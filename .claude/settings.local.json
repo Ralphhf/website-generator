@@ -24,7 +24,9 @@
       "Bash(git init:*)",
       "Bash(cmd //c \"del \\\\?\\\\C:\\\\Users\\\\ralph\\\\website-generator\\\\nul\")",
       "Bash(powershell -Command:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
