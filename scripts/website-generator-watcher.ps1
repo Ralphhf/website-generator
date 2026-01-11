@@ -120,8 +120,79 @@ function Process-WebsiteGeneratorZip {
         Write-Host "       Found prompt: $promptFile" -ForegroundColor Gray
     }
 
-    # Step 4: Open VS Code
-    Write-Host "[3/5] Opening VS Code..." -ForegroundColor Yellow
+    # Step 4: Create VS Code task to auto-run Claude CLI in integrated terminal
+    Write-Host "[3/5] Setting up VS Code task..." -ForegroundColor Yellow
+
+    # Create .vscode folder
+    $vscodeFolder = Join-Path $websitePath ".vscode"
+    New-Item -ItemType Directory -Path $vscodeFolder -Force | Out-Null
+
+    # Create the Claude CLI prompt for the task
+    $claudePrompt = "I need you to generate a complete Next.js website. First, read the prompt file at '$promptFile' and the business data files in '$($dataFolder.FullName)' (business-info.json, testimonials.json, portfolio.json). Then create the website in this current directory. Start by initializing the Next.js project and then build all the components and pages as specified in the prompt."
+
+    # Create tasks.json with runOn: folderOpen to auto-start Claude CLI
+    $tasksJson = @"
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start Claude CLI - Generate Website",
+            "type": "shell",
+            "command": "claude",
+            "args": ["$($claudePrompt -replace '"', '\"')"],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new",
+                "showReuseMessage": false,
+                "clear": true
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            },
+            "problemMatcher": []
+        }
+    ]
+}
+"@
+
+    $tasksJsonPath = Join-Path $vscodeFolder "tasks.json"
+    $tasksJson | Out-File -FilePath $tasksJsonPath -Encoding UTF8
+    Write-Host "       Created VS Code task: $tasksJsonPath" -ForegroundColor Gray
+
+    # Create a README file with instructions
+    $readmeContent = @"
+# Website Generator Project
+
+## Business: $businessName
+## Created: $(Get-Date)
+
+## Data Location
+- Data folder: $($dataFolder.FullName)
+- Prompt file: $promptFile
+
+## Auto-Start
+When you open this folder in VS Code, Claude CLI should automatically start in the integrated terminal.
+
+If it doesn't start automatically:
+1. Press Ctrl+Shift+P
+2. Type "Tasks: Run Task"
+3. Select "Start Claude CLI - Generate Website"
+
+Or manually run in terminal:
+``````
+claude "Read the prompt from $promptFile and generate the website"
+``````
+"@
+
+    $readmePath = Join-Path $websitePath "README.md"
+    $readmeContent | Out-File -FilePath $readmePath -Encoding UTF8
+
+    # Step 5: Open VS Code - task will auto-run
+    Write-Host "[4/5] Opening VS Code..." -ForegroundColor Yellow
+    Write-Host "[5/5] Claude CLI will auto-start in VS Code terminal..." -ForegroundColor Yellow
+
     try {
         Start-Process "code" -ArgumentList $websitePath -ErrorAction Stop
         Write-Host "       VS Code opened at: $websitePath" -ForegroundColor Gray
@@ -130,85 +201,16 @@ function Process-WebsiteGeneratorZip {
         Write-Host "       WARNING: Could not open VS Code. Is it installed?" -ForegroundColor Yellow
     }
 
-    # Give VS Code time to open
-    Start-Sleep -Seconds 2
-
-    # Step 5: Create the Claude CLI command file
-    Write-Host "[4/5] Preparing Claude CLI..." -ForegroundColor Yellow
-
-    # Read the prompt content
-    $promptContent = ""
-    if ($promptFile -and (Test-Path $promptFile)) {
-        $promptContent = Get-Content -Path $promptFile -Raw
-    }
-
-    # Create a startup script for Claude CLI
-    $claudeScript = @"
-# Website Generator - Auto Start Script
-# Project: $businessName
-# Created: $(Get-Date)
-
-# The business data is located at:
-
-"@
-
-    if ($dataFolder) {
-        $claudeScript += "# Data folder: $($dataFolder.FullName)`n"
-    }
-
-    $claudeScript += @"
-
-# To generate the website, Claude CLI will be started with the following prompt.
-# The prompt file is located at: $promptFile
-
-"@
-
-    $claudeScriptPath = Join-Path $websitePath "GENERATE.md"
-    $claudeScript | Out-File -FilePath $claudeScriptPath -Encoding UTF8
-
-    # Create the actual command to run in terminal
-    $claudeCommand = "cd `"$websitePath`" && claude `"Read the prompt from $promptFile and the data files in $($dataFolder.FullName). Generate the complete Next.js website in this folder ($websitePath). Start by creating the project structure.`""
-
-    Write-Host "[5/5] Starting Claude CLI..." -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "       Opening new terminal with Claude CLI..." -ForegroundColor Gray
-
-    # Open Windows Terminal or PowerShell with Claude CLI
-    $terminalCommand = @"
-cd "$websitePath"
-
-Write-Host "============================================" -ForegroundColor Cyan
-Write-Host "  Website Generator - Claude CLI" -ForegroundColor Cyan
-Write-Host "============================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Project folder: $websitePath" -ForegroundColor Yellow
-Write-Host "Data folder: $($dataFolder.FullName)" -ForegroundColor Yellow
-Write-Host "Prompt file: $promptFile" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "Starting Claude CLI..." -ForegroundColor Green
-Write-Host ""
-
-claude "I need you to generate a complete Next.js website. First, read the prompt file at '$promptFile' and the business data files in '$($dataFolder.FullName)' (business-info.json, testimonials.json, portfolio.json). Then create the website in this current directory ($websitePath). Start by initializing the Next.js project and then build all the components and pages as specified in the prompt."
-"@
-
-    # Save the terminal command to a file and execute it
-    $terminalScriptPath = Join-Path $projectPath "start-claude.ps1"
-    $terminalCommand | Out-File -FilePath $terminalScriptPath -Encoding UTF8
-
-    # Start new PowerShell window with Claude CLI
-    Start-Process "powershell" -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", $terminalScriptPath
-
     Write-Host ""
     Write-Host "============================================" -ForegroundColor Green
-    Write-Host "  DONE! Claude CLI is starting..." -ForegroundColor Green
+    Write-Host "  DONE! VS Code is opening..." -ForegroundColor Green
     Write-Host "============================================" -ForegroundColor Green
     Write-Host ""
     Write-Host "Project location: $projectPath" -ForegroundColor Cyan
     Write-Host "Website folder:   $websitePath" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "A new terminal window should open with Claude CLI." -ForegroundColor Yellow
-    Write-Host "If it doesn't, run this manually:" -ForegroundColor Yellow
-    Write-Host "  $terminalScriptPath" -ForegroundColor Gray
+    Write-Host "Claude CLI should auto-start in VS Code's integrated terminal." -ForegroundColor Yellow
+    Write-Host "If it doesn't, press Ctrl+Shift+P and run 'Tasks: Run Task'" -ForegroundColor Yellow
     Write-Host ""
 
     # Optional: Move the ZIP to processed folder
