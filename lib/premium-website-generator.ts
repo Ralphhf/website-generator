@@ -25,7 +25,7 @@ function sanitizeBusinessInfo(info: BusinessInfo): BusinessInfo {
     address: escapeJs(info.address || ''),
     city: escapeJs(info.city || ''),
     state: escapeJs(info.state || ''),
-    businessType: info.businessType ? escapeJs(info.businessType.replace(/_/g, ' ')) as BusinessInfo['businessType'] : undefined,
+    businessType: escapeJs((info.businessType || '').replace(/_/g, ' ')),
     services: info.services?.map(s => escapeJs(s)),
   }
 }
