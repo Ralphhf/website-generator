@@ -46,13 +46,13 @@ export async function GET(request: NextRequest) {
       }
 
       case 'portfolio': {
-        const businessType = searchParams.get('businessType')
+        const businessType = searchParams.get('businessType') || ''
         const sectionTitle = searchParams.get('sectionTitle')
         const perPage = parseInt(searchParams.get('perPage') || '6')
 
-        if (!businessType || !sectionTitle) {
+        if (!sectionTitle) {
           return NextResponse.json(
-            { error: 'Business type and section title are required' },
+            { error: 'Section title is required' },
             { status: 400 }
           )
         }

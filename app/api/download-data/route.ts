@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { BusinessInfo, PortfolioSection } from '@/lib/types'
 import * as fs from 'fs'
 import * as path from 'path'
-import { execSync } from 'child_process'
+import archiver from 'archiver'
+import { Writable } from 'stream'
 
 async function downloadImage(url: string, filepath: string): Promise<boolean> {
   try {
+    // Skip blob URLs - they can't be downloaded server-side
+    if (url.startsWith('blob:')) {
+      return false
+    }
     const response = await fetch(url)
     if (!response.ok) return false
     const buffer = await response.arrayBuffer()
@@ -18,6 +23,7 @@ async function downloadImage(url: string, filepath: string): Promise<boolean> {
 }
 
 function getImageExtension(url: string): string {
+  if (url.startsWith('blob:')) return '.jpg'
   const urlPath = url.split('?')[0]
   const ext = path.extname(urlPath).toLowerCase()
   if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'].includes(ext)) {
@@ -30,15 +36,12 @@ export async function POST(request: NextRequest) {
   try {
     const businessInfo: BusinessInfo = await request.json()
 
-    // Create a temporary directory for the data
-    const tempDir = path.join(process.cwd(), 'temp-download')
-    const dataDir = path.join(tempDir, `${sanitizeFilename(businessInfo.name)}-data`)
+    // Use /tmp for Vercel serverless compatibility
+    const tempDir = path.join('/tmp', 'download-' + Date.now())
+    const dataDir = path.join(tempDir, `${sanitizeFilename(businessInfo.name || 'business')}-data`)
     const imagesDir = path.join(dataDir, 'images')
 
-    // Clean up and create directories
-    if (fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true })
-    }
+    // Create directories
     fs.mkdirSync(dataDir, { recursive: true })
     fs.mkdirSync(imagesDir, { recursive: true })
 
@@ -64,9 +67,6 @@ export async function POST(request: NextRequest) {
       if (downloaded) {
         heroImagePath = `images/${heroFilename}`
       }
-    } else if (businessInfo.heroImage && businessInfo.heroImage.startsWith('blob:')) {
-      // Handle blob URLs (uploaded files) - they'll be included as-is for now
-      heroImagePath = businessInfo.heroImage
     }
 
     // Create the main business info JSON
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
         const updatedImages = []
 
         for (const image of section.images || []) {
-          if (image.url) {
+          if (image.url && image.url.startsWith('http')) {
             imageCounter++
             const ext = getImageExtension(image.url)
             const filename = `portfolio-${imageCounter}${ext}`
@@ -163,6 +163,12 @@ export async function POST(request: NextRequest) {
             updatedImages.push({
               ...image,
               url: downloaded ? `images/${filename}` : image.url,
+              originalUrl: image.url
+            })
+          } else {
+            // Keep non-http URLs as-is
+            updatedImages.push({
+              ...image,
               originalUrl: image.url
             })
           }
@@ -194,46 +200,58 @@ export async function POST(request: NextRequest) {
       promptContent
     )
 
-    // Create ZIP file using PowerShell (Windows compatible)
-    const zipPath = path.join(tempDir, `${sanitizeFilename(businessInfo.name)}-data.zip`)
-
-    try {
-      // Use PowerShell to create ZIP on Windows
-      execSync(
-        `powershell -Command "Compress-Archive -Path '${dataDir}' -DestinationPath '${zipPath}' -Force"`,
-        { stdio: 'pipe' }
-      )
-    } catch (zipError) {
-      console.error('ZIP creation error:', zipError)
-      // If PowerShell fails, try using tar
-      try {
-        execSync(`tar -czvf "${zipPath}" -C "${tempDir}" "${path.basename(dataDir)}"`, { stdio: 'pipe' })
-      } catch {
-        throw new Error('Failed to create ZIP file')
-      }
-    }
-
-    // Read the ZIP file
-    const zipBuffer = fs.readFileSync(zipPath)
+    // Create ZIP file using archiver (works on Linux/Vercel)
+    const zipBuffer = await createZipBuffer(dataDir)
 
     // Clean up temp directory
-    fs.rmSync(tempDir, { recursive: true })
+    try {
+      fs.rmSync(tempDir, { recursive: true })
+    } catch (e) {
+      console.error('Cleanup error:', e)
+    }
 
     // Return the ZIP file
     return new NextResponse(zipBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${sanitizeFilename(businessInfo.name)}-data.zip"`,
+        'Content-Disposition': `attachment; filename="${sanitizeFilename(businessInfo.name || 'business')}-data.zip"`,
       },
     })
   } catch (error) {
     console.error('Download data error:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to create download' },
+      { success: false, error: 'Failed to create download', details: String(error) },
       { status: 500 }
     )
   }
+}
+
+async function createZipBuffer(sourceDir: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = []
+
+    const writableStream = new Writable({
+      write(chunk, encoding, callback) {
+        chunks.push(chunk)
+        callback()
+      }
+    })
+
+    const archive = archiver('zip', { zlib: { level: 9 } })
+
+    writableStream.on('finish', () => {
+      resolve(Buffer.concat(chunks))
+    })
+
+    archive.on('error', (err) => {
+      reject(err)
+    })
+
+    archive.pipe(writableStream)
+    archive.directory(sourceDir, path.basename(sourceDir))
+    archive.finalize()
+  })
 }
 
 function sanitizeFilename(name: string): string {
@@ -241,7 +259,7 @@ function sanitizeFilename(name: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
-    .substring(0, 50)
+    .substring(0, 50) || 'business'
 }
 
 function generateClaudePrompt(info: BusinessInfo): string {
@@ -253,7 +271,7 @@ You have been provided with business data files in this folder. Use the data fro
 ---
 
 ## Your Mission
-Create an **Awwwards-level, premium, high-end website** for "${info.name}" that would genuinely compete for design awards. This is NOT a basic template - it must be a sophisticated, visually stunning website that demonstrates cutting-edge web design.
+Create an **Awwwards-level, premium, high-end website** for "${info.name || 'this business'}" that would genuinely compete for design awards. This is NOT a basic template - it must be a sophisticated, visually stunning website that demonstrates cutting-edge web design.
 
 ---
 
@@ -283,97 +301,20 @@ Use these Aceternity components (copy from https://ui.aceternity.com/components)
 #### 2. 21st.dev Components (Premium UI Blocks)
 Install via: \`npx shadcn@latest add "https://21st.dev/r/[component-path]"\`
 Browse components at: https://21st.dev/
-Use for:
-- Premium button variants
-- Advanced form components
-- Sophisticated card layouts
-- Navigation components
-- Footer designs
 
 #### 3. shadcn/ui (Base Components)
 \`\`\`bash
 npx shadcn@latest init
 \`\`\`
-Use for foundational UI components that you'll enhance with animations.
-
----
-
-## Design Requirements (Awwwards Level)
-
-### Visual Excellence
-- **Micro-interactions everywhere**: Every hover, click, and scroll should feel alive
-- **Smooth page transitions**: Use Framer Motion for route transitions
-- **Parallax effects**: Multiple depth layers on scroll
-- **Cursor effects**: Custom cursors, magnetic buttons, hover trails
-- **Loading states**: Skeleton loaders, shimmer effects, progress indicators
-- **Gradient mastery**: Dynamic gradients, mesh gradients, animated color shifts
-
-### Typography
-- **Variable fonts**: Use Inter, Cal Sans, or similar premium fonts
-- **Dynamic sizing**: Fluid typography with clamp()
-- **Text animations**: Reveal on scroll, character-by-character animations
-- **Hierarchy**: Clear visual hierarchy with dramatic size contrasts
-
-### Layout & Spacing
-- **Generous whitespace**: Premium sites breathe
-- **Asymmetric grids**: Break the monotony of standard layouts
-- **Full-bleed sections**: Edge-to-edge impact areas
-- **Bento grids**: Modern card arrangements (use Aceternity's Bento Grid)
-
-### Color & Light
-- **Dark mode first**: With seamless light mode toggle
-- **Glow effects**: Subtle glows on interactive elements
-- **Glass morphism**: Frosted glass cards where appropriate
-- **Dynamic shadows**: Shadows that respond to interaction
-
-### Motion Design
-- **60fps animations**: Smooth, performant animations
-- **Staggered animations**: Elements entering in sequence
-- **Scroll-triggered animations**: Reveal content as user scrolls
-- **Physics-based motion**: Natural easing, spring animations
-- **Magnetic elements**: Buttons and links that attract the cursor
-
----
-
-## Page Structure
-
-### 1. Homepage
-- **Hero Section**: Full-screen, immersive hero with the provided hero image as background. Use Aceternity's Spotlight or Aurora Background effects overlaid on the image
-- **About Preview**: Compelling story snippet with scroll-triggered reveal
-- **Services Grid**: Bento grid layout with hover 3D effects
-- **Portfolio Showcase**: Infinite scrolling gallery or 3D card carousel
-- **Testimonials**: Animated testimonial carousel with 3D cards
-- **CTA Section**: Magnetic button with glow effect
-- **Footer**: Comprehensive with animated links
-
-### 2. About Page
-- **Story Section**: Timeline with Tracing Beam effect
-- **Team/Values**: Card grid with hover effects
-- **Stats Counter**: Animated number counters on scroll
-
-### 3. Services Page
-- **Service Cards**: Expandable cards with detailed info
-- **Process Section**: Step-by-step with connecting animations
-- **Pricing/Packages**: If applicable, with comparison features
-
-### 4. Portfolio/Work Page
-- **Filterable Gallery**: Smooth filter transitions
-- **Project Cards**: 3D hover effects, quick preview modals
-- **Case Studies**: Detailed project breakdowns
-
-### 5. Contact Page
-- **Interactive Form**: Floating labels, validation animations
-- **Map Integration**: Styled map or location visual
-- **Contact Info**: With copy-to-clipboard animations
 
 ---
 
 ## Business Data to Use
 
-### Business Name: ${info.name}
+### Business Name: ${info.name || 'Business Name'}
 ### Tagline: ${info.tagline || 'Create a compelling tagline'}
 ### Description: ${info.description || 'Create compelling copy based on the business type'}
-### Business Type: ${info.businessType}
+### Business Type: ${info.businessType || 'General Business'}
 ### Years in Business: ${info.yearsInBusiness || 'Established business'}
 
 ### Services Offered:
@@ -383,9 +324,9 @@ ${info.services?.length ? info.services.map(s => `- ${s}`).join('\n') : '- Use a
 ${info.serviceAreas?.length ? info.serviceAreas.map(a => `- ${a}`).join('\n') : '- Local area'}
 
 ### Contact Information:
-- Email: ${info.email}
-- Phone: ${info.phone}
-- Address: ${info.address}, ${info.city}, ${info.state} ${info.zipCode}
+- Email: ${info.email || 'N/A'}
+- Phone: ${info.phone || 'N/A'}
+- Address: ${info.address || ''}, ${info.city || ''}, ${info.state || ''} ${info.zipCode || ''}
 
 ### Social Media:
 ${info.googleProfileUrl ? `- Google: ${info.googleProfileUrl}` : ''}
@@ -395,7 +336,7 @@ ${info.linkedinUrl ? `- LinkedIn: ${info.linkedinUrl}` : ''}
 ${info.yelpUrl ? `- Yelp: ${info.yelpUrl}` : ''}
 
 ### Hero Image:
-${info.heroImage ? `**IMPORTANT**: Use the provided hero image located at \`images/hero.jpg\` (or similar extension) as the background for the landing page hero section. This image should be displayed full-width behind the hero content with an appropriate overlay for text readability.` : 'No hero image provided - use a dynamic gradient or Aceternity background effect instead.'}
+${info.heroImage ? `**IMPORTANT**: Use the provided hero image located at \`images/hero.jpg\` (or similar extension) as the background for the landing page hero section.` : 'No hero image provided - use a dynamic gradient or Aceternity background effect instead.'}
 
 ### Testimonials:
 ${info.testimonials?.length ? info.testimonials.map(t => `
@@ -413,32 +354,10 @@ Images: ${s.images?.length || 0} items
 
 ---
 
-## SEO Requirements
-- Semantic HTML5 structure
-- Proper heading hierarchy (single H1 per page)
-- Meta tags for all pages
-- Open Graph tags for social sharing
-- JSON-LD structured data for Local Business
-- Alt text for all images
-- Sitemap.xml
-- robots.txt
-
----
-
-## Performance Requirements
-- Lighthouse score 90+ on all metrics
-- Lazy loading for images and components
-- Code splitting for routes
-- Optimized fonts with next/font
-- Proper image optimization with next/image
-- Minimal JavaScript bundle
-
----
-
 ## File Structure to Generate
 
 \`\`\`
-${sanitizeFilename(info.name)}-website/
+${sanitizeFilename(info.name || 'business')}-website/
 ├── app/
 │   ├── layout.tsx
 │   ├── page.tsx
@@ -448,15 +367,12 @@ ${sanitizeFilename(info.name)}-website/
 │   ├── contact/page.tsx
 │   └── globals.css
 ├── components/
-│   ├── ui/           (shadcn + Aceternity components)
-│   ├── layout/       (Navbar, Footer, etc.)
-│   ├── sections/     (Hero, About, Services, etc.)
-│   └── shared/       (Buttons, Cards, etc.)
+│   ├── ui/
+│   ├── layout/
+│   ├── sections/
+│   └── shared/
 ├── lib/
-│   ├── utils.ts
-│   └── constants.ts
-├── public/
-│   └── images/
+├── public/images/
 ├── tailwind.config.ts
 ├── next.config.js
 ├── package.json
@@ -465,47 +381,7 @@ ${sanitizeFilename(info.name)}-website/
 
 ---
 
-## Final Checklist
-- [ ] Uses Aceternity UI components for premium animations
-- [ ] Includes 21st.dev components where beneficial
-- [ ] Fully responsive (mobile-first approach)
-- [ ] Dark/Light mode toggle
-- [ ] All pages have smooth transitions
-- [ ] Scroll animations throughout
-- [ ] Interactive hover states on all clickable elements
-- [ ] Contact form with validation
-- [ ] SEO meta tags on all pages
-- [ ] JSON-LD structured data
-- [ ] Performance optimized
-- [ ] Accessibility compliant (WCAG 2.1)
-- [ ] Cross-browser compatible
-
----
-
-## How to Start
-
-1. Create new Next.js project:
-\`\`\`bash
-npx create-next-app@latest ${sanitizeFilename(info.name)}-website --typescript --tailwind --eslint --app
-\`\`\`
-
-2. Install dependencies:
-\`\`\`bash
-npm install framer-motion clsx tailwind-merge @radix-ui/react-icons lucide-react
-\`\`\`
-
-3. Initialize shadcn:
-\`\`\`bash
-npx shadcn@latest init
-\`\`\`
-
-4. Copy Aceternity components from https://ui.aceternity.com/components
-
-5. Start building the premium website!
-
----
-
-**Remember: This website should look like it belongs on Awwwards. Every pixel matters. Every animation should feel intentional. The end result should make visitors say "wow" the moment they land on the page.**
+**Remember: This website should look like it belongs on Awwwards. Every pixel matters. Every animation should feel intentional.**
 `
 }
 
@@ -518,7 +394,7 @@ function generateSummaryText(info: BusinessInfo): string {
     '',
     'BASIC INFORMATION',
     '-'.repeat(40),
-    `Business Name: ${info.name}`,
+    `Business Name: ${info.name || 'N/A'}`,
     `Tagline: ${info.tagline || 'N/A'}`,
     `Description: ${info.description || 'N/A'}`,
     `Years in Business: ${info.yearsInBusiness || 'N/A'}`,
@@ -553,22 +429,11 @@ function generateSummaryText(info: BusinessInfo): string {
     '-'.repeat(40),
     `Logo: ${info.logo || 'N/A'}`,
     `Hero Image: ${info.heroImage || 'N/A'}`,
-    `Primary Color: ${info.primaryColor || 'N/A'}`,
-    `Secondary Color: ${info.secondaryColor || 'N/A'}`,
     '',
-    'OPENING HOURS',
+    'TESTIMONIALS',
     '-'.repeat(40),
   ]
 
-  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-  for (const day of days) {
-    const hours = info.openingHours?.[day as keyof typeof info.openingHours]
-    lines.push(`${day.charAt(0).toUpperCase() + day.slice(1)}: ${hours || 'N/A'}`)
-  }
-
-  lines.push('')
-  lines.push('TESTIMONIALS')
-  lines.push('-'.repeat(40))
   if (info.testimonials?.length) {
     info.testimonials.forEach((t, i) => {
       lines.push(`[${i + 1}] "${t.content}"`)
@@ -588,9 +453,6 @@ function generateSummaryText(info: BusinessInfo): string {
       lines.push(`[${i + 1}] ${section.title}`)
       lines.push(`    Description: ${section.description || 'N/A'}`)
       lines.push(`    Images: ${section.images?.length || 0}`)
-      section.images?.forEach((img, j) => {
-        lines.push(`      ${j + 1}. ${img.alt || 'Image'}: ${img.url}`)
-      })
       lines.push('')
     })
   } else {
