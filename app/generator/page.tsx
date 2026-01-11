@@ -327,6 +327,9 @@ function GeneratorContent() {
                 heroImage={businessInfo.heroImage}
                 businessType={businessInfo.businessType}
                 businessName={businessInfo.name}
+                businessTagline={businessInfo.tagline}
+                businessDescription={businessInfo.description}
+                businessServices={businessInfo.services}
                 portfolioImages={businessInfo.portfolioSections.flatMap(s => s.images)}
                 onSubmit={handleHeroImageSubmit}
                 onBack={handleBack}

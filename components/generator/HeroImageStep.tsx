@@ -19,6 +19,9 @@ interface HeroImageStepProps {
   heroImage?: string
   businessType: string
   businessName: string
+  businessTagline?: string
+  businessDescription?: string
+  businessServices?: string[]
   portfolioImages: PortfolioImage[]
   onSubmit: (heroImage: string) => void
   onBack: () => void
@@ -28,6 +31,9 @@ export function HeroImageStep({
   heroImage: initialHeroImage,
   businessType,
   businessName,
+  businessTagline,
+  businessDescription,
+  businessServices,
   portfolioImages,
   onSubmit,
   onBack
@@ -44,6 +50,29 @@ export function HeroImageStep({
     { name: 'Veo', url: 'https://deepmind.google/technologies/veo/', color: 'from-blue-500 to-indigo-600' },
     { name: 'Runway', url: 'https://runwayml.com', color: 'from-purple-500 to-pink-600' },
   ]
+
+  // Generate ChatGPT prompt URL with business info
+  const getChatGPTUrl = () => {
+    const prompt = `Help me create a video prompt for an AI video generator (like Sora, Veo, or Runway) for a business hero video.
+
+Business Information:
+- Name: ${businessName || 'Not provided'}
+- Type: ${businessType?.replace(/_/g, ' ') || 'Not provided'}
+- Tagline: ${businessTagline || 'Not provided'}
+- Description: ${businessDescription || 'Not provided'}
+- Services: ${businessServices?.join(', ') || 'Not provided'}
+
+Please generate a detailed, cinematic video prompt that would work well as a hero background video for this business website. The video should be professional, visually stunning, and capture the essence of what this business does. Include details about:
+1. Scene setting and environment
+2. Lighting and mood
+3. Camera movements
+4. Key visual elements
+5. Duration suggestion (5-10 seconds for a hero loop)
+
+Make the prompt specific to this business type and ready to paste into an AI video generator.`
+
+    return `https://chat.openai.com/?q=${encodeURIComponent(prompt)}`
+  }
 
   // Unsplash state
   const [unsplashPhotos, setUnsplashPhotos] = useState<UnsplashPhoto[]>([])
@@ -425,6 +454,24 @@ export function HeroImageStep({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    {/* ChatGPT - Generate video prompt */}
+                    <a
+                      href={getChatGPTUrl()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-3 rounded-lg bg-gradient-to-r from-gray-700 to-gray-900 text-white hover:opacity-90 transition-opacity border border-gray-600"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">ChatGPT</span>
+                        <ExternalLink className="w-4 h-4" />
+                      </div>
+                      <p className="text-xs text-white/80 mt-1">Create video prompt</p>
+                    </a>
+
+                    <div className="border-t border-gray-200 pt-3">
+                      <p className="text-xs text-gray-500 mb-2">Then generate with:</p>
+                    </div>
+
                     {videoGenerators.map((generator) => (
                       <a
                         key={generator.name}
