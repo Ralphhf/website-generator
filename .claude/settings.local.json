@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill /PID 34552 /F)",
+      "Bash(cmd //c \"taskkill /PID 34552 /F\")",
+      "Bash(cmd //c \"taskkill /PID 16468 /F\")",
+      "Bash(npx next dev --turbo)",
+      "Bash(npm install:*)",
+      "Bash(rm:*)",
+      "Bash(cmd //c \"taskkill /F /IM node.exe\")",
+      "Bash(cmd //c \"rmdir /S /Q .next\")",
+      "Bash(timeout /t 2 /nobreak)",
+      "Bash(curl:*)",
+      "Bash(npm run build:*)",
+      "Bash(dir /s /b C:Usersralphwebsite-generatortest-generated-site)",
+      "Bash(npx tsc:*)",
+      "Bash(timeout 10 npm run dev:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git init:*)",
+      "Bash(cmd //c \"del \\\\?\\\\C:\\\\Users\\\\ralph\\\\website-generator\\\\nul\")",
+      "Bash(powershell -Command:*)",
+      "Bash(git reset:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
