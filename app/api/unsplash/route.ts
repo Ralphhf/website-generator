@@ -46,11 +46,12 @@ export async function GET(request: NextRequest) {
       }
 
       case 'portfolio': {
+        // businessType is optional - will use sectionTitle for search if empty
         const businessType = searchParams.get('businessType') || ''
-        const sectionTitle = searchParams.get('sectionTitle')
-        const perPage = parseInt(searchParams.get('perPage') || '6')
+        const sectionTitle = searchParams.get('sectionTitle') || ''
+        const perPage = parseInt(searchParams.get('perPage') || '12')
 
-        if (!sectionTitle) {
+        if (!sectionTitle.trim()) {
           return NextResponse.json(
             { error: 'Section title is required' },
             { status: 400 }

@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
   try {
     const businessInfo: BusinessInfo = await request.json()
 
-    // Use /tmp for Vercel serverless compatibility
-    const tempDir = path.join('/tmp', 'download-' + Date.now())
+    // Use /tmp for Vercel serverless compatibility (required for write access)
+    const tempDir = '/tmp/download-' + Date.now()
     const dataDir = path.join(tempDir, `${sanitizeFilename(businessInfo.name || 'business')}-data`)
     const imagesDir = path.join(dataDir, 'images')
 
