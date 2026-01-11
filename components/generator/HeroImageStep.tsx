@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Upload, Image as ImageIcon, Sparkles, Loader2, Search, Check, X, FolderOpen, RefreshCw, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Upload, Image as ImageIcon, Sparkles, Loader2, Search, Check, X, FolderOpen, RefreshCw, ChevronRight, Video, ExternalLink } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
 import { PortfolioImage } from '@/lib/types'
 
@@ -33,8 +33,17 @@ export function HeroImageStep({
   onBack
 }: HeroImageStepProps) {
   const [selectedImage, setSelectedImage] = useState<string>(initialHeroImage || '')
+  const [isVideo, setIsVideo] = useState<boolean>(false)
   const [activeTab, setActiveTab] = useState<'upload' | 'portfolio' | 'ai'>('ai')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const videoInputRef = useRef<HTMLInputElement | null>(null)
+
+  // AI Video Generator links
+  const videoGenerators = [
+    { name: 'Sora', url: 'https://sora.com', color: 'from-green-500 to-emerald-600' },
+    { name: 'Veo', url: 'https://deepmind.google/technologies/veo/', color: 'from-blue-500 to-indigo-600' },
+    { name: 'Runway', url: 'https://runwayml.com', color: 'from-purple-500 to-pink-600' },
+  ]
 
   // Unsplash state
   const [unsplashPhotos, setUnsplashPhotos] = useState<UnsplashPhoto[]>([])
@@ -86,6 +95,15 @@ export function HeroImageStep({
     const file = files[0]
     const url = URL.createObjectURL(file)
     setSelectedImage(url)
+    setIsVideo(false)
+  }
+
+  const handleVideoUpload = (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    const file = files[0]
+    const url = URL.createObjectURL(file)
+    setSelectedImage(url)
+    setIsVideo(true)
   }
 
   const handleSubmit = () => {
@@ -111,7 +129,7 @@ export function HeroImageStep({
         </p>
       </motion.div>
 
-      {/* Preview of selected image */}
+      {/* Preview of selected image/video */}
       {selectedImage && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -121,19 +139,33 @@ export function HeroImageStep({
           <Card variant="gradient">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-primary-500" />
-                Selected Hero Image
+                {isVideo ? (
+                  <Video className="w-5 h-5 text-primary-500" />
+                ) : (
+                  <ImageIcon className="w-5 h-5 text-primary-500" />
+                )}
+                Selected Hero {isVideo ? 'Video' : 'Image'}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="relative aspect-video rounded-xl overflow-hidden border-2 border-primary-200">
-                <img
-                  src={selectedImage}
-                  alt="Selected hero image"
-                  className="w-full h-full object-cover"
-                />
+                {isVideo ? (
+                  <video
+                    src={selectedImage}
+                    className="w-full h-full object-cover"
+                    controls
+                    muted
+                    loop
+                  />
+                ) : (
+                  <img
+                    src={selectedImage}
+                    alt="Selected hero image"
+                    className="w-full h-full object-cover"
+                  />
+                )}
                 <button
-                  onClick={() => setSelectedImage('')}
+                  onClick={() => { setSelectedImage(''); setIsVideo(false); }}
                   className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
                 >
                   <X className="w-4 h-4" />
@@ -326,38 +358,95 @@ export function HeroImageStep({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            <Card variant="outlined">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="w-5 h-5 text-primary-500" />
-                  Upload Your Own Image
-                </CardTitle>
-                <CardDescription>
-                  Upload a custom hero image for your landing page
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  ref={fileInputRef}
-                  onChange={(e) => handleImageUpload(e.target.files)}
-                />
+            <div className="flex gap-4">
+              {/* Main upload area */}
+              <div className="flex-1">
+                <Card variant="outlined">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Upload className="w-5 h-5 text-primary-500" />
+                      Upload Your Own Media
+                    </CardTitle>
+                    <CardDescription>
+                      Upload a custom hero image or video for your landing page
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Image upload */}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      ref={fileInputRef}
+                      onChange={(e) => handleImageUpload(e.target.files)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full py-8 rounded-xl border-2 border-dashed border-gray-300 hover:border-primary-400 transition-colors flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-primary-600"
+                    >
+                      <ImageIcon className="w-10 h-10" />
+                      <div className="text-center">
+                        <p className="font-medium">Upload Image</p>
+                        <p className="text-sm text-gray-400">JPG, PNG, WebP</p>
+                      </div>
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full aspect-video rounded-xl border-2 border-dashed border-gray-300 hover:border-primary-400 transition-colors flex flex-col items-center justify-center gap-4 text-gray-500 hover:text-primary-600"
-                >
-                  <Upload className="w-12 h-12" />
-                  <div className="text-center">
-                    <p className="font-medium">Click to upload an image</p>
-                    <p className="text-sm text-gray-400">JPG, PNG, WebP (recommended: 1920x1080 or larger)</p>
-                  </div>
-                </button>
-              </CardContent>
-            </Card>
+                    {/* Video upload */}
+                    <input
+                      type="file"
+                      accept="video/*"
+                      className="hidden"
+                      ref={videoInputRef}
+                      onChange={(e) => handleVideoUpload(e.target.files)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => videoInputRef.current?.click()}
+                      className="w-full py-8 rounded-xl border-2 border-dashed border-gray-300 hover:border-purple-400 transition-colors flex flex-col items-center justify-center gap-3 text-gray-500 hover:text-purple-600"
+                    >
+                      <Video className="w-10 h-10" />
+                      <div className="text-center">
+                        <p className="font-medium">Upload Video</p>
+                        <p className="text-sm text-gray-400">MP4, WebM, MOV</p>
+                      </div>
+                    </button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* AI Video Generators sidebar */}
+              <div className="w-48 flex-shrink-0">
+                <Card variant="outlined" className="h-full">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-purple-500" />
+                      AI Video Tools
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {videoGenerators.map((generator) => (
+                      <a
+                        key={generator.name}
+                        href={generator.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`block p-3 rounded-lg bg-gradient-to-r ${generator.color} text-white hover:opacity-90 transition-opacity`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{generator.name}</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </div>
+                        <p className="text-xs text-white/80 mt-1">Generate video</p>
+                      </a>
+                    ))}
+                    <p className="text-xs text-gray-400 mt-2">
+                      Create AI videos, then upload them here
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </motion.div>
         )}
 

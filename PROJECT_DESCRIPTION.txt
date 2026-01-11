@@ -1,0 +1,54 @@
+WEBSITE GENERATOR
+=================
+
+A Next.js web application that streamlines the creation of professional websites for local businesses. The tool guides users through a step-by-step wizard to collect business information and generates a complete website data package.
+
+
+FEATURES
+--------
+
+Two Entry Modes:
+- Start Generating - Full 8-step flow that searches Google for local businesses without websites, lets you select one, and pre-fills their details
+- Quick Entry - Skip the search and jump directly to entering business details manually
+
+Step-by-Step Wizard:
+1. Business search by location and type
+2. Select from discovered businesses
+3. Basic info (name, tagline, description, services)
+4. Hero image selection (Unsplash integration or upload)
+5. Contact details and social media links
+6. Customer testimonials
+7. Portfolio/gallery sections
+8. Preview and download
+
+AI-Powered Content Generation:
+- Auto-generate taglines and descriptions
+- AI-suggested services based on business type
+- Generate sample testimonials
+
+Output:
+Downloads a ZIP file containing all collected business data and a claude_prompt file ready for AI website generation.
+
+
+TECH STACK
+----------
+- Next.js 14 (App Router)
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- Anthropic API (AI content)
+- Unsplash API (images)
+- Google Places API (business search)
+
+
+ENVIRONMENT VARIABLES
+---------------------
+ANTHROPIC_API_KEY     - For AI content generation
+UNSPLASH_ACCESS_KEY   - For image search
+GOOGLE_PLACES_API_KEY - For business search
+
+
+DEPLOYMENT
+----------
+Hosted on Vercel: https://website-generator-xxx.vercel.app
+GitHub: https://github.com/Ralphhf/website-generator
