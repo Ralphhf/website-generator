@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Sparkles } from 'lucide-react'
@@ -22,6 +22,29 @@ import { SocialMediaStep } from '@/components/generator/SocialMediaStep'
 import { UpdateProfilesStep } from '@/components/generator/UpdateProfilesStep'
 import { AllDoneStep } from '@/components/generator/AllDoneStep'
 import { StepIndicator } from '@/components/generator/StepIndicator'
+
+// Loading fallback for Suspense
+function GeneratorLoading() {
+  return (
+    <div className="min-h-screen mesh-bg flex items-center justify-center">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center animate-pulse">
+          <Sparkles className="w-4 h-4 text-white" />
+        </div>
+        <span className="text-lg text-gray-600">Loading...</span>
+      </div>
+    </div>
+  )
+}
+
+// Wrapper component to handle Suspense for useSearchParams
+export default function GeneratorPage() {
+  return (
+    <Suspense fallback={<GeneratorLoading />}>
+      <GeneratorContent />
+    </Suspense>
+  )
+}
 
 const initialBusinessInfo: BusinessInfo = {
   name: '',
@@ -58,7 +81,7 @@ const steps: { key: FormStep; label: string }[] = [
   { key: 'preview', label: 'Preview' },
 ]
 
-export default function GeneratorPage() {
+function GeneratorContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState<FormStep>('search')
