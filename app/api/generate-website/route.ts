@@ -45,13 +45,12 @@ async function buildSiteLocally(
 
     console.log('Building Next.js site...')
     // Create a clean env without the parent's NODE_ENV
-    const buildEnv: Record<string, string | undefined> = { ...process.env }
-    delete buildEnv.NODE_ENV
+    const { NODE_ENV, ...buildEnv } = process.env
     execSync('npm run build', {
       cwd: tempDir,
       stdio: 'pipe',
       timeout: 180000, // 3 minute timeout
-      env: buildEnv,
+      env: buildEnv as NodeJS.ProcessEnv,
     })
 
     console.log('Build complete, reading output files...')
