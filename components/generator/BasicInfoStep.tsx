@@ -112,25 +112,36 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
   }
 
   const generateServices = async () => {
-    if (!businessInfo.businessType) {
+    console.log('generateServices called, name:', name)
+
+    if (!name.trim()) {
+      console.log('No name provided, showing error')
+      setErrors({ ...errors, name: 'Business name is required to suggest services' })
       return
     }
 
     setGeneratingServices(true)
+    console.log('Calling API...')
     try {
       const response = await fetch('/api/generate-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'services',
-          businessType: businessInfo.businessType,
+          businessName: name,
+          businessType: businessInfo.businessType || '',
           existingServices: services.split(',').map(s => s.trim()).filter(Boolean),
         }),
       })
 
+      console.log('API response status:', response.status)
       const data = await response.json()
+      console.log('API response data:', data)
+
       if (data.success && data.result) {
         setServices(data.result.join(', '))
+      } else {
+        console.log('API did not return success or result')
       }
     } catch (error) {
       console.error('Failed to generate services:', error)

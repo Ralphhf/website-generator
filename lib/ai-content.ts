@@ -110,10 +110,19 @@ Return ONLY the about section content, no headers or labels.`
 
 export async function generateServices(
   businessType: string,
-  existingServices: string[]
+  existingServices: string[],
+  businessName?: string
 ): Promise<string[]> {
-  const prompt = `Generate a list of 6-8 common services offered by a ${businessType} business.
+  // Use businessType if available, otherwise infer from business name
+  const businessContext = businessType
+    ? `a ${businessType} business`
+    : businessName
+      ? `a business called "${businessName}"`
+      : 'a business'
 
+  const prompt = `Generate a list of 6-8 common services offered by ${businessContext}.
+
+${businessName && !businessType ? `Based on the business name, determine what type of business this is and suggest relevant services.` : ''}
 ${existingServices.length > 0 ? `They already have these services: ${existingServices.join(', ')}. Add complementary services.` : ''}
 
 Return ONLY a comma-separated list of service names, nothing else. Each service should be 2-4 words maximum.`

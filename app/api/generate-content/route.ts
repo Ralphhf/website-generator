@@ -47,8 +47,9 @@ export async function POST(request: NextRequest) {
 
       case 'services':
         result = await generateServices(
-          params.businessType,
-          params.existingServices || []
+          params.businessType || '',
+          params.existingServices || [],
+          params.businessName
         )
         break
 
