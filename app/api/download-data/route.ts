@@ -33,17 +33,24 @@ function getImageExtension(url: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('Download API called')
+
   try {
     const businessInfo: BusinessInfo = await request.json()
+    console.log('Business name:', businessInfo.name)
 
     // Use /tmp for Vercel serverless compatibility (required for write access)
     const tempDir = '/tmp/download-' + Date.now()
-    const dataDir = path.join(tempDir, `${sanitizeFilename(businessInfo.name || 'business')}-data`)
-    const imagesDir = path.join(dataDir, 'images')
+    const dataDir = `${tempDir}/${sanitizeFilename(businessInfo.name || 'business')}-data`
+    const imagesDir = `${dataDir}/images`
+
+    console.log('Creating directories:', { tempDir, dataDir, imagesDir })
 
     // Create directories
     fs.mkdirSync(dataDir, { recursive: true })
     fs.mkdirSync(imagesDir, { recursive: true })
+
+    console.log('Directories created successfully')
 
     // Download logo if provided
     let logoPath = businessInfo.logo

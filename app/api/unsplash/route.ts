@@ -11,6 +11,8 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const action = searchParams.get('action') || 'search'
 
+  console.log('Unsplash API called:', { action, params: Object.fromEntries(searchParams.entries()) })
+
   try {
     switch (action) {
       case 'search': {
