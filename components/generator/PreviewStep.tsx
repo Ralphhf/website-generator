@@ -1,7 +1,8 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { ArrowLeft, Download, Check, Building2, MapPin, Phone, Image as ImageIcon, Quote } from 'lucide-react'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowLeft, Download, Check, Building2, MapPin, Phone, Image as ImageIcon, Quote, Sparkles, X, Terminal, FolderOpen, Play, ExternalLink } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import { BusinessInfo } from '@/lib/types'
 
@@ -12,6 +13,30 @@ interface PreviewStepProps {
 }
 
 export function PreviewStep({ businessInfo, onGenerate, onBack }: PreviewStepProps) {
+  const [showSetupModal, setShowSetupModal] = useState(false)
+  const [setupComplete, setSetupComplete] = useState(() => {
+    // Check if user has already set up the watcher
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('website-generator-watcher-setup') === 'true'
+    }
+    return false
+  })
+
+  const handleGenerateWebsite = () => {
+    if (!setupComplete) {
+      setShowSetupModal(true)
+    } else {
+      onGenerate()
+    }
+  }
+
+  const confirmSetupAndGenerate = () => {
+    localStorage.setItem('website-generator-watcher-setup', 'true')
+    setSetupComplete(true)
+    setShowSetupModal(false)
+    onGenerate()
+  }
+
   const sections = [
     {
       title: 'Basic Information',
@@ -182,26 +207,51 @@ export function PreviewStep({ businessInfo, onGenerate, onBack }: PreviewStepPro
         </Card>
       </motion.div>
 
-      {/* Download CTA */}
+      {/* Action Buttons */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="mt-8 p-6 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl text-white text-center"
+        className="mt-8 grid md:grid-cols-2 gap-4"
       >
-        <Download className="w-12 h-12 mx-auto mb-4 opacity-80" />
-        <h3 className="text-xl font-semibold mb-2">Ready to Download?</h3>
-        <p className="text-white/80 mb-6 max-w-md mx-auto">
-          Download all business information as a ZIP file containing organized JSON data files.
-        </p>
-        <Button
-          variant="glass"
-          size="xl"
-          onClick={onGenerate}
-        >
-          <Download className="mr-2 w-5 h-5" />
-          Download Data
-        </Button>
+        {/* Download Data Option */}
+        <div className="p-6 bg-gray-100 rounded-2xl text-center">
+          <Download className="w-10 h-10 mx-auto mb-3 text-gray-600" />
+          <h3 className="text-lg font-semibold mb-2 text-gray-900">Download Data Only</h3>
+          <p className="text-gray-600 mb-4 text-sm">
+            Get the ZIP file with all business data and prompts for manual website generation.
+          </p>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={onGenerate}
+            className="w-full"
+          >
+            <Download className="mr-2 w-4 h-4" />
+            Download Data
+          </Button>
+        </div>
+
+        {/* Generate Website Option */}
+        <div className="p-6 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl text-white text-center">
+          <Sparkles className="w-10 h-10 mx-auto mb-3 opacity-90" />
+          <h3 className="text-lg font-semibold mb-2">Generate Website</h3>
+          <p className="text-white/80 mb-4 text-sm">
+            Automatically download, extract, and start Claude CLI to generate your website.
+          </p>
+          <Button
+            variant="glass"
+            size="lg"
+            onClick={handleGenerateWebsite}
+            className="w-full"
+          >
+            <Sparkles className="mr-2 w-4 h-4" />
+            Generate Website
+          </Button>
+          {setupComplete && (
+            <p className="text-white/60 text-xs mt-2">Watcher is set up</p>
+          )}
+        </div>
       </motion.div>
 
       <div className="flex justify-start mt-8">
@@ -210,6 +260,126 @@ export function PreviewStep({ businessInfo, onGenerate, onBack }: PreviewStepPro
           Back to Edit
         </Button>
       </div>
+
+      {/* Setup Instructions Modal */}
+      <AnimatePresence>
+        {showSetupModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={() => setShowSetupModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <Terminal className="w-6 h-6 text-primary-500" />
+                    One-Time Setup Required
+                  </h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowSetupModal(false)}
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+                <p className="text-gray-600 mt-2">
+                  To automatically generate websites, you need to run a small watcher script on your computer.
+                </p>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 space-y-6">
+                {/* Step 1 */}
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+                    <span className="text-primary-600 font-semibold">1</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">Download the Watcher Script</h3>
+                    <p className="text-gray-600 text-sm mb-3">
+                      Download and extract the watcher script to your computer.
+                    </p>
+                    <a
+                      href="https://github.com/Ralphhf/website-generator/tree/main/scripts"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 text-sm font-medium"
+                    >
+                      <FolderOpen className="w-4 h-4" />
+                      View scripts on GitHub
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+                    <span className="text-primary-600 font-semibold">2</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">Run the Watcher</h3>
+                    <p className="text-gray-600 text-sm mb-3">
+                      Double-click <code className="bg-gray-100 px-2 py-0.5 rounded text-sm">Start-Website-Generator-Watcher.bat</code> to start watching your Downloads folder.
+                    </p>
+                    <div className="bg-gray-900 text-gray-100 p-3 rounded-lg text-sm font-mono">
+                      <span className="text-green-400">$</span> Website Generator Watcher<br />
+                      <span className="text-gray-400">Watching: C:\Users\...\Downloads</span><br />
+                      <span className="text-gray-400">Waiting for website-generator ZIP files...</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+                    <span className="text-primary-600 font-semibold">3</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">Click Generate Website</h3>
+                    <p className="text-gray-600 text-sm">
+                      Once the watcher is running, click the button below. The ZIP will download, extract automatically, and Claude CLI will start generating your website.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Optional: Auto-start */}
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                  <h4 className="font-medium text-blue-900 mb-1 flex items-center gap-2">
+                    <Play className="w-4 h-4" />
+                    Optional: Auto-start on Login
+                  </h4>
+                  <p className="text-sm text-blue-700">
+                    Run <code className="bg-blue-100 px-2 py-0.5 rounded">Install-To-Startup.bat</code> to have the watcher start automatically when you log in to Windows.
+                  </p>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-6 border-t border-gray-200 flex items-center justify-between">
+                <Button variant="outline" onClick={() => setShowSetupModal(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={confirmSetupAndGenerate} className="bg-primary-600 hover:bg-primary-700">
+                  <Sparkles className="mr-2 w-4 h-4" />
+                  I've Set It Up - Generate Website
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
