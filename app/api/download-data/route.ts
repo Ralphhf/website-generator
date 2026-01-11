@@ -217,8 +217,8 @@ export async function POST(request: NextRequest) {
       console.error('Cleanup error:', e)
     }
 
-    // Return the ZIP file
-    return new NextResponse(zipBuffer, {
+    // Return the ZIP file (convert Buffer to Uint8Array for NextResponse compatibility)
+    return new NextResponse(new Uint8Array(zipBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/zip',
