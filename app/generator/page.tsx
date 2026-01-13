@@ -378,7 +378,7 @@ function GeneratorContent() {
 
             {currentStep === 'complete' && (
               <CompleteStep
-                businessName={businessInfo.name}
+                businessInfo={businessInfo}
                 downloadSuccess={downloadSuccess}
                 onContinue={handleContinueToLogo}
               />

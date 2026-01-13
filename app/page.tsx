@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ArrowRight, Sparkles, Globe, Zap, Search, Palette, Rocket, PenLine } from 'lucide-react'
+import { ArrowRight, Sparkles, Globe, Zap, Search, Palette, Rocket, PenLine, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
 import { MotionButton } from '@/components/ui'
 
@@ -26,7 +26,12 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-3"
             >
+              <Link href="/profiles" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+                <FolderOpen className="w-4 h-4" />
+                <span className="hidden sm:inline">My Profiles</span>
+              </Link>
               <Link href="/generator">
                 <MotionButton variant="default" size="sm">
                   Get Started

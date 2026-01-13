@@ -1,17 +1,51 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Download, FileText, Archive, Rocket, ArrowRight } from 'lucide-react'
+import { Check, Download, FileText, Archive, Rocket, ArrowRight, Save, Loader2 } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
+import { BusinessInfo } from '@/lib/types'
 
 interface CompleteStepProps {
-  businessName: string
+  businessInfo: BusinessInfo
   downloadSuccess: boolean
   onContinue: () => void
 }
 
-export function CompleteStep({ businessName, downloadSuccess, onContinue }: CompleteStepProps) {
+export function CompleteStep({ businessInfo, downloadSuccess, onContinue }: CompleteStepProps) {
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  const handleSaveProfile = async () => {
+    setSaving(true)
+    setSaveError(null)
+
+    try {
+      const response = await fetch('/api/profiles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ businessInfo }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save profile')
+      }
+
+      setSaved(true)
+    } catch (error) {
+      console.error('Error saving profile:', error)
+      setSaveError(error instanceof Error ? error.message : 'Failed to save profile')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto py-8">
       {/* Success animation */}
@@ -59,11 +93,67 @@ export function CompleteStep({ businessName, downloadSuccess, onContinue }: Comp
           className="text-gray-600"
         >
           {downloadSuccess
-            ? <>Your data for <span className="font-medium">{businessName}</span> has been downloaded.</>
-            : <>There was an issue downloading the data for <span className="font-medium">{businessName}</span>. Please try again.</>
+            ? <>Your data for <span className="font-medium">{businessInfo.name}</span> has been downloaded.</>
+            : <>There was an issue downloading the data for <span className="font-medium">{businessInfo.name}</span>. Please try again.</>
           }
         </motion.p>
       </motion.div>
+
+      {/* Save Profile Card */}
+      {downloadSuccess && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="mb-6"
+        >
+          <Card variant="outlined" className="border-primary-200 bg-primary-50/50">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-gray-900">Save this profile?</h3>
+                  <p className="text-sm text-gray-600">
+                    Save to continue with logo & social media later
+                  </p>
+                </div>
+                {saved ? (
+                  <Badge variant="success" className="flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    Saved
+                  </Badge>
+                ) : (
+                  <Button
+                    onClick={handleSaveProfile}
+                    disabled={saving}
+                    size="sm"
+                    className="bg-primary-600 hover:bg-primary-700"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Profile
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+              {saveError && (
+                <p className="text-sm text-red-600 mt-2">{saveError}</p>
+              )}
+              {saved && (
+                <p className="text-sm text-green-600 mt-2">
+                  Profile saved! You can find it in <Link href="/profiles" className="underline font-medium">My Profiles</Link>
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* What's included */}
       {downloadSuccess && (
