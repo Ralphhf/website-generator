@@ -354,6 +354,26 @@ Make sure the deployment is successful and the site is accessible.`
               </CardContent>
             </Card>
 
+            {/* Download Website Data */}
+            <Card variant="outlined" hover>
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <Download className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Download Website Data</h3>
+                      <p className="text-sm text-gray-500">Re-download the ZIP with all business data</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" onClick={handleRedownload}>
+                    Download
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Deploy to Vercel */}
             <Card variant="outlined" hover className="border-2 border-orange-200 bg-orange-50/50">
               <CardContent className="py-4">
@@ -437,310 +457,224 @@ Make sure the deployment is successful and the site is accessible.`
               </CardContent>
             </Card>
 
-            {/* QR Code Generator */}
-            <Card variant="outlined" hover className="border-2 border-violet-200 bg-violet-50/50">
-              <CardContent className="py-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
-                    <QrCode className="w-5 h-5 text-violet-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">QR Code Generator</h3>
-                    <p className="text-sm text-gray-500">Create a QR code for your website</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <input
-                    type="url"
-                    placeholder="Enter your website URL (e.g., https://example.com)"
-                    value={qrUrl}
-                    onChange={(e) => {
-                      setQrUrl(e.target.value)
-                      setQrGenerated(false)
-                    }}
-                    className="w-full px-3 py-2 border border-violet-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-                  />
-                  {qrGenerated && qrUrl && (
-                    <div className="flex flex-col items-center gap-3 p-4 bg-white rounded-lg border border-violet-200">
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`}
-                        alt="QR Code"
-                        className="w-48 h-48"
-                      />
-                      <a
-                        href={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrUrl)}&format=png`}
-                        download={`${profile.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-qrcode.png`}
-                        className="text-sm text-violet-600 hover:text-violet-800 underline"
-                      >
-                        Download QR Code
-                      </a>
-                    </div>
-                  )}
-                  <Button
-                    variant="outline"
-                    className="w-full border-violet-300 hover:bg-violet-100"
-                    onClick={() => setQrGenerated(true)}
-                    disabled={!qrUrl}
-                  >
-                    <QrCode className="w-4 h-4 mr-2" />
-                    Generate QR Code
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* LLC Formation */}
-            <Card variant="outlined" className="border-2 border-amber-200 bg-amber-50/50">
+            {/* Logo Generator */}
+            <Card variant="outlined" className="border-2 border-purple-200 bg-purple-50/50">
               <CardContent className="py-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                      <Briefcase className="w-5 h-5 text-amber-600" />
+                    <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                      <Palette className="w-5 h-5 text-purple-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Form an LLC</h3>
-                      <p className="text-sm text-gray-500">Protect your business with legal entity status</p>
+                      <h3 className="font-semibold text-gray-900">Logo Generator</h3>
+                      <p className="text-sm text-gray-500">Create a professional logo for your business</p>
                     </div>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowLlcDetails(!showLlcDetails)}
-                    className="border-amber-300"
+                    onClick={() => setShowLogoDetails(!showLogoDetails)}
+                    className="border-purple-300"
                   >
-                    {showLlcDetails ? 'Hide Details' : 'View Options'}
+                    {showLogoDetails ? 'Hide Details' : 'View Options'}
                   </Button>
                 </div>
 
-                {showLlcDetails && (
-                  <div className="space-y-6">
-                    {/* Why LLC */}
-                    <div className="p-4 bg-white rounded-lg border border-amber-200">
-                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-amber-600" />
-                        Why Form an LLC?
-                      </h4>
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li>• <strong>Personal Asset Protection</strong> - Separates personal and business liability</li>
-                        <li>• <strong>Tax Flexibility</strong> - Choose how your business is taxed</li>
-                        <li>• <strong>Credibility</strong> - Looks more professional to customers</li>
-                        <li>• <strong>Easy Management</strong> - Less paperwork than corporations</li>
-                      </ul>
-                    </div>
+                {showLogoDetails && (() => {
+                  const businessTypeFormatted = (profile.business_type || 'business').replace(/_/g, ' ')
+                  const logoPrompts = [
+                    {
+                      name: 'Modern Minimalist',
+                      prompt: `Create a minimalist, modern logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
 
-                    {/* Formation Services */}
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-3">Recommended Formation Services</h4>
-                      <div className="grid gap-3">
-                        {/* ZenBusiness - Recommended */}
-                        <div className="p-4 bg-white rounded-lg border-2 border-green-200 relative">
-                          <div className="absolute -top-2 left-3 px-2 py-0.5 bg-green-500 text-white text-xs font-medium rounded">
-                            RECOMMENDED
-                          </div>
-                          <div className="flex items-start justify-between mt-1">
-                            <div>
-                              <h5 className="font-semibold text-gray-900">ZenBusiness</h5>
-                              <p className="text-xs text-gray-500 mb-2">Best overall value for small businesses</p>
-                              <div className="flex flex-wrap gap-2 text-xs">
-                                <span className="flex items-center gap-1 text-green-600">
-                                  <DollarSign className="w-3 h-3" /> From $0 + state fee
-                                </span>
-                                <span className="flex items-center gap-1 text-blue-600">
-                                  <Clock className="w-3 h-3" /> 1-2 business days
-                                </span>
-                                <span className="flex items-center gap-1 text-amber-600">
-                                  <Star className="w-3 h-3" /> 4.8/5 rating
-                                </span>
-                              </div>
-                              <p className="text-xs text-gray-500 mt-2">Includes: Filing, registered agent (1 yr), operating agreement template</p>
-                            </div>
+Style Requirements:
+- Ultra-clean, minimal design with lots of whitespace
+- Simple geometric shapes or single-line icon
+- Maximum 2 colors (prefer monochrome with one accent)
+- Sans-serif typography, thin or light weight
+- Negative space usage for clever visual effect
+
+Aesthetic: Apple/Google-inspired, Silicon Valley tech minimal
+Output: SVG-ready, works as small as 16x16 favicon`
+                    },
+                    {
+                      name: 'Bold & Vibrant',
+                      prompt: `Design a bold, eye-catching logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
+
+Style Requirements:
+- Strong, confident design that commands attention
+- Vibrant color palette (2-3 bold colors)
+- Thick, heavy typography with impact
+- Dynamic shapes or abstract icon
+- High contrast for maximum visibility
+
+Aesthetic: Energetic, confident, memorable, stands out in a crowd
+Output: Works great on social media, billboards, merchandise`
+                    },
+                    {
+                      name: 'Elegant & Premium',
+                      prompt: `Create an elegant, luxury logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
+
+Style Requirements:
+- Sophisticated, high-end aesthetic
+- Serif or elegant script typography
+- Gold, black, navy, or deep jewel tones
+- Fine lines, subtle details, or monogram style
+- Could include a crest, emblem, or refined icon
+
+Aesthetic: Luxury brand, premium service, timeless elegance
+Output: Suitable for embossing, foil stamping, premium print`
+                    },
+                    {
+                      name: 'Friendly & Approachable',
+                      prompt: `Design a friendly, approachable logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
+
+Style Requirements:
+- Warm, welcoming, and trustworthy feel
+- Rounded shapes and soft edges
+- Friendly color palette (warm tones, soft blues, greens)
+- Rounded sans-serif or casual typography
+- Optional: subtle smile, character, or mascot element
+
+Aesthetic: Local business, family-friendly, community-focused
+Output: Works well for storefront, uniforms, local advertising`
+                    },
+                    {
+                      name: 'Classic & Professional',
+                      prompt: `Create a classic, professional logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
+
+Style Requirements:
+- Timeless design that won't look dated in 10 years
+- Traditional color scheme (navy, burgundy, forest green, or classic blue)
+- Professional serif or strong sans-serif typography
+- Industry-appropriate icon or symbol
+- Balanced, symmetrical composition
+
+Aesthetic: Established business, trustworthy, corporate-ready
+Output: Versatile for business cards, letterheads, signage, websites`
+                    }
+                  ]
+                  const currentLogoPrompt = logoPrompts[logoPromptIndex]
+
+                  return (
+                    <div className="space-y-6">
+                      {/* AI Prompt Section */}
+                      <div className="p-4 bg-white rounded-lg border border-purple-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-purple-500" />
+                            AI Logo Prompt
+                          </h4>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">
+                              {logoPromptIndex + 1} / {logoPrompts.length}
+                            </span>
                             <Button
+                              variant="outline"
                               size="sm"
-                              className="bg-green-600 hover:bg-green-700"
-                              onClick={() => window.open('https://www.zenbusiness.com/llc/', '_blank')}
+                              onClick={() => {
+                                setLogoPromptIndex((prev) => (prev + 1) % logoPrompts.length)
+                                setLogoPromptCopied(false)
+                              }}
+                              className="border-purple-300 hover:bg-purple-50"
                             >
-                              Start
+                              <Shuffle className="w-3 h-3 mr-1" />
+                              Next Style
                             </Button>
                           </div>
                         </div>
-
-                        {/* Incfile */}
-                        <div className="p-4 bg-white rounded-lg border border-gray-200">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h5 className="font-semibold text-gray-900">Incfile</h5>
-                              <p className="text-xs text-gray-500 mb-2">Best free option (only pay state fees)</p>
-                              <div className="flex flex-wrap gap-2 text-xs">
-                                <span className="flex items-center gap-1 text-green-600">
-                                  <DollarSign className="w-3 h-3" /> $0 + state fee
-                                </span>
-                                <span className="flex items-center gap-1 text-blue-600">
-                                  <Clock className="w-3 h-3" /> 1-3 weeks
-                                </span>
-                                <span className="flex items-center gap-1 text-amber-600">
-                                  <Star className="w-3 h-3" /> 4.7/5 rating
-                                </span>
-                              </div>
-                              <p className="text-xs text-gray-500 mt-2">Includes: Basic filing, 1 year registered agent, digital dashboard</p>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => window.open('https://www.incfile.com/form-an-llc/', '_blank')}
-                            >
-                              Start
-                            </Button>
-                          </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Copy this prompt and paste it into ChatGPT, DALL-E, or other AI tools
+                        </p>
+                        <div className="mb-3">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                            {currentLogoPrompt.name}
+                          </span>
                         </div>
-
-                        {/* LegalZoom */}
-                        <div className="p-4 bg-white rounded-lg border border-gray-200">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h5 className="font-semibold text-gray-900">LegalZoom</h5>
-                              <p className="text-xs text-gray-500 mb-2">Most recognized brand, comprehensive services</p>
-                              <div className="flex flex-wrap gap-2 text-xs">
-                                <span className="flex items-center gap-1 text-green-600">
-                                  <DollarSign className="w-3 h-3" /> From $79 + state fee
-                                </span>
-                                <span className="flex items-center gap-1 text-blue-600">
-                                  <Clock className="w-3 h-3" /> 7-10 business days
-                                </span>
-                                <span className="flex items-center gap-1 text-amber-600">
-                                  <Star className="w-3 h-3" /> 4.5/5 rating
-                                </span>
-                              </div>
-                              <p className="text-xs text-gray-500 mt-2">Includes: Name search, filing, compliance calendar</p>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => window.open('https://www.legalzoom.com/business/business-formation/llc-overview.html', '_blank')}
-                            >
-                              Start
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Northwest */}
-                        <div className="p-4 bg-white rounded-lg border border-gray-200">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h5 className="font-semibold text-gray-900">Northwest Registered Agent</h5>
-                              <p className="text-xs text-gray-500 mb-2">Best for privacy & registered agent service</p>
-                              <div className="flex flex-wrap gap-2 text-xs">
-                                <span className="flex items-center gap-1 text-green-600">
-                                  <DollarSign className="w-3 h-3" /> $39 + state fee
-                                </span>
-                                <span className="flex items-center gap-1 text-blue-600">
-                                  <Clock className="w-3 h-3" /> Same day - 2 weeks
-                                </span>
-                                <span className="flex items-center gap-1 text-amber-600">
-                                  <Star className="w-3 h-3" /> 4.9/5 rating
-                                </span>
-                              </div>
-                              <p className="text-xs text-gray-500 mt-2">Includes: Filing, free year of registered agent, privacy protection</p>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => window.open('https://www.northwestregisteredagent.com/llc', '_blank')}
-                            >
-                              Start
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Rocket Lawyer */}
-                        <div className="p-4 bg-white rounded-lg border border-gray-200">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h5 className="font-semibold text-gray-900">Rocket Lawyer</h5>
-                              <p className="text-xs text-gray-500 mb-2">Best for ongoing legal support</p>
-                              <div className="flex flex-wrap gap-2 text-xs">
-                                <span className="flex items-center gap-1 text-green-600">
-                                  <DollarSign className="w-3 h-3" /> $99 + state fee
-                                </span>
-                                <span className="flex items-center gap-1 text-blue-600">
-                                  <Clock className="w-3 h-3" /> 5-7 business days
-                                </span>
-                                <span className="flex items-center gap-1 text-amber-600">
-                                  <Star className="w-3 h-3" /> 4.6/5 rating
-                                </span>
-                              </div>
-                              <p className="text-xs text-gray-500 mt-2">Includes: Filing, operating agreement, attorney consultations</p>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => window.open('https://www.rocketlawyer.com/business-and-contracts/starting-a-business/form-an-llc', '_blank')}
-                            >
-                              Start
-                            </Button>
-                          </div>
+                        <div className="relative">
+                          <pre className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 whitespace-pre-wrap font-mono max-h-48 overflow-y-auto">
+                            {currentLogoPrompt.prompt}
+                          </pre>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute top-2 right-2"
+                            onClick={async () => {
+                              await navigator.clipboard.writeText(currentLogoPrompt.prompt)
+                              setLogoPromptCopied(true)
+                              setTimeout(() => setLogoPromptCopied(false), 2000)
+                            }}
+                          >
+                            {logoPromptCopied ? (
+                              <><Check className="w-3 h-3 mr-1 text-green-500" /> Copied</>
+                            ) : (
+                              <><Copy className="w-3 h-3 mr-1" /> Copy</>
+                            )}
+                          </Button>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Steps */}
-                    <div className="p-4 bg-white rounded-lg border border-amber-200">
-                      <h4 className="font-semibold text-gray-900 mb-3">Steps to Form an LLC</h4>
-                      <ol className="text-sm text-gray-600 space-y-2">
-                        <li className="flex gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">1</span>
-                          <span><strong>Choose your state</strong> - Usually where you do business (state fees: $50-$500)</span>
-                        </li>
-                        <li className="flex gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">2</span>
-                          <span><strong>Name your LLC</strong> - Must be unique in your state, end with "LLC"</span>
-                        </li>
-                        <li className="flex gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">3</span>
-                          <span><strong>Choose a Registered Agent</strong> - Required in all states (person/service to receive legal mail)</span>
-                        </li>
-                        <li className="flex gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">4</span>
-                          <span><strong>File Articles of Organization</strong> - Main formation document filed with state</span>
-                        </li>
-                        <li className="flex gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">5</span>
-                          <span><strong>Create Operating Agreement</strong> - Internal document outlining ownership & rules</span>
-                        </li>
-                        <li className="flex gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">6</span>
-                          <span><strong>Get EIN from IRS</strong> - Free tax ID number for your business (like SSN for business)</span>
-                        </li>
-                      </ol>
-                    </div>
+                      {/* Logo Tools */}
+                      <div className="p-4 bg-white rounded-lg border border-purple-200">
+                        <h4 className="font-semibold text-gray-900 mb-3">Logo Design Tools</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <Button
+                            variant="outline"
+                            className="flex flex-col items-center gap-2 h-auto py-3 hover:border-purple-300"
+                            onClick={() => window.open('https://chat.openai.com', '_blank')}
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-[#10a37f] flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">G</span>
+                            </div>
+                            <span className="text-xs">ChatGPT</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex flex-col items-center gap-2 h-auto py-3 hover:border-purple-300"
+                            onClick={() => window.open('https://www.canva.com/create/logos/', '_blank')}
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-[#7d2ae8] flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">C</span>
+                            </div>
+                            <span className="text-xs">Canva</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex flex-col items-center gap-2 h-auto py-3 hover:border-purple-300"
+                            onClick={() => window.open('https://looka.com/logo-maker', '_blank')}
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-[#5340ff] flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">L</span>
+                            </div>
+                            <span className="text-xs">Looka</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex flex-col items-center gap-2 h-auto py-3 hover:border-purple-300"
+                            onClick={() => window.open('https://www.fiverr.com/logo-maker', '_blank')}
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-[#1dbf73] flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">F</span>
+                            </div>
+                            <span className="text-xs">Fiverr</span>
+                          </Button>
+                        </div>
+                      </div>
 
-                    {/* Additional Tips */}
-                    <div className="p-4 bg-amber-100/50 rounded-lg border border-amber-200">
-                      <h4 className="font-semibold text-amber-800 mb-2">Pro Tips</h4>
-                      <ul className="text-sm text-amber-700 space-y-1">
-                        <li>• Get your <strong>EIN for free</strong> at <a href="https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online" target="_blank" rel="noopener noreferrer" className="underline">IRS.gov</a> - don't pay a service for this</li>
-                        <li>• Open a <strong>business bank account</strong> after getting your EIN</li>
-                        <li>• Consider <strong>business insurance</strong> even with LLC protection</li>
-                        <li>• Keep business and personal finances <strong>completely separate</strong></li>
-                        <li>• Some states (like California) have <strong>annual fees</strong> - check before filing</li>
-                      </ul>
+                      {/* Tips */}
+                      <div className="p-4 bg-purple-100/50 rounded-lg border border-purple-200">
+                        <h4 className="font-semibold text-purple-800 mb-2">Tips for a Great Logo</h4>
+                        <ul className="text-sm text-purple-700 space-y-1">
+                          <li>• Generate multiple variations and pick the best one</li>
+                          <li>• Request versions with and without text</li>
+                          <li>• Ask for transparent background versions (PNG)</li>
+                          <li>• Test how it looks at small sizes (favicon, profile pic)</li>
+                          <li>• Get both light and dark background versions</li>
+                        </ul>
+                      </div>
                     </div>
-
-                    {/* DIY Option */}
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <p className="text-xs text-gray-500">
-                        <strong>DIY Option:</strong> You can file directly with your state's Secretary of State website to save money.
-                        <a
-                          href="https://www.usa.gov/state-business"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-amber-600 hover:text-amber-800 underline ml-1"
-                        >
-                          Find your state's business portal →
-                        </a>
-                      </p>
-                    </div>
-                  </div>
-                )}
+                  )
+                })()}
               </CardContent>
             </Card>
 
@@ -1032,244 +966,55 @@ Requirements:
               </CardContent>
             </Card>
 
-            {/* Re-download */}
-            <Card variant="outlined" hover>
+            {/* QR Code Generator */}
+            <Card variant="outlined" hover className="border-2 border-violet-200 bg-violet-50/50">
               <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <Download className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">Download Website Data</h3>
-                      <p className="text-sm text-gray-500">Re-download the ZIP with all business data</p>
-                    </div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
+                    <QrCode className="w-5 h-5 text-violet-600" />
                   </div>
-                  <Button variant="outline" onClick={handleRedownload}>
-                    Download
-                  </Button>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">QR Code Generator</h3>
+                    <p className="text-sm text-gray-500">Create a QR code for your website</p>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Logo Generator */}
-            <Card variant="outlined" className="border-2 border-purple-200 bg-purple-50/50">
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                      <Palette className="w-5 h-5 text-purple-600" />
+                <div className="space-y-3">
+                  <input
+                    type="url"
+                    placeholder="Enter your website URL (e.g., https://example.com)"
+                    value={qrUrl}
+                    onChange={(e) => {
+                      setQrUrl(e.target.value)
+                      setQrGenerated(false)
+                    }}
+                    className="w-full px-3 py-2 border border-violet-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  />
+                  {qrGenerated && qrUrl && (
+                    <div className="flex flex-col items-center gap-3 p-4 bg-white rounded-lg border border-violet-200">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`}
+                        alt="QR Code"
+                        className="w-48 h-48"
+                      />
+                      <a
+                        href={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrUrl)}&format=png`}
+                        download={`${profile.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-qrcode.png`}
+                        className="text-sm text-violet-600 hover:text-violet-800 underline"
+                      >
+                        Download QR Code
+                      </a>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">Logo Generator</h3>
-                      <p className="text-sm text-gray-500">Create a professional logo for your business</p>
-                    </div>
-                  </div>
+                  )}
                   <Button
                     variant="outline"
-                    size="sm"
-                    onClick={() => setShowLogoDetails(!showLogoDetails)}
-                    className="border-purple-300"
+                    className="w-full border-violet-300 hover:bg-violet-100"
+                    onClick={() => setQrGenerated(true)}
+                    disabled={!qrUrl}
                   >
-                    {showLogoDetails ? 'Hide Details' : 'View Options'}
+                    <QrCode className="w-4 h-4 mr-2" />
+                    Generate QR Code
                   </Button>
                 </div>
-
-                {showLogoDetails && (() => {
-                  const businessTypeFormatted = (profile.business_type || 'business').replace(/_/g, ' ')
-                  const logoPrompts = [
-                    {
-                      name: 'Modern Minimalist',
-                      prompt: `Create a minimalist, modern logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
-
-Style Requirements:
-- Ultra-clean, minimal design with lots of whitespace
-- Simple geometric shapes or single-line icon
-- Maximum 2 colors (prefer monochrome with one accent)
-- Sans-serif typography, thin or light weight
-- Negative space usage for clever visual effect
-
-Aesthetic: Apple/Google-inspired, Silicon Valley tech minimal
-Output: SVG-ready, works as small as 16x16 favicon`
-                    },
-                    {
-                      name: 'Bold & Vibrant',
-                      prompt: `Design a bold, eye-catching logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
-
-Style Requirements:
-- Strong, confident design that commands attention
-- Vibrant color palette (2-3 bold colors)
-- Thick, heavy typography with impact
-- Dynamic shapes or abstract icon
-- High contrast for maximum visibility
-
-Aesthetic: Energetic, confident, memorable, stands out in a crowd
-Output: Works great on social media, billboards, merchandise`
-                    },
-                    {
-                      name: 'Elegant & Premium',
-                      prompt: `Create an elegant, luxury logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
-
-Style Requirements:
-- Sophisticated, high-end aesthetic
-- Serif or elegant script typography
-- Gold, black, navy, or deep jewel tones
-- Fine lines, subtle details, or monogram style
-- Could include a crest, emblem, or refined icon
-
-Aesthetic: Luxury brand, premium service, timeless elegance
-Output: Suitable for embossing, foil stamping, premium print`
-                    },
-                    {
-                      name: 'Friendly & Approachable',
-                      prompt: `Design a friendly, approachable logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
-
-Style Requirements:
-- Warm, welcoming, and trustworthy feel
-- Rounded shapes and soft edges
-- Friendly color palette (warm tones, soft blues, greens)
-- Rounded sans-serif or casual typography
-- Optional: subtle smile, character, or mascot element
-
-Aesthetic: Local business, family-friendly, community-focused
-Output: Works well for storefront, uniforms, local advertising`
-                    },
-                    {
-                      name: 'Classic & Professional',
-                      prompt: `Create a classic, professional logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
-
-Style Requirements:
-- Timeless design that won't look dated in 10 years
-- Traditional color scheme (navy, burgundy, forest green, or classic blue)
-- Professional serif or strong sans-serif typography
-- Industry-appropriate icon or symbol
-- Balanced, symmetrical composition
-
-Aesthetic: Established business, trustworthy, corporate-ready
-Output: Versatile for business cards, letterheads, signage, websites`
-                    }
-                  ]
-                  const currentLogoPrompt = logoPrompts[logoPromptIndex]
-
-                  return (
-                    <div className="space-y-6">
-                      {/* AI Prompt Section */}
-                      <div className="p-4 bg-white rounded-lg border border-purple-200">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-purple-500" />
-                            AI Logo Prompt
-                          </h4>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">
-                              {logoPromptIndex + 1} / {logoPrompts.length}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setLogoPromptIndex((prev) => (prev + 1) % logoPrompts.length)
-                                setLogoPromptCopied(false)
-                              }}
-                              className="border-purple-300 hover:bg-purple-50"
-                            >
-                              <Shuffle className="w-3 h-3 mr-1" />
-                              Next Style
-                            </Button>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                          Copy this prompt and paste it into ChatGPT, DALL-E, or other AI tools
-                        </p>
-                        <div className="mb-3">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                            {currentLogoPrompt.name}
-                          </span>
-                        </div>
-                        <div className="relative">
-                          <pre className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 whitespace-pre-wrap font-mono max-h-48 overflow-y-auto">
-                            {currentLogoPrompt.prompt}
-                          </pre>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="absolute top-2 right-2"
-                            onClick={async () => {
-                              await navigator.clipboard.writeText(currentLogoPrompt.prompt)
-                              setLogoPromptCopied(true)
-                              setTimeout(() => setLogoPromptCopied(false), 2000)
-                            }}
-                          >
-                            {logoPromptCopied ? (
-                              <><Check className="w-3 h-3 mr-1 text-green-500" /> Copied</>
-                            ) : (
-                              <><Copy className="w-3 h-3 mr-1" /> Copy</>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Logo Tools */}
-                      <div className="p-4 bg-white rounded-lg border border-purple-200">
-                        <h4 className="font-semibold text-gray-900 mb-3">Logo Design Tools</h4>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          <Button
-                            variant="outline"
-                            className="flex flex-col items-center gap-2 h-auto py-3 hover:border-purple-300"
-                            onClick={() => window.open('https://chat.openai.com', '_blank')}
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-[#10a37f] flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">G</span>
-                            </div>
-                            <span className="text-xs">ChatGPT</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="flex flex-col items-center gap-2 h-auto py-3 hover:border-purple-300"
-                            onClick={() => window.open('https://www.canva.com/create/logos/', '_blank')}
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-[#7d2ae8] flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">C</span>
-                            </div>
-                            <span className="text-xs">Canva</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="flex flex-col items-center gap-2 h-auto py-3 hover:border-purple-300"
-                            onClick={() => window.open('https://looka.com/logo-maker', '_blank')}
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-[#5340ff] flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">L</span>
-                            </div>
-                            <span className="text-xs">Looka</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="flex flex-col items-center gap-2 h-auto py-3 hover:border-purple-300"
-                            onClick={() => window.open('https://www.fiverr.com/logo-maker', '_blank')}
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-[#1dbf73] flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">F</span>
-                            </div>
-                            <span className="text-xs">Fiverr</span>
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Tips */}
-                      <div className="p-4 bg-purple-100/50 rounded-lg border border-purple-200">
-                        <h4 className="font-semibold text-purple-800 mb-2">Tips for a Great Logo</h4>
-                        <ul className="text-sm text-purple-700 space-y-1">
-                          <li>• Generate multiple variations and pick the best one</li>
-                          <li>• Request versions with and without text</li>
-                          <li>• Ask for transparent background versions (PNG)</li>
-                          <li>• Test how it looks at small sizes (favicon, profile pic)</li>
-                          <li>• Get both light and dark background versions</li>
-                        </ul>
-                      </div>
-                    </div>
-                  )
-                })()}
               </CardContent>
             </Card>
 
@@ -1293,23 +1038,261 @@ Output: Versatile for business cards, letterheads, signage, websites`
               </CardContent>
             </Card>
 
-            {/* Full Setup Flow */}
-            <Card variant="gradient" className="mt-8">
-              <CardContent className="py-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5 text-white" />
+            {/* LLC Formation */}
+            <Card variant="outlined" className="border-2 border-amber-200 bg-amber-50/50">
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                      <Briefcase className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Form an LLC</h3>
+                      <p className="text-sm text-gray-500">Protect your business with legal entity status</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Complete Setup Wizard</h3>
-                    <p className="text-sm text-gray-500">Go through all steps: Logo, Google Business, Social Media</p>
-                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowLlcDetails(!showLlcDetails)}
+                    className="border-amber-300"
+                  >
+                    {showLlcDetails ? 'Hide Details' : 'View Options'}
+                  </Button>
                 </div>
-                <Button className="w-full" onClick={() => setCurrentStep('logo-generator')}>
-                  Start Complete Setup
-                </Button>
+
+                {showLlcDetails && (
+                  <div className="space-y-6">
+                    {/* Why LLC */}
+                    <div className="p-4 bg-white rounded-lg border border-amber-200">
+                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-amber-600" />
+                        Why Form an LLC?
+                      </h4>
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>• <strong>Personal Asset Protection</strong> - Separates personal and business liability</li>
+                        <li>• <strong>Tax Flexibility</strong> - Choose how your business is taxed</li>
+                        <li>• <strong>Credibility</strong> - Looks more professional to customers</li>
+                        <li>• <strong>Easy Management</strong> - Less paperwork than corporations</li>
+                      </ul>
+                    </div>
+
+                    {/* Formation Services */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Recommended Formation Services</h4>
+                      <div className="grid gap-3">
+                        {/* ZenBusiness - Recommended */}
+                        <div className="p-4 bg-white rounded-lg border-2 border-green-200 relative">
+                          <div className="absolute -top-2 left-3 px-2 py-0.5 bg-green-500 text-white text-xs font-medium rounded">
+                            RECOMMENDED
+                          </div>
+                          <div className="flex items-start justify-between mt-1">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">ZenBusiness</h5>
+                              <p className="text-xs text-gray-500 mb-2">Best overall value for small businesses</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <DollarSign className="w-3 h-3" /> From $0 + state fee
+                                </span>
+                                <span className="flex items-center gap-1 text-blue-600">
+                                  <Clock className="w-3 h-3" /> 1-2 business days
+                                </span>
+                                <span className="flex items-center gap-1 text-amber-600">
+                                  <Star className="w-3 h-3" /> 4.8/5 rating
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">Includes: Filing, registered agent (1 yr), operating agreement template</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => window.open('https://www.zenbusiness.com/llc/', '_blank')}
+                            >
+                              Start
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Incfile */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Incfile</h5>
+                              <p className="text-xs text-gray-500 mb-2">Best free option (only pay state fees)</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <DollarSign className="w-3 h-3" /> $0 + state fee
+                                </span>
+                                <span className="flex items-center gap-1 text-blue-600">
+                                  <Clock className="w-3 h-3" /> 1-3 weeks
+                                </span>
+                                <span className="flex items-center gap-1 text-amber-600">
+                                  <Star className="w-3 h-3" /> 4.7/5 rating
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">Includes: Basic filing, 1 year registered agent, digital dashboard</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open('https://www.incfile.com/form-an-llc/', '_blank')}
+                            >
+                              Start
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* LegalZoom */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">LegalZoom</h5>
+                              <p className="text-xs text-gray-500 mb-2">Most recognized brand, comprehensive services</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <DollarSign className="w-3 h-3" /> From $79 + state fee
+                                </span>
+                                <span className="flex items-center gap-1 text-blue-600">
+                                  <Clock className="w-3 h-3" /> 7-10 business days
+                                </span>
+                                <span className="flex items-center gap-1 text-amber-600">
+                                  <Star className="w-3 h-3" /> 4.5/5 rating
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">Includes: Name search, filing, compliance calendar</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open('https://www.legalzoom.com/business/business-formation/llc-overview.html', '_blank')}
+                            >
+                              Start
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Northwest */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Northwest Registered Agent</h5>
+                              <p className="text-xs text-gray-500 mb-2">Best for privacy & registered agent service</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <DollarSign className="w-3 h-3" /> $39 + state fee
+                                </span>
+                                <span className="flex items-center gap-1 text-blue-600">
+                                  <Clock className="w-3 h-3" /> Same day - 2 weeks
+                                </span>
+                                <span className="flex items-center gap-1 text-amber-600">
+                                  <Star className="w-3 h-3" /> 4.9/5 rating
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">Includes: Filing, free year of registered agent, privacy protection</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open('https://www.northwestregisteredagent.com/llc', '_blank')}
+                            >
+                              Start
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Rocket Lawyer */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Rocket Lawyer</h5>
+                              <p className="text-xs text-gray-500 mb-2">Best for ongoing legal support</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <DollarSign className="w-3 h-3" /> $99 + state fee
+                                </span>
+                                <span className="flex items-center gap-1 text-blue-600">
+                                  <Clock className="w-3 h-3" /> 5-7 business days
+                                </span>
+                                <span className="flex items-center gap-1 text-amber-600">
+                                  <Star className="w-3 h-3" /> 4.6/5 rating
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">Includes: Filing, operating agreement, attorney consultations</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open('https://www.rocketlawyer.com/business-and-contracts/starting-a-business/form-an-llc', '_blank')}
+                            >
+                              Start
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Steps */}
+                    <div className="p-4 bg-white rounded-lg border border-amber-200">
+                      <h4 className="font-semibold text-gray-900 mb-3">Steps to Form an LLC</h4>
+                      <ol className="text-sm text-gray-600 space-y-2">
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">1</span>
+                          <span><strong>Choose your state</strong> - Usually where you do business (state fees: $50-$500)</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">2</span>
+                          <span><strong>Name your LLC</strong> - Must be unique in your state, end with "LLC"</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">3</span>
+                          <span><strong>Choose a Registered Agent</strong> - Required in all states (person/service to receive legal mail)</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">4</span>
+                          <span><strong>File Articles of Organization</strong> - Main formation document filed with state</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">5</span>
+                          <span><strong>Create Operating Agreement</strong> - Internal document outlining ownership & rules</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">6</span>
+                          <span><strong>Get EIN from IRS</strong> - Free tax ID number for your business (like SSN for business)</span>
+                        </li>
+                      </ol>
+                    </div>
+
+                    {/* Additional Tips */}
+                    <div className="p-4 bg-amber-100/50 rounded-lg border border-amber-200">
+                      <h4 className="font-semibold text-amber-800 mb-2">Pro Tips</h4>
+                      <ul className="text-sm text-amber-700 space-y-1">
+                        <li>• Get your <strong>EIN for free</strong> at <a href="https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online" target="_blank" rel="noopener noreferrer" className="underline">IRS.gov</a> - don't pay a service for this</li>
+                        <li>• Open a <strong>business bank account</strong> after getting your EIN</li>
+                        <li>• Consider <strong>business insurance</strong> even with LLC protection</li>
+                        <li>• Keep business and personal finances <strong>completely separate</strong></li>
+                        <li>• Some states (like California) have <strong>annual fees</strong> - check before filing</li>
+                      </ul>
+                    </div>
+
+                    {/* DIY Option */}
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-xs text-gray-500">
+                        <strong>DIY Option:</strong> You can file directly with your state's Secretary of State website to save money.
+                        <a
+                          href="https://www.usa.gov/state-business"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-amber-600 hover:text-amber-800 underline ml-1"
+                        >
+                          Find your state's business portal →
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
+
           </motion.div>
         </div>
       </main>
