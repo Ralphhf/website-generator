@@ -179,9 +179,6 @@ export function SocialMediaStep({
     }
   ]
 
-  // X/Twitter
-  const twitterBio = `${businessInfo.name} | ${businessTypeFormatted} in ${location} ${businessInfo.tagline ? `| ${businessInfo.tagline}` : ''} | ${businessInfo.phone || 'Contact us today!'}`
-
   return (
     <div className="max-w-4xl mx-auto">
       <motion.div
@@ -201,48 +198,11 @@ export function SocialMediaStep({
       </motion.div>
 
       {/* Platform Cards */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {platforms.map((platform) => (
           <BioCard key={platform.name} platform={platform} bio={platform.bio} />
         ))}
       </div>
-
-      {/* Additional Platform - X/Twitter */}
-      <Card variant="outlined" className="mb-8">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center">
-                <span className="text-white font-bold">𝕏</span>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">X (Twitter)</h3>
-                <p className="text-xs text-gray-500">Optional: Good for customer updates</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={async () => {
-                  await navigator.clipboard.writeText(twitterBio)
-                }}
-              >
-                <Copy className="w-4 h-4 mr-1" />
-                Copy Bio
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open('https://twitter.com/i/flow/signup', '_blank')}
-              >
-                <ExternalLink className="w-4 h-4 mr-1" />
-                Open
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Tips */}
       <motion.div
