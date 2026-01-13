@@ -202,16 +202,16 @@ Output: Versatile for business cards, letterheads, signage, websites`
       </Card>
 
       {/* Tool Links */}
-      <div className="grid sm:grid-cols-2 gap-4 mb-8">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card variant="outlined" className="hover:border-purple-300 transition-colors">
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-[#10a37f] flex items-center justify-center">
                 <span className="text-white font-bold text-lg">G</span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-1">ChatGPT / DALL-E</h3>
+              <h3 className="font-semibold text-gray-900 mb-1">ChatGPT</h3>
               <p className="text-sm text-gray-500 mb-4">
-                Generate logos using OpenAI's image generation
+                AI image generation
               </p>
               <Button
                 variant="outline"
@@ -219,7 +219,7 @@ Output: Versatile for business cards, letterheads, signage, websites`
                 onClick={() => window.open('https://chat.openai.com', '_blank')}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                Open ChatGPT
+                Open
               </Button>
             </div>
           </CardContent>
@@ -228,12 +228,12 @@ Output: Versatile for business cards, letterheads, signage, websites`
         <Card variant="outlined" className="hover:border-purple-300 transition-colors">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-[#00c4cc] flex items-center justify-center">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-[#7d2ae8] flex items-center justify-center">
                 <span className="text-white font-bold text-lg">C</span>
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">Canva</h3>
               <p className="text-sm text-gray-500 mb-4">
-                Use Canva's AI logo generator and templates
+                Logo templates & AI
               </p>
               <Button
                 variant="outline"
@@ -241,7 +241,51 @@ Output: Versatile for business cards, letterheads, signage, websites`
                 onClick={() => window.open('https://www.canva.com/create/logos/', '_blank')}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                Open Canva
+                Open
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card variant="outlined" className="hover:border-purple-300 transition-colors">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-[#5340ff] flex items-center justify-center">
+                <span className="text-white font-bold text-lg">L</span>
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-1">Looka</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                AI logo maker
+              </p>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => window.open('https://looka.com/logo-maker', '_blank')}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Open
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card variant="outlined" className="hover:border-purple-300 transition-colors">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-[#1dbf73] flex items-center justify-center">
+                <span className="text-white font-bold text-lg">F</span>
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-1">Fiverr</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Logo maker tool
+              </p>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => window.open('https://www.fiverr.com/logo-maker', '_blank')}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Open
               </Button>
             </div>
           </CardContent>
