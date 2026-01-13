@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -40,7 +40,11 @@ export default function ProfileDetailPage() {
   const [qrGenerated, setQrGenerated] = useState(false)
   const [showLlcDetails, setShowLlcDetails] = useState(false)
   const [showBusinessCardDetails, setShowBusinessCardDetails] = useState(false)
+  const [businessCardPromptIndex, setBusinessCardPromptIndex] = useState(0)
   const [businessCardPromptCopied, setBusinessCardPromptCopied] = useState(false)
+  const [showFlyerDetails, setShowFlyerDetails] = useState(false)
+  const [flyerPromptIndex, setFlyerPromptIndex] = useState(0)
+  const [flyerPromptCopied, setFlyerPromptCopied] = useState(false)
   const [showLogoDetails, setShowLogoDetails] = useState(false)
   const [logoPromptIndex, setLogoPromptIndex] = useState(0)
   const [logoPromptCopied, setLogoPromptCopied] = useState(false)
@@ -718,44 +722,161 @@ Output: Versatile for business cards, letterheads, signage, websites`
                       </div>
 
                       {/* AI Prompt */}
-                      <div className="mb-4">
-                        <p className="text-sm text-gray-600 mb-2">Use this prompt with ChatGPT/DALL-E to design your card:</p>
-                        <div className="relative">
-                          <pre className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 whitespace-pre-wrap font-mono">
-{`Design a professional business card for:
-Business: ${profile.name}
-${profile.tagline ? `Tagline: ${profile.tagline}` : ''}
-Type: ${profile.business_type || 'Business'}
+                      {(() => {
+                        const businessCardPrompts = [
+                          {
+                            name: 'Modern Minimalist',
+                            prompt: `Design a modern minimalist business card for "${profile.name}"${profile.tagline ? `, "${profile.tagline}"` : ''}.
+
+Business Type: ${profile.business_type || 'Business'}
 ${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
 ${profile.data.email ? `Email: ${profile.data.email}` : ''}
 ${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
 
-Requirements:
-- Standard size: 3.5" x 2" (horizontal)
-- Include space for logo on the left
-- Include QR code placeholder on the back
-- Clean, professional design
-- Match the business type aesthetic`}
-                          </pre>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="absolute top-2 right-2"
-                            onClick={async () => {
-                              const prompt = `Design a professional business card for:\nBusiness: ${profile.name}\n${profile.tagline ? `Tagline: ${profile.tagline}\n` : ''}Type: ${profile.business_type || 'Business'}\n${profile.data.phone ? `Phone: ${profile.data.phone}\n` : ''}${profile.data.email ? `Email: ${profile.data.email}\n` : ''}${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}\n` : ''}\nRequirements:\n- Standard size: 3.5" x 2" (horizontal)\n- Include space for logo on the left\n- Include QR code placeholder on the back\n- Clean, professional design\n- Match the business type aesthetic`
-                              await navigator.clipboard.writeText(prompt)
-                              setBusinessCardPromptCopied(true)
-                              setTimeout(() => setBusinessCardPromptCopied(false), 2000)
-                            }}
-                          >
-                            {businessCardPromptCopied ? (
-                              <><Check className="w-3 h-3 mr-1 text-green-500" /> Copied</>
-                            ) : (
-                              <><Copy className="w-3 h-3 mr-1" /> Copy</>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
+Style Requirements:
+- Ultra-clean design with generous whitespace
+- Single accent color with black/white base
+- Thin, modern sans-serif typography
+- Logo placement on left, info on right
+- QR code on back (small, bottom corner)
+- Standard size: 3.5" x 2" horizontal
+
+Aesthetic: Apple-inspired, Silicon Valley minimal`
+                          },
+                          {
+                            name: 'Bold & Professional',
+                            prompt: `Design a bold, professional business card for "${profile.name}"${profile.tagline ? `, "${profile.tagline}"` : ''}.
+
+Business Type: ${profile.business_type || 'Business'}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+
+Style Requirements:
+- Strong, confident design that makes an impact
+- Bold typography with clear hierarchy
+- Dark background with light text (or vice versa)
+- Full-bleed color or gradient accent
+- Large logo prominently displayed
+- QR code on back with call-to-action
+- Standard size: 3.5" x 2" horizontal
+
+Aesthetic: Corporate executive, Fortune 500`
+                          },
+                          {
+                            name: 'Creative & Artistic',
+                            prompt: `Design a creative, artistic business card for "${profile.name}"${profile.tagline ? `, "${profile.tagline}"` : ''}.
+
+Business Type: ${profile.business_type || 'Business'}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+
+Style Requirements:
+- Unique, eye-catching design that stands out
+- Creative use of shapes, patterns, or illustrations
+- Vibrant or unexpected color combinations
+- Artistic typography or custom lettering
+- Memorable visual element or texture
+- QR code integrated creatively into design
+- Standard size: 3.5" x 2" horizontal
+
+Aesthetic: Design agency, creative professional`
+                          },
+                          {
+                            name: 'Elegant & Luxury',
+                            prompt: `Design an elegant, luxury business card for "${profile.name}"${profile.tagline ? `, "${profile.tagline}"` : ''}.
+
+Business Type: ${profile.business_type || 'Business'}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+
+Style Requirements:
+- Sophisticated, high-end aesthetic
+- Gold, silver, or copper foil accents
+- Premium serif or elegant script typography
+- Black, navy, or deep jewel tone background
+- Embossed or debossed logo effect
+- QR code in gold/silver on back
+- Standard size: 3.5" x 2" horizontal
+
+Aesthetic: Luxury brand, premium service, high-end clientele`
+                          },
+                          {
+                            name: 'Friendly & Approachable',
+                            prompt: `Design a friendly, approachable business card for "${profile.name}"${profile.tagline ? `, "${profile.tagline}"` : ''}.
+
+Business Type: ${profile.business_type || 'Business'}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+
+Style Requirements:
+- Warm, welcoming design that builds trust
+- Rounded corners and soft shapes
+- Friendly color palette (warm tones, soft blues)
+- Rounded sans-serif typography
+- Approachable layout with breathing room
+- QR code on back with friendly call-to-action
+- Standard size: 3.5" x 2" horizontal
+
+Aesthetic: Local business, family-friendly, community-focused`
+                          }
+                        ]
+                        const currentPrompt = businessCardPrompts[businessCardPromptIndex]
+
+                        return (
+                          <div className="mb-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-sm text-gray-600">Use this prompt with ChatGPT/DALL-E to design your card:</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500">
+                                  {businessCardPromptIndex + 1} / {businessCardPrompts.length}
+                                </span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setBusinessCardPromptIndex((prev) => (prev + 1) % businessCardPrompts.length)
+                                    setBusinessCardPromptCopied(false)
+                                  }}
+                                  className="border-rose-300 hover:bg-rose-50"
+                                >
+                                  <Shuffle className="w-3 h-3 mr-1" />
+                                  Next Style
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="mb-2">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-rose-100 text-rose-800">
+                                {currentPrompt.name}
+                              </span>
+                            </div>
+                            <div className="relative">
+                              <pre className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 whitespace-pre-wrap font-mono max-h-48 overflow-y-auto">
+                                {currentPrompt.prompt}
+                              </pre>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="absolute top-2 right-2"
+                                onClick={async () => {
+                                  await navigator.clipboard.writeText(currentPrompt.prompt)
+                                  setBusinessCardPromptCopied(true)
+                                  setTimeout(() => setBusinessCardPromptCopied(false), 2000)
+                                }}
+                              >
+                                {businessCardPromptCopied ? (
+                                  <><Check className="w-3 h-3 mr-1 text-green-500" /> Copied</>
+                                ) : (
+                                  <><Copy className="w-3 h-3 mr-1" /> Copy</>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        )
+                      })()}
 
                       {/* Design Tools */}
                       <p className="text-sm text-gray-600 mb-2">Or use these design tools:</p>
@@ -959,6 +1080,388 @@ Requirements:
                         <li>• <strong>Finishes:</strong> Matte (professional), Glossy (vibrant), Soft-touch (premium)</li>
                         <li>• <strong>Bleed:</strong> Extend design 0.125" past edges for clean cuts</li>
                         <li>• <strong>Quantity:</strong> Start with 250-500 cards, reorder is easy</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Flyers */}
+            <Card variant="outlined" className="border-2 border-cyan-200 bg-cyan-50/50">
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-cyan-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Flyer Design</h3>
+                      <p className="text-sm text-gray-500">Create eye-catching promotional flyers</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFlyerDetails(!showFlyerDetails)}
+                    className="border-cyan-300"
+                  >
+                    {showFlyerDetails ? 'Hide Details' : 'View Options'}
+                  </Button>
+                </div>
+
+                {showFlyerDetails && (
+                  <div className="space-y-6">
+                    {/* AI Prompt Section */}
+                    {(() => {
+                      const flyerPrompts = [
+                        {
+                          name: 'Grand Opening',
+                          prompt: `Design a grand opening promotional flyer for "${profile.name}"${profile.tagline ? `, "${profile.tagline}"` : ''}.
+
+Business Type: ${profile.business_type || 'Business'}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+
+Flyer Requirements:
+- Size: 8.5" x 11" (letter size), print-ready
+- Bold "GRAND OPENING" headline at top
+- Business name and logo prominently displayed
+- Include special opening offer/discount (placeholder)
+- Date and time of opening (placeholder)
+- Address and contact information
+- QR code placeholder for website
+- Eye-catching colors that match business type
+- Professional but exciting design
+
+Style: Celebratory, exciting, inviting`
+                        },
+                        {
+                          name: 'Special Promotion',
+                          prompt: `Design a special promotion/sale flyer for "${profile.name}"${profile.tagline ? `, "${profile.tagline}"` : ''}.
+
+Business Type: ${profile.business_type || 'Business'}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+
+Flyer Requirements:
+- Size: 8.5" x 11" (letter size), print-ready
+- Large discount/offer number (e.g., "20% OFF")
+- Clear promotion headline
+- Limited time urgency messaging
+- Business name and logo
+- List 3-4 key services/products
+- Terms and conditions area
+- Contact info and QR code
+- Bold, attention-grabbing colors
+
+Style: Urgent, valuable, action-driving`
+                        },
+                        {
+                          name: 'Services Overview',
+                          prompt: `Design a services overview flyer for "${profile.name}"${profile.tagline ? `, "${profile.tagline}"` : ''}.
+
+Business Type: ${profile.business_type || 'Business'}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+
+Flyer Requirements:
+- Size: 8.5" x 11" (letter size), print-ready
+- Professional header with logo and business name
+- 4-6 service boxes with icons and descriptions
+- Pricing information area (optional)
+- Customer testimonial quote area
+- Clear call-to-action
+- Contact information prominently displayed
+- QR code to website/booking
+- Clean, organized layout
+
+Style: Professional, informative, trustworthy`
+                        },
+                        {
+                          name: 'Event Announcement',
+                          prompt: `Design an event announcement flyer for "${profile.name}"${profile.tagline ? `, "${profile.tagline}"` : ''}.
+
+Business Type: ${profile.business_type || 'Business'}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+
+Flyer Requirements:
+- Size: 8.5" x 11" (letter size), print-ready
+- Large event title/name at top
+- Date, time, and location prominently displayed
+- Event description/highlights
+- Guest speaker or special feature area
+- RSVP or registration info
+- Business branding (logo, colors)
+- Map or directions area
+- QR code for registration/more info
+
+Style: Exciting, informative, community-focused`
+                        },
+                        {
+                          name: 'Seasonal/Holiday',
+                          prompt: `Design a seasonal/holiday promotional flyer for "${profile.name}"${profile.tagline ? `, "${profile.tagline}"` : ''}.
+
+Business Type: ${profile.business_type || 'Business'}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+
+Flyer Requirements:
+- Size: 8.5" x 11" (letter size), print-ready
+- Seasonal theme (customize for current season)
+- Holiday-appropriate graphics and colors
+- Special seasonal offer or promotion
+- Gift ideas or holiday services
+- Extended holiday hours (if applicable)
+- Festive but professional design
+- Business branding maintained
+- Contact info and QR code
+
+Style: Festive, warm, seasonal, inviting`
+                        }
+                      ]
+                      const currentFlyerPrompt = flyerPrompts[flyerPromptIndex]
+
+                      return (
+                        <div className="p-4 bg-white rounded-lg border border-cyan-200">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                              <Sparkles className="w-4 h-4 text-cyan-500" />
+                              AI Flyer Prompt
+                            </h4>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-500">
+                                {flyerPromptIndex + 1} / {flyerPrompts.length}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setFlyerPromptIndex((prev) => (prev + 1) % flyerPrompts.length)
+                                  setFlyerPromptCopied(false)
+                                }}
+                                className="border-cyan-300 hover:bg-cyan-50"
+                              >
+                                <Shuffle className="w-3 h-3 mr-1" />
+                                Next Style
+                              </Button>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-3">
+                            Copy this prompt and paste it into ChatGPT, DALL-E, or Canva AI
+                          </p>
+                          <div className="mb-3">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-cyan-100 text-cyan-800">
+                              {currentFlyerPrompt.name}
+                            </span>
+                          </div>
+                          <div className="relative">
+                            <pre className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 whitespace-pre-wrap font-mono max-h-48 overflow-y-auto">
+                              {currentFlyerPrompt.prompt}
+                            </pre>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="absolute top-2 right-2"
+                              onClick={async () => {
+                                await navigator.clipboard.writeText(currentFlyerPrompt.prompt)
+                                setFlyerPromptCopied(true)
+                                setTimeout(() => setFlyerPromptCopied(false), 2000)
+                              }}
+                            >
+                              {flyerPromptCopied ? (
+                                <><Check className="w-3 h-3 mr-1 text-green-500" /> Copied</>
+                              ) : (
+                                <><Copy className="w-3 h-3 mr-1" /> Copy</>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      )
+                    })()}
+
+                    {/* AI Design Tools */}
+                    <div className="p-4 bg-white rounded-lg border border-cyan-200">
+                      <h4 className="font-semibold text-gray-900 mb-3">AI Flyer Design Tools</h4>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Use AI to generate professional flyers instantly:
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <Button
+                          variant="outline"
+                          className="flex flex-col items-center gap-2 h-auto py-3 hover:border-cyan-300"
+                          onClick={() => window.open('https://chat.openai.com', '_blank')}
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-[#10a37f] flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">G</span>
+                          </div>
+                          <span className="text-xs">ChatGPT</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex flex-col items-center gap-2 h-auto py-3 hover:border-cyan-300"
+                          onClick={() => window.open('https://www.canva.com/create/flyers/', '_blank')}
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-[#7d2ae8] flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">C</span>
+                          </div>
+                          <span className="text-xs">Canva</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex flex-col items-center gap-2 h-auto py-3 hover:border-cyan-300"
+                          onClick={() => window.open('https://www.adobe.com/express/create/flyer', '_blank')}
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-[#ff0000] flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">A</span>
+                          </div>
+                          <span className="text-xs">Adobe Express</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex flex-col items-center gap-2 h-auto py-3 hover:border-cyan-300"
+                          onClick={() => window.open('https://www.visme.co/flyer-maker/', '_blank')}
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-[#3b82f6] flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">V</span>
+                          </div>
+                          <span className="text-xs">Visme</span>
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Printing Services */}
+                    <div className="p-4 bg-white rounded-lg border border-cyan-200">
+                      <h4 className="font-semibold text-gray-900 mb-3">Print Your Flyers</h4>
+                      <div className="space-y-4">
+                        {/* Fast Printing */}
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-yellow-500" />
+                            Fast Printing (Same Day - Next Day)
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-cyan-300 text-cyan-700 hover:bg-cyan-100"
+                              onClick={() => window.open('https://www.staples.com/sbd/content/copyandprint/flyers.html', '_blank')}
+                            >
+                              Staples
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-cyan-300 text-cyan-700 hover:bg-cyan-100"
+                              onClick={() => window.open('https://www.fedex.com/en-us/printing/flyers.html', '_blank')}
+                            >
+                              FedEx
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-cyan-300 text-cyan-700 hover:bg-cyan-100"
+                              onClick={() => window.open('https://www.officedepot.com/cm/print-and-copy/flyers', '_blank')}
+                            >
+                              Office Depot
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Affordable Printing */}
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-green-500" />
+                            Affordable Bulk Printing
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-green-300 text-green-700 hover:bg-green-100"
+                              onClick={() => window.open('https://www.vistaprint.com/marketing-materials/flyers', '_blank')}
+                            >
+                              VistaPrint
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-green-300 text-green-700 hover:bg-green-100"
+                              onClick={() => window.open('https://www.gotprint.com/products/flyers.html', '_blank')}
+                            >
+                              GotPrint
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-green-300 text-green-700 hover:bg-green-100"
+                              onClick={() => window.open('https://www.48hourprint.com/flyer-printing.html', '_blank')}
+                            >
+                              48HourPrint
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-green-300 text-green-700 hover:bg-green-100"
+                              onClick={() => window.open('https://www.printful.com/custom-flyers', '_blank')}
+                            >
+                              Printful
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Premium Printing */}
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                            <Award className="w-4 h-4 text-amber-500" />
+                            Premium Quality
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                              onClick={() => window.open('https://www.moo.com/us/products/flyers', '_blank')}
+                            >
+                              Moo
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                              onClick={() => window.open('https://www.overnightprints.com/flyers', '_blank')}
+                            >
+                              OvernightPrints
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                              onClick={() => window.open('https://www.printingforless.com/flyer-printing.html', '_blank')}
+                            >
+                              PrintingForLess
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tips */}
+                    <div className="p-4 bg-cyan-100/50 rounded-lg border border-cyan-200">
+                      <h4 className="font-semibold text-cyan-800 mb-2">Pro Tips for Effective Flyers</h4>
+                      <ul className="text-sm text-cyan-700 space-y-1">
+                        <li>• <strong>One clear message:</strong> Don't overcrowd - focus on one main offer or announcement</li>
+                        <li>• <strong>Strong headline:</strong> Grab attention in the first 3 seconds</li>
+                        <li>• <strong>Clear call-to-action:</strong> Tell people exactly what to do next</li>
+                        <li>• <strong>High-resolution images:</strong> Use 300 DPI for print quality</li>
+                        <li>• <strong>Include QR code:</strong> Link to website, booking page, or special offer</li>
+                        <li>• <strong>Paper matters:</strong> Glossy for photos, matte for text-heavy designs</li>
                       </ul>
                     </div>
                   </div>
