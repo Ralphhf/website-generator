@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -23,9 +23,12 @@ interface SavedProfile {
   city: string | null
   state: string | null
   data: BusinessInfo
+  completed_sections: string[]
   created_at: string
   updated_at: string
 }
+
+type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'social-media' | 'llc'
 
 export default function ProfileDetailPage() {
   const params = useParams()
@@ -48,12 +51,48 @@ export default function ProfileDetailPage() {
   const [showLogoDetails, setShowLogoDetails] = useState(false)
   const [logoPromptIndex, setLogoPromptIndex] = useState(0)
   const [logoPromptCopied, setLogoPromptCopied] = useState(false)
+  const [completedSections, setCompletedSections] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (params.id) {
       fetchProfile(params.id as string)
     }
   }, [params.id])
+
+  // Load completed sections when profile loads
+  useEffect(() => {
+    if (profile?.completed_sections) {
+      setCompletedSections(new Set(profile.completed_sections))
+    }
+  }, [profile])
+
+  const toggleSectionComplete = async (sectionId: SectionId) => {
+    if (!profile) return
+
+    const newCompleted = new Set(completedSections)
+    if (newCompleted.has(sectionId)) {
+      newCompleted.delete(sectionId)
+    } else {
+      newCompleted.add(sectionId)
+    }
+
+    setCompletedSections(newCompleted)
+
+    // Save to database
+    try {
+      await fetch(`/api/profiles/${profile.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          completed_sections: Array.from(newCompleted)
+        })
+      })
+    } catch (err) {
+      console.error('Failed to save completion state:', err)
+    }
+  }
+
+  const isSectionComplete = (sectionId: SectionId) => completedSections.has(sectionId)
 
   const fetchProfile = async (id: string) => {
     try {
@@ -328,15 +367,26 @@ Make sure the deployment is successful and the site is accessible.`
             className="space-y-4"
           >
             {/* Generate Website - Primary Action */}
-            <Card variant="gradient" className="border-2 border-primary-200">
+            <Card variant="gradient" className={`border-2 ${isSectionComplete('generate') ? 'border-green-300 bg-green-50/30' : 'border-primary-200'}`}>
               <CardContent className="py-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('generate')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('generate') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('generate') ? (
+                        <CheckSquare className="w-6 h-6 text-green-500" />
+                      ) : (
+                        <Square className="w-6 h-6 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
                       <Rocket className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900 text-lg">Generate Website</h3>
+                      <h3 className={`font-bold text-lg ${isSectionComplete('generate') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Generate Website</h3>
                       <p className="text-sm text-gray-500">Auto-generate with Claude CLI (watcher must be running)</p>
                     </div>
                   </div>
@@ -359,15 +409,26 @@ Make sure the deployment is successful and the site is accessible.`
             </Card>
 
             {/* Download Website Data */}
-            <Card variant="outlined" hover>
+            <Card variant="outlined" hover className={isSectionComplete('download') ? 'border-green-300 bg-green-50/30' : ''}>
               <CardContent className="py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('download')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('download') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('download') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
                     <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
                       <Download className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Download Website Data</h3>
+                      <h3 className={`font-semibold ${isSectionComplete('download') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Download Website Data</h3>
                       <p className="text-sm text-gray-500">Re-download the ZIP with all business data</p>
                     </div>
                   </div>
@@ -379,15 +440,26 @@ Make sure the deployment is successful and the site is accessible.`
             </Card>
 
             {/* Deploy to Vercel */}
-            <Card variant="outlined" hover className="border-2 border-orange-200 bg-orange-50/50">
+            <Card variant="outlined" hover className={`border-2 ${isSectionComplete('deploy') ? 'border-green-300 bg-green-50/30' : 'border-orange-200 bg-orange-50/50'}`}>
               <CardContent className="py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('deploy')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('deploy') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('deploy') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
                     <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
                       <Globe className="w-5 h-5 text-orange-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Deploy to Vercel</h3>
+                      <h3 className={`font-semibold ${isSectionComplete('deploy') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Deploy to Vercel</h3>
                       <p className="text-sm text-gray-500">Copy prompt to deploy via GitHub & Vercel</p>
                     </div>
                   </div>
@@ -413,14 +485,25 @@ Make sure the deployment is successful and the site is accessible.`
             </Card>
 
             {/* Domain Search */}
-            <Card variant="outlined" hover className="border-2 border-teal-200 bg-teal-50/50">
+            <Card variant="outlined" hover className={`border-2 ${isSectionComplete('domain') ? 'border-green-300 bg-green-50/30' : 'border-teal-200 bg-teal-50/50'}`}>
               <CardContent className="py-4">
                 <div className="flex items-center gap-3 mb-4">
+                  <button
+                    onClick={() => toggleSectionComplete('domain')}
+                    className="flex-shrink-0 hover:scale-110 transition-transform"
+                    title={isSectionComplete('domain') ? 'Mark as incomplete' : 'Mark as complete'}
+                  >
+                    {isSectionComplete('domain') ? (
+                      <CheckSquare className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                    )}
+                  </button>
                   <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center">
                     <Search className="w-5 h-5 text-teal-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Find a Domain</h3>
+                    <h3 className={`font-semibold ${isSectionComplete('domain') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Find a Domain</h3>
                     <p className="text-sm text-gray-500">Search and register a domain for your website</p>
                   </div>
                 </div>
@@ -462,15 +545,26 @@ Make sure the deployment is successful and the site is accessible.`
             </Card>
 
             {/* Logo Generator */}
-            <Card variant="outlined" className="border-2 border-purple-200 bg-purple-50/50">
+            <Card variant="outlined" className={`border-2 ${isSectionComplete('logo') ? 'border-green-300 bg-green-50/30' : 'border-purple-200 bg-purple-50/50'}`}>
               <CardContent className="py-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('logo')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('logo') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('logo') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
                     <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
                       <Palette className="w-5 h-5 text-purple-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Logo Generator</h3>
+                      <h3 className={`font-semibold ${isSectionComplete('logo') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Logo Generator</h3>
                       <p className="text-sm text-gray-500">Create a professional logo for your business</p>
                     </div>
                   </div>
@@ -683,15 +777,26 @@ Output: Versatile for business cards, letterheads, signage, websites`
             </Card>
 
             {/* Business Cards */}
-            <Card variant="outlined" className="border-2 border-rose-200 bg-rose-50/50">
+            <Card variant="outlined" className={`border-2 ${isSectionComplete('business-cards') ? 'border-green-300 bg-green-50/30' : 'border-rose-200 bg-rose-50/50'}`}>
               <CardContent className="py-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('business-cards')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('business-cards') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('business-cards') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
                     <div className="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center">
                       <CreditCard className="w-5 h-5 text-rose-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Business Cards</h3>
+                      <h3 className={`font-semibold ${isSectionComplete('business-cards') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Business Cards</h3>
                       <p className="text-sm text-gray-500">Design and order professional business cards</p>
                     </div>
                   </div>
@@ -1088,15 +1193,26 @@ Aesthetic: Local business, family-friendly, community-focused`
             </Card>
 
             {/* Flyers */}
-            <Card variant="outlined" className="border-2 border-cyan-200 bg-cyan-50/50">
+            <Card variant="outlined" className={`border-2 ${isSectionComplete('flyers') ? 'border-green-300 bg-green-50/30' : 'border-cyan-200 bg-cyan-50/50'}`}>
               <CardContent className="py-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('flyers')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('flyers') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('flyers') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
                     <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center">
                       <FileText className="w-5 h-5 text-cyan-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Flyer Design</h3>
+                      <h3 className={`font-semibold ${isSectionComplete('flyers') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Flyer Design</h3>
                       <p className="text-sm text-gray-500">Create eye-catching promotional flyers</p>
                     </div>
                   </div>
@@ -1470,14 +1586,25 @@ Style: Festive, warm, seasonal, inviting`
             </Card>
 
             {/* QR Code Generator */}
-            <Card variant="outlined" hover className="border-2 border-violet-200 bg-violet-50/50">
+            <Card variant="outlined" hover className={`border-2 ${isSectionComplete('qr-code') ? 'border-green-300 bg-green-50/30' : 'border-violet-200 bg-violet-50/50'}`}>
               <CardContent className="py-4">
                 <div className="flex items-center gap-3 mb-4">
+                  <button
+                    onClick={() => toggleSectionComplete('qr-code')}
+                    className="flex-shrink-0 hover:scale-110 transition-transform"
+                    title={isSectionComplete('qr-code') ? 'Mark as incomplete' : 'Mark as complete'}
+                  >
+                    {isSectionComplete('qr-code') ? (
+                      <CheckSquare className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                    )}
+                  </button>
                   <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
                     <QrCode className="w-5 h-5 text-violet-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">QR Code Generator</h3>
+                    <h3 className={`font-semibold ${isSectionComplete('qr-code') ? 'text-green-700 line-through' : 'text-gray-900'}`}>QR Code Generator</h3>
                     <p className="text-sm text-gray-500">Create a QR code for your website</p>
                   </div>
                 </div>
@@ -1522,15 +1649,26 @@ Style: Festive, warm, seasonal, inviting`
             </Card>
 
             {/* Social Media Setup */}
-            <Card variant="outlined" hover>
+            <Card variant="outlined" hover className={isSectionComplete('social-media') ? 'border-green-300 bg-green-50/30' : ''}>
               <CardContent className="py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('social-media')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('social-media') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('social-media') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
                     <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
                       <Share2 className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Social Media Setup</h3>
+                      <h3 className={`font-semibold ${isSectionComplete('social-media') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Social Media Setup</h3>
                       <p className="text-sm text-gray-500">Set up Google Business, social profiles & more</p>
                     </div>
                   </div>
@@ -1542,15 +1680,26 @@ Style: Festive, warm, seasonal, inviting`
             </Card>
 
             {/* LLC Formation */}
-            <Card variant="outlined" className="border-2 border-amber-200 bg-amber-50/50">
+            <Card variant="outlined" className={`border-2 ${isSectionComplete('llc') ? 'border-green-300 bg-green-50/30' : 'border-amber-200 bg-amber-50/50'}`}>
               <CardContent className="py-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('llc')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('llc') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('llc') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
                     <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
                       <Briefcase className="w-5 h-5 text-amber-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Form an LLC</h3>
+                      <h3 className={`font-semibold ${isSectionComplete('llc') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Form an LLC</h3>
                       <p className="text-sm text-gray-500">Protect your business with legal entity status</p>
                     </div>
                   </div>

@@ -81,6 +81,44 @@ export async function PUT(
   }
 }
 
+// PATCH - Partial update (for completed_sections, etc.)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+
+    const updateData: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    }
+
+    // Only update fields that are provided
+    if (body.completed_sections !== undefined) {
+      updateData.completed_sections = body.completed_sections
+    }
+
+    const supabase = getSupabase()
+    const { data, error } = await supabase
+      .from('business_profiles')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ profile: data, message: 'Profile updated successfully' })
+  } catch (error) {
+    console.error('Error updating profile:', error)
+    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+  }
+}
+
 // DELETE - Delete a profile
 export async function DELETE(
   request: NextRequest,

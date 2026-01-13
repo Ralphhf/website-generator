@@ -26,7 +26,8 @@
       "Bash(powershell -Command:*)",
       "Bash(git reset:*)",
       "Bash(git branch:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\ralph\\\\website-generator-watcher\\\\create-shortcut.ps1\")"
     ],
     "deny": [],
     "ask": []
