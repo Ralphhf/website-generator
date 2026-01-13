@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Copy, Check, ExternalLink, Sparkles, Palette } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Copy, Check, ExternalLink, Sparkles, Palette, Shuffle } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
 
 interface LogoGeneratorStepProps {
@@ -23,30 +23,103 @@ export function LogoGeneratorStep({
   onBack
 }: LogoGeneratorStepProps) {
   const [copied, setCopied] = useState(false)
+  const [promptIndex, setPromptIndex] = useState(0)
 
   const businessTypeFormatted = businessType.replace(/_/g, ' ')
 
-  const logoPrompt = `Create a professional, modern logo for a ${businessTypeFormatted} business called "${businessName}"${tagline ? ` with the tagline "${tagline}"` : ''}.
+  const logoPrompts = [
+    // 1. Modern Minimalist
+    {
+      name: 'Modern Minimalist',
+      prompt: `Create a minimalist, modern logo for "${businessName}", a ${businessTypeFormatted} business${tagline ? ` with the tagline "${tagline}"` : ''}.
 
-Requirements:
-- Clean, minimalist design that works at any size
-- Professional and trustworthy appearance
-- Should work on both light and dark backgrounds
-- Include an icon/symbol that represents ${businessTypeFormatted}
-- Use modern, readable typography for the business name
-- Color palette should be appropriate for a ${businessTypeFormatted} business
+Style Requirements:
+- Ultra-clean, minimal design with lots of whitespace
+- Simple geometric shapes or single-line icon
+- Maximum 2 colors (prefer monochrome with one accent)
+- Sans-serif typography, thin or light weight
+- Negative space usage for clever visual effect
 
-Style: Modern, professional, memorable, scalable
-Format: Vector-style, suitable for business cards, websites, and signage`
+Aesthetic: Apple/Google-inspired, Silicon Valley tech minimal
+Output: SVG-ready, works as small as 16x16 favicon`
+    },
+    // 2. Bold & Vibrant
+    {
+      name: 'Bold & Vibrant',
+      prompt: `Design a bold, eye-catching logo for "${businessName}", a ${businessTypeFormatted} business${tagline ? ` with the tagline "${tagline}"` : ''}.
+
+Style Requirements:
+- Strong, confident design that commands attention
+- Vibrant color palette (2-3 bold colors)
+- Thick, heavy typography with impact
+- Dynamic shapes or abstract icon
+- High contrast for maximum visibility
+
+Aesthetic: Energetic, confident, memorable, stands out in a crowd
+Output: Works great on social media, billboards, merchandise`
+    },
+    // 3. Elegant & Premium
+    {
+      name: 'Elegant & Premium',
+      prompt: `Create an elegant, luxury logo for "${businessName}", a ${businessTypeFormatted} business${tagline ? ` with the tagline "${tagline}"` : ''}.
+
+Style Requirements:
+- Sophisticated, high-end aesthetic
+- Serif or elegant script typography
+- Gold, black, navy, or deep jewel tones
+- Fine lines, subtle details, or monogram style
+- Could include a crest, emblem, or refined icon
+
+Aesthetic: Luxury brand, premium service, timeless elegance
+Output: Suitable for embossing, foil stamping, premium print`
+    },
+    // 4. Friendly & Approachable
+    {
+      name: 'Friendly & Approachable',
+      prompt: `Design a friendly, approachable logo for "${businessName}", a ${businessTypeFormatted} business${tagline ? ` with the tagline "${tagline}"` : ''}.
+
+Style Requirements:
+- Warm, welcoming, and trustworthy feel
+- Rounded shapes and soft edges
+- Friendly color palette (warm tones, soft blues, greens)
+- Rounded sans-serif or casual typography
+- Optional: subtle smile, character, or mascot element
+
+Aesthetic: Local business, family-friendly, community-focused
+Output: Works well for storefront, uniforms, local advertising`
+    },
+    // 5. Classic & Professional
+    {
+      name: 'Classic & Professional',
+      prompt: `Create a classic, professional logo for "${businessName}", a ${businessTypeFormatted} business${tagline ? ` with the tagline "${tagline}"` : ''}.
+
+Style Requirements:
+- Timeless design that won't look dated in 10 years
+- Traditional color scheme (navy, burgundy, forest green, or classic blue)
+- Professional serif or strong sans-serif typography
+- Industry-appropriate icon or symbol
+- Balanced, symmetrical composition
+
+Aesthetic: Established business, trustworthy, corporate-ready
+Output: Versatile for business cards, letterheads, signage, websites`
+    }
+  ]
+
+  const currentPrompt = logoPrompts[promptIndex]
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(logoPrompt)
+      await navigator.clipboard.writeText(currentPrompt.prompt)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
       console.error('Failed to copy:', err)
     }
+  }
+
+  const nextPrompt = () => {
+    setPromptIndex((prev) => (prev + 1) % logoPrompts.length)
+    setCopied(false)
   }
 
   return (
@@ -69,18 +142,42 @@ Format: Vector-style, suitable for business cards, websites, and signage`
 
       <Card variant="gradient" className="mb-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-500" />
-            AI Logo Prompt
-          </CardTitle>
-          <CardDescription>
-            Copy this prompt and paste it into ChatGPT or Canva AI to generate your logo
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-500" />
+                AI Logo Prompt
+              </CardTitle>
+              <CardDescription>
+                Copy this prompt and paste it into ChatGPT or Canva AI to generate your logo
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500">
+                {promptIndex + 1} / {logoPrompts.length}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={nextPrompt}
+                className="border-purple-300 hover:bg-purple-50"
+              >
+                <Shuffle className="w-4 h-4 mr-1" />
+                Next Style
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
+          {/* Style name badge */}
+          <div className="mb-3">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+              {currentPrompt.name}
+            </span>
+          </div>
           <div className="relative">
             <pre className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700 whitespace-pre-wrap font-mono">
-              {logoPrompt}
+              {currentPrompt.prompt}
             </pre>
             <Button
               variant="outline"
