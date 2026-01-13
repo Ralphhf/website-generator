@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -375,6 +375,55 @@ Make sure the deployment is successful and the site is accessible.`
                         Copy Prompt
                       </>
                     )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Domain Search */}
+            <Card variant="outlined" hover className="border-2 border-teal-200 bg-teal-50/50">
+              <CardContent className="py-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center">
+                    <Search className="w-5 h-5 text-teal-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Find a Domain</h3>
+                    <p className="text-sm text-gray-500">Search and register a domain for your website</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-xs text-gray-500 font-medium">Suggested domains:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(() => {
+                      const baseName = profile.name.toLowerCase().replace(/[^a-z0-9]+/g, '')
+                      const shortName = baseName.slice(0, 15)
+                      return [
+                        `${shortName}.com`,
+                        `${shortName}.co`,
+                        `${shortName}.io`,
+                        `get${shortName}.com`,
+                        `${shortName}hq.com`,
+                      ].map((domain) => (
+                        <span
+                          key={domain}
+                          className="px-2 py-1 bg-white border border-teal-200 rounded text-sm text-gray-700"
+                        >
+                          {domain}
+                        </span>
+                      ))
+                    })()}
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full border-teal-300 hover:bg-teal-100"
+                    onClick={() => {
+                      const searchTerm = profile.name.toLowerCase().replace(/[^a-z0-9]+/g, '')
+                      window.open(`https://www.godaddy.com/domainsearch/find?domainToCheck=${searchTerm}`, '_blank')
+                    }}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Search on GoDaddy
                   </Button>
                 </div>
               </CardContent>
