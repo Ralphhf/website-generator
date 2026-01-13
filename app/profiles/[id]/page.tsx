@@ -773,6 +773,13 @@ Make sure the deployment is successful and the site is accessible.`
                         Design Your Business Card
                       </h4>
 
+                      {/* Logo Reminder */}
+                      <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-sm text-amber-800">
+                          <strong>⚠️ Have your logo ready first!</strong> Use the Logo Generator section above to create your logo before designing your business card.
+                        </p>
+                      </div>
+
                       {/* AI Prompt */}
                       <div className="mb-4">
                         <p className="text-sm text-gray-600 mb-2">Use this prompt with ChatGPT/DALL-E to design your card:</p>
@@ -814,14 +821,24 @@ Requirements:
                       </div>
 
                       {/* Design Tools */}
+                      <p className="text-sm text-gray-600 mb-2">Or use these design tools:</p>
                       <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open('https://www.logoai.com/design/business-card', '_blank')}
+                          className="border-rose-300 text-rose-700 hover:bg-rose-50"
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          LogoAI (Recommended)
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => window.open('https://www.canva.com/create/business-cards/', '_blank')}
                         >
                           <ExternalLink className="w-3 h-3 mr-1" />
-                          Canva Templates
+                          Canva
                         </Button>
                         <Button
                           variant="outline"
