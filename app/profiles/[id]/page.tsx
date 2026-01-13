@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -36,6 +36,8 @@ export default function ProfileDetailPage() {
   const [currentStep, setCurrentStep] = useState<ProfileStep>('overview')
   const [generating, setGenerating] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [qrUrl, setQrUrl] = useState('')
+  const [qrGenerated, setQrGenerated] = useState(false)
 
   useEffect(() => {
     if (params.id) {
@@ -424,6 +426,58 @@ Make sure the deployment is successful and the site is accessible.`
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
                     Search on GoDaddy
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* QR Code Generator */}
+            <Card variant="outlined" hover className="border-2 border-violet-200 bg-violet-50/50">
+              <CardContent className="py-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
+                    <QrCode className="w-5 h-5 text-violet-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">QR Code Generator</h3>
+                    <p className="text-sm text-gray-500">Create a QR code for your website</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <input
+                    type="url"
+                    placeholder="Enter your website URL (e.g., https://example.com)"
+                    value={qrUrl}
+                    onChange={(e) => {
+                      setQrUrl(e.target.value)
+                      setQrGenerated(false)
+                    }}
+                    className="w-full px-3 py-2 border border-violet-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  />
+                  {qrGenerated && qrUrl && (
+                    <div className="flex flex-col items-center gap-3 p-4 bg-white rounded-lg border border-violet-200">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`}
+                        alt="QR Code"
+                        className="w-48 h-48"
+                      />
+                      <a
+                        href={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrUrl)}&format=png`}
+                        download={`${profile.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-qrcode.png`}
+                        className="text-sm text-violet-600 hover:text-violet-800 underline"
+                      >
+                        Download QR Code
+                      </a>
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="w-full border-violet-300 hover:bg-violet-100"
+                    onClick={() => setQrGenerated(true)}
+                    disabled={!qrUrl}
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    Generate QR Code
                   </Button>
                 </div>
               </CardContent>
