@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -41,6 +41,9 @@ export default function ProfileDetailPage() {
   const [showLlcDetails, setShowLlcDetails] = useState(false)
   const [showBusinessCardDetails, setShowBusinessCardDetails] = useState(false)
   const [businessCardPromptCopied, setBusinessCardPromptCopied] = useState(false)
+  const [showLogoDetails, setShowLogoDetails] = useState(false)
+  const [logoPromptIndex, setLogoPromptIndex] = useState(0)
+  const [logoPromptCopied, setLogoPromptCopied] = useState(false)
 
   useEffect(() => {
     if (params.id) {
@@ -1050,22 +1053,223 @@ Requirements:
             </Card>
 
             {/* Logo Generator */}
-            <Card variant="outlined" hover>
+            <Card variant="outlined" className="border-2 border-purple-200 bg-purple-50/50">
               <CardContent className="py-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
                       <Palette className="w-5 h-5 text-purple-600" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">Logo Generator</h3>
-                      <p className="text-sm text-gray-500">Create a logo for your business</p>
+                      <p className="text-sm text-gray-500">Create a professional logo for your business</p>
                     </div>
                   </div>
-                  <Button onClick={() => setCurrentStep('logo-generator')}>
-                    Start
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowLogoDetails(!showLogoDetails)}
+                    className="border-purple-300"
+                  >
+                    {showLogoDetails ? 'Hide Details' : 'View Options'}
                   </Button>
                 </div>
+
+                {showLogoDetails && (() => {
+                  const businessTypeFormatted = (profile.business_type || 'business').replace(/_/g, ' ')
+                  const logoPrompts = [
+                    {
+                      name: 'Modern Minimalist',
+                      prompt: `Create a minimalist, modern logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
+
+Style Requirements:
+- Ultra-clean, minimal design with lots of whitespace
+- Simple geometric shapes or single-line icon
+- Maximum 2 colors (prefer monochrome with one accent)
+- Sans-serif typography, thin or light weight
+- Negative space usage for clever visual effect
+
+Aesthetic: Apple/Google-inspired, Silicon Valley tech minimal
+Output: SVG-ready, works as small as 16x16 favicon`
+                    },
+                    {
+                      name: 'Bold & Vibrant',
+                      prompt: `Design a bold, eye-catching logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
+
+Style Requirements:
+- Strong, confident design that commands attention
+- Vibrant color palette (2-3 bold colors)
+- Thick, heavy typography with impact
+- Dynamic shapes or abstract icon
+- High contrast for maximum visibility
+
+Aesthetic: Energetic, confident, memorable, stands out in a crowd
+Output: Works great on social media, billboards, merchandise`
+                    },
+                    {
+                      name: 'Elegant & Premium',
+                      prompt: `Create an elegant, luxury logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
+
+Style Requirements:
+- Sophisticated, high-end aesthetic
+- Serif or elegant script typography
+- Gold, black, navy, or deep jewel tones
+- Fine lines, subtle details, or monogram style
+- Could include a crest, emblem, or refined icon
+
+Aesthetic: Luxury brand, premium service, timeless elegance
+Output: Suitable for embossing, foil stamping, premium print`
+                    },
+                    {
+                      name: 'Friendly & Approachable',
+                      prompt: `Design a friendly, approachable logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
+
+Style Requirements:
+- Warm, welcoming, and trustworthy feel
+- Rounded shapes and soft edges
+- Friendly color palette (warm tones, soft blues, greens)
+- Rounded sans-serif or casual typography
+- Optional: subtle smile, character, or mascot element
+
+Aesthetic: Local business, family-friendly, community-focused
+Output: Works well for storefront, uniforms, local advertising`
+                    },
+                    {
+                      name: 'Classic & Professional',
+                      prompt: `Create a classic, professional logo for "${profile.name}", a ${businessTypeFormatted} business${profile.tagline ? ` with the tagline "${profile.tagline}"` : ''}.
+
+Style Requirements:
+- Timeless design that won't look dated in 10 years
+- Traditional color scheme (navy, burgundy, forest green, or classic blue)
+- Professional serif or strong sans-serif typography
+- Industry-appropriate icon or symbol
+- Balanced, symmetrical composition
+
+Aesthetic: Established business, trustworthy, corporate-ready
+Output: Versatile for business cards, letterheads, signage, websites`
+                    }
+                  ]
+                  const currentLogoPrompt = logoPrompts[logoPromptIndex]
+
+                  return (
+                    <div className="space-y-6">
+                      {/* AI Prompt Section */}
+                      <div className="p-4 bg-white rounded-lg border border-purple-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-purple-500" />
+                            AI Logo Prompt
+                          </h4>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">
+                              {logoPromptIndex + 1} / {logoPrompts.length}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setLogoPromptIndex((prev) => (prev + 1) % logoPrompts.length)
+                                setLogoPromptCopied(false)
+                              }}
+                              className="border-purple-300 hover:bg-purple-50"
+                            >
+                              <Shuffle className="w-3 h-3 mr-1" />
+                              Next Style
+                            </Button>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Copy this prompt and paste it into ChatGPT, DALL-E, or other AI tools
+                        </p>
+                        <div className="mb-3">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                            {currentLogoPrompt.name}
+                          </span>
+                        </div>
+                        <div className="relative">
+                          <pre className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 whitespace-pre-wrap font-mono max-h-48 overflow-y-auto">
+                            {currentLogoPrompt.prompt}
+                          </pre>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute top-2 right-2"
+                            onClick={async () => {
+                              await navigator.clipboard.writeText(currentLogoPrompt.prompt)
+                              setLogoPromptCopied(true)
+                              setTimeout(() => setLogoPromptCopied(false), 2000)
+                            }}
+                          >
+                            {logoPromptCopied ? (
+                              <><Check className="w-3 h-3 mr-1 text-green-500" /> Copied</>
+                            ) : (
+                              <><Copy className="w-3 h-3 mr-1" /> Copy</>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Logo Tools */}
+                      <div className="p-4 bg-white rounded-lg border border-purple-200">
+                        <h4 className="font-semibold text-gray-900 mb-3">Logo Design Tools</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <Button
+                            variant="outline"
+                            className="flex flex-col items-center gap-2 h-auto py-3 hover:border-purple-300"
+                            onClick={() => window.open('https://chat.openai.com', '_blank')}
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-[#10a37f] flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">G</span>
+                            </div>
+                            <span className="text-xs">ChatGPT</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex flex-col items-center gap-2 h-auto py-3 hover:border-purple-300"
+                            onClick={() => window.open('https://www.canva.com/create/logos/', '_blank')}
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-[#7d2ae8] flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">C</span>
+                            </div>
+                            <span className="text-xs">Canva</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex flex-col items-center gap-2 h-auto py-3 hover:border-purple-300"
+                            onClick={() => window.open('https://looka.com/logo-maker', '_blank')}
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-[#5340ff] flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">L</span>
+                            </div>
+                            <span className="text-xs">Looka</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex flex-col items-center gap-2 h-auto py-3 hover:border-purple-300"
+                            onClick={() => window.open('https://www.fiverr.com/logo-maker', '_blank')}
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-[#1dbf73] flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">F</span>
+                            </div>
+                            <span className="text-xs">Fiverr</span>
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Tips */}
+                      <div className="p-4 bg-purple-100/50 rounded-lg border border-purple-200">
+                        <h4 className="font-semibold text-purple-800 mb-2">Tips for a Great Logo</h4>
+                        <ul className="text-sm text-purple-700 space-y-1">
+                          <li>• Generate multiple variations and pick the best one</li>
+                          <li>• Request versions with and without text</li>
+                          <li>• Ask for transparent background versions (PNG)</li>
+                          <li>• Test how it looks at small sizes (favicon, profile pic)</li>
+                          <li>• Get both light and dark background versions</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )
+                })()}
               </CardContent>
             </Card>
 
