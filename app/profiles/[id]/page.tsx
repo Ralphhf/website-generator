@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -39,6 +39,8 @@ export default function ProfileDetailPage() {
   const [qrUrl, setQrUrl] = useState('')
   const [qrGenerated, setQrGenerated] = useState(false)
   const [showLlcDetails, setShowLlcDetails] = useState(false)
+  const [showBusinessCardDetails, setShowBusinessCardDetails] = useState(false)
+  const [businessCardPromptCopied, setBusinessCardPromptCopied] = useState(false)
 
   useEffect(() => {
     if (params.id) {
@@ -733,6 +735,277 @@ Make sure the deployment is successful and the site is accessible.`
                           Find your state's business portal →
                         </a>
                       </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Business Cards */}
+            <Card variant="outlined" className="border-2 border-rose-200 bg-rose-50/50">
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center">
+                      <CreditCard className="w-5 h-5 text-rose-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Business Cards</h3>
+                      <p className="text-sm text-gray-500">Design and order professional business cards</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowBusinessCardDetails(!showBusinessCardDetails)}
+                    className="border-rose-300"
+                  >
+                    {showBusinessCardDetails ? 'Hide Details' : 'View Options'}
+                  </Button>
+                </div>
+
+                {showBusinessCardDetails && (
+                  <div className="space-y-6">
+                    {/* Step 1: Design */}
+                    <div className="p-4 bg-white rounded-lg border border-rose-200">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-rose-500 text-white text-sm flex items-center justify-center">1</span>
+                        Design Your Business Card
+                      </h4>
+
+                      {/* AI Prompt */}
+                      <div className="mb-4">
+                        <p className="text-sm text-gray-600 mb-2">Use this prompt with ChatGPT/DALL-E to design your card:</p>
+                        <div className="relative">
+                          <pre className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 whitespace-pre-wrap font-mono">
+{`Design a professional business card for:
+Business: ${profile.name}
+${profile.tagline ? `Tagline: ${profile.tagline}` : ''}
+Type: ${profile.business_type || 'Business'}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+
+Requirements:
+- Standard size: 3.5" x 2" (horizontal)
+- Include space for logo on the left
+- Include QR code placeholder on the back
+- Clean, professional design
+- Match the business type aesthetic`}
+                          </pre>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute top-2 right-2"
+                            onClick={async () => {
+                              const prompt = `Design a professional business card for:\nBusiness: ${profile.name}\n${profile.tagline ? `Tagline: ${profile.tagline}\n` : ''}Type: ${profile.business_type || 'Business'}\n${profile.data.phone ? `Phone: ${profile.data.phone}\n` : ''}${profile.data.email ? `Email: ${profile.data.email}\n` : ''}${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}\n` : ''}\nRequirements:\n- Standard size: 3.5" x 2" (horizontal)\n- Include space for logo on the left\n- Include QR code placeholder on the back\n- Clean, professional design\n- Match the business type aesthetic`
+                              await navigator.clipboard.writeText(prompt)
+                              setBusinessCardPromptCopied(true)
+                              setTimeout(() => setBusinessCardPromptCopied(false), 2000)
+                            }}
+                          >
+                            {businessCardPromptCopied ? (
+                              <><Check className="w-3 h-3 mr-1 text-green-500" /> Copied</>
+                            ) : (
+                              <><Copy className="w-3 h-3 mr-1" /> Copy</>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Design Tools */}
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open('https://www.canva.com/create/business-cards/', '_blank')}
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          Canva Templates
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open('https://www.adobe.com/express/create/business-card', '_blank')}
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          Adobe Express
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open('https://chat.openai.com', '_blank')}
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          ChatGPT
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* What to Include */}
+                    <div className="p-4 bg-white rounded-lg border border-rose-200">
+                      <h4 className="font-semibold text-gray-900 mb-2">What to Include</h4>
+                      <div className="grid sm:grid-cols-2 gap-2 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-500" />
+                          <span>Logo (use Logo Generator above)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-500" />
+                          <span>Business name & tagline</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-500" />
+                          <span>Your name & title</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-500" />
+                          <span>Phone number</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-500" />
+                          <span>Email address</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-500" />
+                          <span>Website URL</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-500" />
+                          <span>QR code (use QR Generator above)</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-400">
+                          <Check className="w-4 h-4" />
+                          <span>Address (optional)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 2: Order */}
+                    <div className="p-4 bg-white rounded-lg border border-rose-200">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-rose-500 text-white text-sm flex items-center justify-center">2</span>
+                        Order Your Cards
+                      </h4>
+
+                      <div className="grid gap-3">
+                        {/* Fastest */}
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Zap className="w-4 h-4 text-blue-600" />
+                            <span className="font-semibold text-blue-800 text-sm">Fastest - Same Day Pickup</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                              onClick={() => window.open('https://www.staples.com/services/printing/business-cards', '_blank')}
+                            >
+                              Staples
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                              onClick={() => window.open('https://www.fedex.com/en-us/printing/business-cards.html', '_blank')}
+                            >
+                              FedEx Office
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                              onClick={() => window.open('https://www.officedepot.com/cm/print-and-copy/business-cards', '_blank')}
+                            >
+                              Office Depot
+                            </Button>
+                          </div>
+                          <p className="text-xs text-blue-600 mt-2">Pick up in-store within hours</p>
+                        </div>
+
+                        {/* Cheapest */}
+                        <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <DollarSign className="w-4 h-4 text-green-600" />
+                            <span className="font-semibold text-green-800 text-sm">Cheapest - Starting ~$10 for 500</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-green-300 text-green-700 hover:bg-green-100"
+                              onClick={() => window.open('https://www.vistaprint.com/business-cards', '_blank')}
+                            >
+                              VistaPrint
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-green-300 text-green-700 hover:bg-green-100"
+                              onClick={() => window.open('https://www.gotprint.com/products/business-cards.html', '_blank')}
+                            >
+                              GotPrint
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-green-300 text-green-700 hover:bg-green-100"
+                              onClick={() => window.open('https://www.4over4.com/printing/business-cards', '_blank')}
+                            >
+                              4over4
+                            </Button>
+                          </div>
+                          <p className="text-xs text-green-600 mt-2">Ships in 3-7 business days</p>
+                        </div>
+
+                        {/* Best Quality */}
+                        <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Award className="w-4 h-4 text-amber-600" />
+                            <span className="font-semibold text-amber-800 text-sm">Best Quality - Premium Cards</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                              onClick={() => window.open('https://www.moo.com/us/business-cards', '_blank')}
+                            >
+                              Moo
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                              onClick={() => window.open('https://www.jukebox.com/us/business-cards', '_blank')}
+                            >
+                              Jukebox
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                              onClick={() => window.open('https://www.printingforless.com/business-cards.html', '_blank')}
+                            >
+                              PrintingForLess
+                            </Button>
+                          </div>
+                          <p className="text-xs text-amber-600 mt-2">Premium paper, unique finishes, luxury feel</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tips */}
+                    <div className="p-4 bg-rose-100/50 rounded-lg border border-rose-200">
+                      <h4 className="font-semibold text-rose-800 mb-2">Pro Tips</h4>
+                      <ul className="text-sm text-rose-700 space-y-1">
+                        <li>• <strong>Standard size:</strong> 3.5" x 2" (US) or 85mm x 55mm (EU)</li>
+                        <li>• <strong>Paper weight:</strong> 14pt or 16pt cardstock recommended</li>
+                        <li>• <strong>Finishes:</strong> Matte (professional), Glossy (vibrant), Soft-touch (premium)</li>
+                        <li>• <strong>Bleed:</strong> Extend design 0.125" past edges for clean cuts</li>
+                        <li>• <strong>Quantity:</strong> Start with 250-500 cards, reorder is easy</li>
+                      </ul>
                     </div>
                   </div>
                 )}
