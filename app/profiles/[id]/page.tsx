@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -38,6 +38,7 @@ export default function ProfileDetailPage() {
   const [copied, setCopied] = useState(false)
   const [qrUrl, setQrUrl] = useState('')
   const [qrGenerated, setQrGenerated] = useState(false)
+  const [showLlcDetails, setShowLlcDetails] = useState(false)
 
   useEffect(() => {
     if (params.id) {
@@ -480,6 +481,261 @@ Make sure the deployment is successful and the site is accessible.`
                     Generate QR Code
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* LLC Formation */}
+            <Card variant="outlined" className="border-2 border-amber-200 bg-amber-50/50">
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                      <Briefcase className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Form an LLC</h3>
+                      <p className="text-sm text-gray-500">Protect your business with legal entity status</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowLlcDetails(!showLlcDetails)}
+                    className="border-amber-300"
+                  >
+                    {showLlcDetails ? 'Hide Details' : 'View Options'}
+                  </Button>
+                </div>
+
+                {showLlcDetails && (
+                  <div className="space-y-6">
+                    {/* Why LLC */}
+                    <div className="p-4 bg-white rounded-lg border border-amber-200">
+                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-amber-600" />
+                        Why Form an LLC?
+                      </h4>
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>• <strong>Personal Asset Protection</strong> - Separates personal and business liability</li>
+                        <li>• <strong>Tax Flexibility</strong> - Choose how your business is taxed</li>
+                        <li>• <strong>Credibility</strong> - Looks more professional to customers</li>
+                        <li>• <strong>Easy Management</strong> - Less paperwork than corporations</li>
+                      </ul>
+                    </div>
+
+                    {/* Formation Services */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Recommended Formation Services</h4>
+                      <div className="grid gap-3">
+                        {/* ZenBusiness - Recommended */}
+                        <div className="p-4 bg-white rounded-lg border-2 border-green-200 relative">
+                          <div className="absolute -top-2 left-3 px-2 py-0.5 bg-green-500 text-white text-xs font-medium rounded">
+                            RECOMMENDED
+                          </div>
+                          <div className="flex items-start justify-between mt-1">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">ZenBusiness</h5>
+                              <p className="text-xs text-gray-500 mb-2">Best overall value for small businesses</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <DollarSign className="w-3 h-3" /> From $0 + state fee
+                                </span>
+                                <span className="flex items-center gap-1 text-blue-600">
+                                  <Clock className="w-3 h-3" /> 1-2 business days
+                                </span>
+                                <span className="flex items-center gap-1 text-amber-600">
+                                  <Star className="w-3 h-3" /> 4.8/5 rating
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">Includes: Filing, registered agent (1 yr), operating agreement template</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => window.open('https://www.zenbusiness.com/llc/', '_blank')}
+                            >
+                              Start
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Incfile */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Incfile</h5>
+                              <p className="text-xs text-gray-500 mb-2">Best free option (only pay state fees)</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <DollarSign className="w-3 h-3" /> $0 + state fee
+                                </span>
+                                <span className="flex items-center gap-1 text-blue-600">
+                                  <Clock className="w-3 h-3" /> 1-3 weeks
+                                </span>
+                                <span className="flex items-center gap-1 text-amber-600">
+                                  <Star className="w-3 h-3" /> 4.7/5 rating
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">Includes: Basic filing, 1 year registered agent, digital dashboard</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open('https://www.incfile.com/form-an-llc/', '_blank')}
+                            >
+                              Start
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* LegalZoom */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">LegalZoom</h5>
+                              <p className="text-xs text-gray-500 mb-2">Most recognized brand, comprehensive services</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <DollarSign className="w-3 h-3" /> From $79 + state fee
+                                </span>
+                                <span className="flex items-center gap-1 text-blue-600">
+                                  <Clock className="w-3 h-3" /> 7-10 business days
+                                </span>
+                                <span className="flex items-center gap-1 text-amber-600">
+                                  <Star className="w-3 h-3" /> 4.5/5 rating
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">Includes: Name search, filing, compliance calendar</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open('https://www.legalzoom.com/business/business-formation/llc-overview.html', '_blank')}
+                            >
+                              Start
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Northwest */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Northwest Registered Agent</h5>
+                              <p className="text-xs text-gray-500 mb-2">Best for privacy & registered agent service</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <DollarSign className="w-3 h-3" /> $39 + state fee
+                                </span>
+                                <span className="flex items-center gap-1 text-blue-600">
+                                  <Clock className="w-3 h-3" /> Same day - 2 weeks
+                                </span>
+                                <span className="flex items-center gap-1 text-amber-600">
+                                  <Star className="w-3 h-3" /> 4.9/5 rating
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">Includes: Filing, free year of registered agent, privacy protection</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open('https://www.northwestregisteredagent.com/llc', '_blank')}
+                            >
+                              Start
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Rocket Lawyer */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Rocket Lawyer</h5>
+                              <p className="text-xs text-gray-500 mb-2">Best for ongoing legal support</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <DollarSign className="w-3 h-3" /> $99 + state fee
+                                </span>
+                                <span className="flex items-center gap-1 text-blue-600">
+                                  <Clock className="w-3 h-3" /> 5-7 business days
+                                </span>
+                                <span className="flex items-center gap-1 text-amber-600">
+                                  <Star className="w-3 h-3" /> 4.6/5 rating
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">Includes: Filing, operating agreement, attorney consultations</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open('https://www.rocketlawyer.com/business-and-contracts/starting-a-business/form-an-llc', '_blank')}
+                            >
+                              Start
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Steps */}
+                    <div className="p-4 bg-white rounded-lg border border-amber-200">
+                      <h4 className="font-semibold text-gray-900 mb-3">Steps to Form an LLC</h4>
+                      <ol className="text-sm text-gray-600 space-y-2">
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">1</span>
+                          <span><strong>Choose your state</strong> - Usually where you do business (state fees: $50-$500)</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">2</span>
+                          <span><strong>Name your LLC</strong> - Must be unique in your state, end with "LLC"</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">3</span>
+                          <span><strong>Choose a Registered Agent</strong> - Required in all states (person/service to receive legal mail)</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">4</span>
+                          <span><strong>File Articles of Organization</strong> - Main formation document filed with state</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">5</span>
+                          <span><strong>Create Operating Agreement</strong> - Internal document outlining ownership & rules</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-medium">6</span>
+                          <span><strong>Get EIN from IRS</strong> - Free tax ID number for your business (like SSN for business)</span>
+                        </li>
+                      </ol>
+                    </div>
+
+                    {/* Additional Tips */}
+                    <div className="p-4 bg-amber-100/50 rounded-lg border border-amber-200">
+                      <h4 className="font-semibold text-amber-800 mb-2">Pro Tips</h4>
+                      <ul className="text-sm text-amber-700 space-y-1">
+                        <li>• Get your <strong>EIN for free</strong> at <a href="https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online" target="_blank" rel="noopener noreferrer" className="underline">IRS.gov</a> - don't pay a service for this</li>
+                        <li>• Open a <strong>business bank account</strong> after getting your EIN</li>
+                        <li>• Consider <strong>business insurance</strong> even with LLC protection</li>
+                        <li>• Keep business and personal finances <strong>completely separate</strong></li>
+                        <li>• Some states (like California) have <strong>annual fees</strong> - check before filing</li>
+                      </ul>
+                    </div>
+
+                    {/* DIY Option */}
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-xs text-gray-500">
+                        <strong>DIY Option:</strong> You can file directly with your state's Secretary of State website to save money.
+                        <a
+                          href="https://www.usa.gov/state-business"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-amber-600 hover:text-amber-800 underline ml-1"
+                        >
+                          Find your state's business portal →
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
