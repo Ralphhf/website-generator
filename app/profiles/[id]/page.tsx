@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -34,6 +34,7 @@ export default function ProfileDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState<ProfileStep>('overview')
+  const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
     if (params.id) {
@@ -85,6 +86,40 @@ export default function ProfileDetailPage() {
     } catch (err) {
       console.error('Download error:', err)
       alert('Failed to download. Please try again.')
+    }
+  }
+
+  const handleGenerateWebsite = async () => {
+    if (!profile) return
+
+    setGenerating(true)
+    try {
+      const response = await fetch('/api/download-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profile.data),
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${profile.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-data.zip`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+
+        alert('ZIP downloaded! If the watcher is running, it will automatically start generating your website in VS Code.')
+      }
+    } catch (err) {
+      console.error('Generate error:', err)
+      alert('Failed to start generation. Please try again.')
+    } finally {
+      setGenerating(false)
     }
   }
 
@@ -255,6 +290,37 @@ export default function ProfileDetailPage() {
             transition={{ delay: 0.1 }}
             className="space-y-4"
           >
+            {/* Generate Website - Primary Action */}
+            <Card variant="gradient" className="border-2 border-primary-200">
+              <CardContent className="py-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
+                      <Rocket className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-lg">Generate Website</h3>
+                      <p className="text-sm text-gray-500">Auto-generate with Claude CLI (watcher must be running)</p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleGenerateWebsite}
+                    disabled={generating}
+                    className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600"
+                  >
+                    {generating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Starting...
+                      </>
+                    ) : (
+                      'Generate'
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Re-download */}
             <Card variant="outlined" hover>
               <CardContent className="py-4">
