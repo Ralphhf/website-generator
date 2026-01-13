@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
+
+export const dynamic = 'force-dynamic'
 
 // GET - List all profiles
 export async function GET() {
   try {
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('business_profiles')
       .select('id, name, business_type, tagline, city, state, created_at, updated_at')
@@ -44,6 +47,7 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     }
 
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('business_profiles')
       .insert([profileData])

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
+
+export const dynamic = 'force-dynamic'
 
 // GET - Get a single profile by ID
 export async function GET(
@@ -9,6 +11,7 @@ export async function GET(
   try {
     const { id } = await params
 
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('business_profiles')
       .select('*')
@@ -58,6 +61,7 @@ export async function PUT(
       updated_at: new Date().toISOString(),
     }
 
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('business_profiles')
       .update(profileData)
@@ -85,6 +89,7 @@ export async function DELETE(
   try {
     const { id } = await params
 
+    const supabase = getSupabase()
     const { error } = await supabase
       .from('business_profiles')
       .delete()
