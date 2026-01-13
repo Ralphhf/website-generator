@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -35,6 +35,7 @@ export default function ProfileDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState<ProfileStep>('overview')
   const [generating, setGenerating] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (params.id) {
@@ -120,6 +121,30 @@ export default function ProfileDetailPage() {
       alert('Failed to start generation. Please try again.')
     } finally {
       setGenerating(false)
+    }
+  }
+
+  const handleCopyDeployPrompt = async () => {
+    if (!profile) return
+
+    const repoName = profile.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    const prompt = `I need you to deploy this website to production. Please do the following:
+
+1. Initialize a git repository if not already done
+2. Create a new GitHub repository called "${repoName}" (use gh repo create)
+3. Push all the code to the GitHub repository
+4. Deploy the site to Vercel using the Vercel CLI (vercel --prod)
+5. Give me the live URL when done
+
+Make sure the deployment is successful and the site is accessible.`
+
+    try {
+      await navigator.clipboard.writeText(prompt)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+      alert('Failed to copy to clipboard')
     }
   }
 
@@ -315,6 +340,40 @@ export default function ProfileDetailPage() {
                       </>
                     ) : (
                       'Generate'
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Deploy to Vercel */}
+            <Card variant="outlined" hover className="border-2 border-orange-200 bg-orange-50/50">
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                      <Globe className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Deploy to Vercel</h3>
+                      <p className="text-sm text-gray-500">Copy prompt to deploy via GitHub & Vercel</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleCopyDeployPrompt}
+                    className="border-orange-300 hover:bg-orange-100"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2 text-green-600" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy Prompt
+                      </>
                     )}
                   </Button>
                 </div>
