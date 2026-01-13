@@ -166,6 +166,7 @@ function GeneratorContent() {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
+        // Use -data.zip suffix - this triggers the watcher
         a.download = `${businessInfo.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-data.zip`
         document.body.appendChild(a)
         a.click()
@@ -174,6 +175,44 @@ function GeneratorContent() {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
 
+        setDownloadSuccess(true)
+      } else {
+        console.error('Download failed')
+        setDownloadSuccess(false)
+      }
+
+      setCurrentStep('complete')
+    } catch (error) {
+      console.error('Download error:', error)
+      setDownloadSuccess(false)
+      setCurrentStep('complete')
+    }
+  }
+
+  // Download only - uses different filename so watcher doesn't pick it up
+  const handleDownloadOnly = async () => {
+    setCurrentStep('generating')
+
+    try {
+      const response = await fetch('/api/download-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(businessInfo),
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        // Use -export.zip suffix - this does NOT trigger the watcher
+        a.download = `${businessInfo.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-export.zip`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
         setDownloadSuccess(true)
       } else {
         console.error('Download failed')
@@ -368,6 +407,7 @@ function GeneratorContent() {
               <PreviewStep
                 businessInfo={businessInfo}
                 onGenerate={handleGenerate}
+                onDownloadOnly={handleDownloadOnly}
                 onBack={handleBack}
               />
             )}

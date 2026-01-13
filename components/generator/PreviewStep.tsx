@@ -9,10 +9,11 @@ import { BusinessInfo } from '@/lib/types'
 interface PreviewStepProps {
   businessInfo: BusinessInfo
   onGenerate: () => void
+  onDownloadOnly: () => void
   onBack: () => void
 }
 
-export function PreviewStep({ businessInfo, onGenerate, onBack }: PreviewStepProps) {
+export function PreviewStep({ businessInfo, onGenerate, onDownloadOnly, onBack }: PreviewStepProps) {
   const [showSetupModal, setShowSetupModal] = useState(false)
   const [setupComplete, setSetupComplete] = useState(() => {
     // Check if user has already set up the watcher
@@ -224,7 +225,7 @@ export function PreviewStep({ businessInfo, onGenerate, onBack }: PreviewStepPro
           <Button
             variant="outline"
             size="lg"
-            onClick={onGenerate}
+            onClick={onDownloadOnly}
             className="w-full"
           >
             <Download className="mr-2 w-4 h-4" />
