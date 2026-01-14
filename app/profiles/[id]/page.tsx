@@ -1689,11 +1689,127 @@ Style: Festive, warm, seasonal, inviting`
 
                 {showEmailSetupDetails && (
                   <div className="space-y-6">
+                    {/* Free Email Options */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">FREE</span>
+                        Free Email Options
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Don't need a custom domain? These free options work great for getting started.
+                      </p>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        {/* Gmail */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Gmail</h5>
+                              <p className="text-xs text-gray-500 mb-2">Google's free email service</p>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                <li>• 15GB free storage</li>
+                                <li>• Best spam protection</li>
+                                <li>• Great mobile app</li>
+                              </ul>
+                              <p className="text-xs text-gray-400 mt-2">Tip: Use {profile.name.toLowerCase().replace(/[^a-z0-9]+/g, '')}@gmail.com</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open('https://accounts.google.com/signup', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Sign Up
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Outlook.com */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Outlook.com</h5>
+                              <p className="text-xs text-gray-500 mb-2">Microsoft's free email</p>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                <li>• 15GB free storage</li>
+                                <li>• Clean interface</li>
+                                <li>• Office online free</li>
+                              </ul>
+                              <p className="text-xs text-gray-400 mt-2">Also: @hotmail.com, @live.com</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open('https://outlook.live.com/owa/?nlp=1&signup=1', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Sign Up
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Yahoo Mail */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Yahoo Mail</h5>
+                              <p className="text-xs text-gray-500 mb-2">Classic free email</p>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                <li>• 1TB free storage</li>
+                                <li>• Disposable addresses</li>
+                                <li>• News integration</li>
+                              </ul>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open('https://login.yahoo.com/account/create', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Sign Up
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* ProtonMail Free */}
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Proton Mail</h5>
+                              <p className="text-xs text-gray-500 mb-2">Privacy-focused free email</p>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                <li>• 1GB free storage</li>
+                                <li>• End-to-end encrypted</li>
+                                <li>• No ads, no tracking</li>
+                              </ul>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open('https://proton.me/mail', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Sign Up
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-200"></div>
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-4 bg-sky-50 text-gray-500">or upgrade to a professional email</span>
+                      </div>
+                    </div>
+
                     {/* Why Business Email */}
                     <div className="p-4 bg-white rounded-lg border border-sky-200">
                       <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                         <Mail className="w-4 h-4 text-sky-600" />
-                        Why Use a Business Email?
+                        Why Upgrade to a Business Email?
                       </h4>
                       <ul className="text-sm text-gray-600 space-y-1">
                         <li>• <strong>Professionalism</strong> - yourname@{profile.name.toLowerCase().replace(/[^a-z0-9]+/g, '')}.com looks better than gmail</li>
@@ -1705,7 +1821,7 @@ Style: Festive, warm, seasonal, inviting`
 
                     {/* Email Provider Options */}
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-3">Email Providers</h4>
+                      <h4 className="font-semibold text-gray-900 mb-3">Business Email Providers</h4>
                       <div className="grid gap-3">
                         {/* Google Workspace - Recommended */}
                         <div className="p-4 bg-white rounded-lg border-2 border-green-200 relative">
