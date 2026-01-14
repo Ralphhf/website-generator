@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare, Mail, PenTool } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -28,7 +28,7 @@ interface SavedProfile {
   updated_at: string
 }
 
-type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'social-media' | 'llc'
+type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'business-email' | 'email-signature' | 'social-media' | 'llc'
 
 export default function ProfileDetailPage() {
   const params = useParams()
@@ -51,6 +51,10 @@ export default function ProfileDetailPage() {
   const [showLogoDetails, setShowLogoDetails] = useState(false)
   const [logoPromptIndex, setLogoPromptIndex] = useState(0)
   const [logoPromptCopied, setLogoPromptCopied] = useState(false)
+  const [showEmailSetupDetails, setShowEmailSetupDetails] = useState(false)
+  const [showEmailSignatureDetails, setShowEmailSignatureDetails] = useState(false)
+  const [emailSignaturePromptIndex, setEmailSignaturePromptIndex] = useState(0)
+  const [emailSignaturePromptCopied, setEmailSignaturePromptCopied] = useState(false)
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -1645,6 +1649,528 @@ Style: Festive, warm, seasonal, inviting`
                     Generate QR Code
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Business Email Setup */}
+            <Card variant="outlined" className={`border-2 ${isSectionComplete('business-email') ? 'border-green-300 bg-green-50/30' : 'border-sky-200 bg-sky-50/50'}`}>
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('business-email')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('business-email') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('business-email') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
+                    <div className="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center">
+                      <Mail className="w-5 h-5 text-sky-600" />
+                    </div>
+                    <div>
+                      <h3 className={`font-semibold ${isSectionComplete('business-email') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Business Email Setup</h3>
+                      <p className="text-sm text-gray-500">Get a professional email address for your business</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowEmailSetupDetails(!showEmailSetupDetails)}
+                    className="border-sky-300"
+                  >
+                    {showEmailSetupDetails ? 'Hide Details' : 'View Options'}
+                  </Button>
+                </div>
+
+                {showEmailSetupDetails && (
+                  <div className="space-y-6">
+                    {/* Why Business Email */}
+                    <div className="p-4 bg-white rounded-lg border border-sky-200">
+                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-sky-600" />
+                        Why Use a Business Email?
+                      </h4>
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>• <strong>Professionalism</strong> - yourname@{profile.name.toLowerCase().replace(/[^a-z0-9]+/g, '')}.com looks better than gmail</li>
+                        <li>• <strong>Brand Recognition</strong> - Every email reinforces your brand</li>
+                        <li>• <strong>Trust & Credibility</strong> - Customers trust professional email addresses</li>
+                        <li>• <strong>Security</strong> - Better spam protection and admin controls</li>
+                      </ul>
+                    </div>
+
+                    {/* Email Provider Options */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Email Providers</h4>
+                      <div className="grid gap-3">
+                        {/* Google Workspace - Recommended */}
+                        <div className="p-4 bg-white rounded-lg border-2 border-green-200 relative">
+                          <div className="absolute -top-2 left-3 px-2 py-0.5 bg-green-500 text-white text-xs font-medium rounded">
+                            RECOMMENDED
+                          </div>
+                          <div className="flex items-start justify-between mt-1">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Google Workspace</h5>
+                              <p className="text-xs text-gray-500 mb-2">Professional email powered by Gmail</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <DollarSign className="w-3 h-3" />
+                                  From $6/user/month
+                                </span>
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <Zap className="w-3 h-3" />
+                                  Gmail interface
+                                </span>
+                              </div>
+                              <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                                <li>• 30GB storage per user</li>
+                                <li>• Google Meet, Drive, Docs included</li>
+                                <li>• Excellent mobile apps</li>
+                              </ul>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-green-300 hover:bg-green-50"
+                              onClick={() => window.open('https://workspace.google.com/business/signup/welcome', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Sign Up
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Microsoft 365 */}
+                        <div className="p-4 bg-white rounded-lg border border-sky-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Microsoft 365 Business</h5>
+                              <p className="text-xs text-gray-500 mb-2">Outlook email with Office apps</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <DollarSign className="w-3 h-3" />
+                                  From $6/user/month
+                                </span>
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <Zap className="w-3 h-3" />
+                                  Outlook interface
+                                </span>
+                              </div>
+                              <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                                <li>• 50GB mailbox per user</li>
+                                <li>• Word, Excel, PowerPoint included</li>
+                                <li>• Best for Microsoft users</li>
+                              </ul>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-sky-300"
+                              onClick={() => window.open('https://www.microsoft.com/en-us/microsoft-365/business/compare-all-microsoft-365-products', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Sign Up
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Zoho Mail */}
+                        <div className="p-4 bg-white rounded-lg border border-sky-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Zoho Mail</h5>
+                              <p className="text-xs text-gray-500 mb-2">Affordable business email solution</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <DollarSign className="w-3 h-3" />
+                                  From $1/user/month
+                                </span>
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <Zap className="w-3 h-3" />
+                                  Free tier available
+                                </span>
+                              </div>
+                              <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                                <li>• Free for up to 5 users</li>
+                                <li>• Clean, ad-free interface</li>
+                                <li>• Great for budget-conscious businesses</li>
+                              </ul>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-sky-300"
+                              onClick={() => window.open('https://www.zoho.com/mail/zohomail-pricing.html', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Sign Up
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* ProtonMail */}
+                        <div className="p-4 bg-white rounded-lg border border-sky-200">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h5 className="font-semibold text-gray-900">Proton Mail Business</h5>
+                              <p className="text-xs text-gray-500 mb-2">Privacy-focused encrypted email</p>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <DollarSign className="w-3 h-3" />
+                                  From $8/user/month
+                                </span>
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <Shield className="w-3 h-3" />
+                                  End-to-end encryption
+                                </span>
+                              </div>
+                              <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                                <li>• Swiss privacy laws</li>
+                                <li>• Zero-access encryption</li>
+                                <li>• Best for privacy-sensitive businesses</li>
+                              </ul>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-sky-300"
+                              onClick={() => window.open('https://proton.me/business', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Sign Up
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Setup Steps */}
+                    <div className="p-4 bg-sky-50 rounded-lg border border-sky-200">
+                      <h4 className="font-semibold text-sky-900 mb-2">Setup Steps</h4>
+                      <ol className="text-sm text-sky-800 space-y-1 list-decimal list-inside">
+                        <li>Choose an email provider above</li>
+                        <li>Purchase or verify ownership of your domain</li>
+                        <li>Follow provider's DNS setup instructions (MX records)</li>
+                        <li>Create email addresses (info@, contact@, yourname@)</li>
+                        <li>Set up email clients on your devices</li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Email Signature Generator */}
+            <Card variant="outlined" className={`border-2 ${isSectionComplete('email-signature') ? 'border-green-300 bg-green-50/30' : 'border-cyan-200 bg-cyan-50/50'}`}>
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('email-signature')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('email-signature') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('email-signature') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
+                    <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center">
+                      <PenTool className="w-5 h-5 text-cyan-600" />
+                    </div>
+                    <div>
+                      <h3 className={`font-semibold ${isSectionComplete('email-signature') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Email Signature Generator</h3>
+                      <p className="text-sm text-gray-500">Create a professional email signature</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowEmailSignatureDetails(!showEmailSignatureDetails)}
+                    className="border-cyan-300"
+                  >
+                    {showEmailSignatureDetails ? 'Hide Details' : 'View Options'}
+                  </Button>
+                </div>
+
+                {showEmailSignatureDetails && (() => {
+                  const emailSignaturePrompts = [
+                    {
+                      name: 'Professional Corporate',
+                      prompt: `Create a professional HTML email signature for:
+
+Business: ${profile.name}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+${profile.tagline ? `Tagline: ${profile.tagline}` : ''}
+
+Style Requirements:
+- Clean, corporate design with clear hierarchy
+- Company name in bold, professional font
+- Contact info in organized rows with icons
+- Subtle divider line between sections
+- Color scheme: Navy blue (#1e3a5f) and gray
+- Include social media icons if applicable
+- Mobile-responsive width (max 600px)
+
+Output: Clean HTML code ready to paste into email settings`
+                    },
+                    {
+                      name: 'Modern Minimalist',
+                      prompt: `Design a minimalist HTML email signature for:
+
+Business: ${profile.name}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+${profile.tagline ? `Tagline: ${profile.tagline}` : ''}
+
+Style Requirements:
+- Ultra-minimal design with maximum whitespace
+- Single accent color line or element
+- Typography-focused, no unnecessary graphics
+- Thin, light fonts
+- Contact info on single line with pipe separators
+- No borders or boxes, just clean text
+- Monochrome with one brand color accent
+
+Output: Lightweight HTML that works in all email clients`
+                    },
+                    {
+                      name: 'Creative & Bold',
+                      prompt: `Create a bold, eye-catching HTML email signature for:
+
+Business: ${profile.name}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+${profile.tagline ? `Tagline: ${profile.tagline}` : ''}
+
+Style Requirements:
+- Bold, creative design that stands out
+- Gradient accent or colorful banner element
+- Strong typography with impact
+- Rounded corners and modern feel
+- Vibrant brand colors
+- Interactive-looking social icons
+- Includes a short tagline or call-to-action
+
+Output: HTML email signature with inline styles`
+                    },
+                    {
+                      name: 'Elegant Luxury',
+                      prompt: `Design an elegant, premium HTML email signature for:
+
+Business: ${profile.name}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+${profile.tagline ? `Tagline: ${profile.tagline}` : ''}
+
+Style Requirements:
+- Sophisticated, luxury aesthetic
+- Serif fonts for elegance
+- Gold (#c9a962) or rose gold accents on dark background
+- Refined spacing and typography
+- Subtle decorative elements (thin lines, small icons)
+- Name styled as if on business card
+- Premium, high-end feel
+
+Output: Elegant HTML signature suitable for luxury businesses`
+                    },
+                    {
+                      name: 'Friendly & Approachable',
+                      prompt: `Create a warm, friendly HTML email signature for:
+
+Business: ${profile.name}
+${profile.data.email ? `Email: ${profile.data.email}` : ''}
+${profile.data.phone ? `Phone: ${profile.data.phone}` : ''}
+${profile.data.city && profile.data.state ? `Location: ${profile.data.city}, ${profile.data.state}` : ''}
+${profile.tagline ? `Tagline: ${profile.tagline}` : ''}
+
+Style Requirements:
+- Warm, welcoming design
+- Rounded elements and soft corners
+- Friendly colors (warm oranges, soft blues, greens)
+- Casual but professional font choices
+- Space for small headshot or logo placeholder
+- Includes a friendly sign-off phrase
+- Inviting call-to-action button style
+
+Output: HTML signature perfect for service businesses and local shops`
+                    }
+                  ]
+
+                  const currentEmailPrompt = emailSignaturePrompts[emailSignaturePromptIndex]
+
+                  const copyEmailPrompt = async () => {
+                    try {
+                      await navigator.clipboard.writeText(currentEmailPrompt.prompt)
+                      setEmailSignaturePromptCopied(true)
+                      setTimeout(() => setEmailSignaturePromptCopied(false), 2000)
+                    } catch (err) {
+                      console.error('Failed to copy:', err)
+                    }
+                  }
+
+                  return (
+                    <div className="space-y-6">
+                      {/* AI Prompt Section */}
+                      <div className="p-4 bg-white rounded-lg border border-cyan-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-cyan-600" />
+                            <h4 className="font-semibold text-gray-900">AI Signature Prompt</h4>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">
+                              {emailSignaturePromptIndex + 1} / {emailSignaturePrompts.length}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEmailSignaturePromptIndex((prev) => (prev + 1) % emailSignaturePrompts.length)
+                                setEmailSignaturePromptCopied(false)
+                              }}
+                              className="border-cyan-300 hover:bg-cyan-50"
+                            >
+                              <Shuffle className="w-4 h-4 mr-1" />
+                              Next Style
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="mb-3">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-cyan-100 text-cyan-800">
+                            {currentEmailPrompt.name}
+                          </span>
+                        </div>
+                        <div className="relative">
+                          <pre className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 whitespace-pre-wrap font-mono max-h-48 overflow-y-auto">
+                            {currentEmailPrompt.prompt}
+                          </pre>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={copyEmailPrompt}
+                            className="absolute top-2 right-2"
+                          >
+                            {emailSignaturePromptCopied ? (
+                              <>
+                                <Check className="w-3 h-3 mr-1 text-green-500" />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3 mr-1" />
+                                Copy
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Signature Generator Tools */}
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-3">Signature Generator Tools</h4>
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          <div className="p-4 bg-white rounded-lg border border-cyan-200">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h5 className="font-semibold text-gray-900">HubSpot Signature Generator</h5>
+                                <p className="text-xs text-gray-500 mb-2">Free, easy-to-use generator</p>
+                                <span className="text-xs text-green-600 font-medium">FREE</span>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-cyan-300"
+                                onClick={() => window.open('https://www.hubspot.com/email-signature-generator', '_blank')}
+                              >
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                Open
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="p-4 bg-white rounded-lg border border-cyan-200">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h5 className="font-semibold text-gray-900">WiseStamp</h5>
+                                <p className="text-xs text-gray-500 mb-2">Professional templates</p>
+                                <span className="text-xs text-gray-600 font-medium">Free & Paid</span>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-cyan-300"
+                                onClick={() => window.open('https://www.wisestamp.com/signature-generator/', '_blank')}
+                              >
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                Open
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="p-4 bg-white rounded-lg border border-cyan-200">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h5 className="font-semibold text-gray-900">MySignature</h5>
+                                <p className="text-xs text-gray-500 mb-2">Modern signature templates</p>
+                                <span className="text-xs text-green-600 font-medium">FREE</span>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-cyan-300"
+                                onClick={() => window.open('https://mysignature.io/', '_blank')}
+                              >
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                Open
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="p-4 bg-white rounded-lg border border-cyan-200">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h5 className="font-semibold text-gray-900">ChatGPT</h5>
+                                <p className="text-xs text-gray-500 mb-2">Generate custom HTML code</p>
+                                <span className="text-xs text-gray-600 font-medium">Use prompt above</span>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-cyan-300"
+                                onClick={() => window.open('https://chat.openai.com/', '_blank')}
+                              >
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                Open
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tips */}
+                      <div className="p-4 bg-cyan-50 rounded-lg border border-cyan-200">
+                        <h4 className="font-semibold text-cyan-900 mb-2">Email Signature Tips</h4>
+                        <ul className="text-sm text-cyan-800 space-y-1">
+                          <li>• Keep it concise - 3-4 lines of contact info max</li>
+                          <li>• Include a call-to-action (book a call, visit website)</li>
+                          <li>• Use web-safe fonts (Arial, Georgia, Verdana)</li>
+                          <li>• Test your signature by sending emails to yourself</li>
+                          <li>• Update seasonally or with promotions</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )
+                })()}
               </CardContent>
             </Card>
 
