@@ -13,7 +13,7 @@ import { HeroImageStep } from '@/components/generator/HeroImageStep'
 import { ContactInfoStep } from '@/components/generator/ContactInfoStep'
 import { TestimonialsStep } from '@/components/generator/TestimonialsStep'
 import { PortfolioStep } from '@/components/generator/PortfolioStep'
-import { PreviewStep } from '@/components/generator/PreviewStep'
+import { PreviewStep, WebsiteStyle } from '@/components/generator/PreviewStep'
 import { GeneratingStep } from '@/components/generator/GeneratingStep'
 import { CompleteStep } from '@/components/generator/CompleteStep'
 import { LogoGeneratorStep } from '@/components/generator/LogoGeneratorStep'
@@ -146,7 +146,7 @@ function GeneratorContent() {
     setCurrentStep('preview')
   }
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (style: WebsiteStyle) => {
     setCurrentStep('generating')
 
     try {
@@ -155,7 +155,7 @@ function GeneratorContent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(businessInfo),
+        body: JSON.stringify({ businessInfo, style }),
       })
 
       if (response.ok) {
@@ -190,7 +190,7 @@ function GeneratorContent() {
   }
 
   // Download only - uses different filename so watcher doesn't pick it up
-  const handleDownloadOnly = async () => {
+  const handleDownloadOnly = async (style: WebsiteStyle) => {
     setCurrentStep('generating')
 
     try {
@@ -199,7 +199,7 @@ function GeneratorContent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(businessInfo),
+        body: JSON.stringify({ businessInfo, style }),
       })
 
       if (response.ok) {

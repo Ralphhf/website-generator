@@ -2,19 +2,22 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Download, Check, Building2, MapPin, Phone, Image as ImageIcon, Quote, Sparkles, X, Terminal, FolderOpen, Play, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Download, Check, Building2, MapPin, Phone, Image as ImageIcon, Quote, Sparkles, X, Terminal, FolderOpen, Play, ExternalLink, Palette, Briefcase } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import { BusinessInfo } from '@/lib/types'
 
+export type WebsiteStyle = 'modern' | 'classic'
+
 interface PreviewStepProps {
   businessInfo: BusinessInfo
-  onGenerate: () => void
-  onDownloadOnly: () => void
+  onGenerate: (style: WebsiteStyle) => void
+  onDownloadOnly: (style: WebsiteStyle) => void
   onBack: () => void
 }
 
 export function PreviewStep({ businessInfo, onGenerate, onDownloadOnly, onBack }: PreviewStepProps) {
   const [showSetupModal, setShowSetupModal] = useState(false)
+  const [selectedStyle, setSelectedStyle] = useState<WebsiteStyle>('modern')
   const [setupComplete, setSetupComplete] = useState(() => {
     // Check if user has already set up the watcher
     if (typeof window !== 'undefined') {
@@ -27,7 +30,7 @@ export function PreviewStep({ businessInfo, onGenerate, onDownloadOnly, onBack }
     if (!setupComplete) {
       setShowSetupModal(true)
     } else {
-      onGenerate()
+      onGenerate(selectedStyle)
     }
   }
 
@@ -35,7 +38,7 @@ export function PreviewStep({ businessInfo, onGenerate, onDownloadOnly, onBack }
     localStorage.setItem('website-generator-watcher-setup', 'true')
     setSetupComplete(true)
     setShowSetupModal(false)
-    onGenerate()
+    onGenerate(selectedStyle)
   }
 
   const sections = [
@@ -208,6 +211,87 @@ export function PreviewStep({ businessInfo, onGenerate, onDownloadOnly, onBack }
         </Card>
       </motion.div>
 
+      {/* Website Style Selection */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+        className="mt-8"
+      >
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Choose Your Website Style</h3>
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* Modern & Creative Option */}
+          <button
+            onClick={() => setSelectedStyle('modern')}
+            className={`relative p-6 rounded-2xl text-left transition-all duration-200 ${
+              selectedStyle === 'modern'
+                ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white ring-4 ring-purple-300 ring-offset-2'
+                : 'bg-white border-2 border-gray-200 hover:border-purple-300 hover:shadow-lg'
+            }`}
+          >
+            {selectedStyle === 'modern' && (
+              <div className="absolute top-3 right-3 w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                <Check className="w-4 h-4 text-purple-600" />
+              </div>
+            )}
+            <div className={`w-12 h-12 rounded-xl mb-4 flex items-center justify-center ${
+              selectedStyle === 'modern' ? 'bg-white/20' : 'bg-gradient-to-br from-purple-500 to-pink-500'
+            }`}>
+              <Palette className={`w-6 h-6 ${selectedStyle === 'modern' ? 'text-white' : 'text-white'}`} />
+            </div>
+            <h4 className={`text-lg font-semibold mb-2 ${selectedStyle === 'modern' ? 'text-white' : 'text-gray-900'}`}>
+              Modern & Creative
+            </h4>
+            <p className={`text-sm mb-3 ${selectedStyle === 'modern' ? 'text-white/80' : 'text-gray-600'}`}>
+              Awwwards-level design with bold animations, gradients, and cutting-edge effects
+            </p>
+            <div className={`flex flex-wrap gap-2 text-xs ${selectedStyle === 'modern' ? 'text-white/70' : 'text-gray-500'}`}>
+              <span className="px-2 py-1 rounded-full bg-black/10">Glassmorphism</span>
+              <span className="px-2 py-1 rounded-full bg-black/10">Parallax</span>
+              <span className="px-2 py-1 rounded-full bg-black/10">Animations</span>
+            </div>
+            <p className={`text-xs mt-3 font-medium ${selectedStyle === 'modern' ? 'text-white/60' : 'text-gray-400'}`}>
+              Best for: Creative agencies, tech, modern restaurants, fitness
+            </p>
+          </button>
+
+          {/* Classic Professional Option */}
+          <button
+            onClick={() => setSelectedStyle('classic')}
+            className={`relative p-6 rounded-2xl text-left transition-all duration-200 ${
+              selectedStyle === 'classic'
+                ? 'bg-gradient-to-br from-slate-700 to-slate-900 text-white ring-4 ring-slate-400 ring-offset-2'
+                : 'bg-white border-2 border-gray-200 hover:border-slate-400 hover:shadow-lg'
+            }`}
+          >
+            {selectedStyle === 'classic' && (
+              <div className="absolute top-3 right-3 w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                <Check className="w-4 h-4 text-slate-700" />
+              </div>
+            )}
+            <div className={`w-12 h-12 rounded-xl mb-4 flex items-center justify-center ${
+              selectedStyle === 'classic' ? 'bg-white/20' : 'bg-gradient-to-br from-slate-700 to-slate-900'
+            }`}>
+              <Briefcase className={`w-6 h-6 ${selectedStyle === 'classic' ? 'text-white' : 'text-white'}`} />
+            </div>
+            <h4 className={`text-lg font-semibold mb-2 ${selectedStyle === 'classic' ? 'text-white' : 'text-gray-900'}`}>
+              Classic Professional
+            </h4>
+            <p className={`text-sm mb-3 ${selectedStyle === 'classic' ? 'text-white/80' : 'text-gray-600'}`}>
+              Clean, trustworthy design with elegant typography and subtle animations
+            </p>
+            <div className={`flex flex-wrap gap-2 text-xs ${selectedStyle === 'classic' ? 'text-white/70' : 'text-gray-500'}`}>
+              <span className="px-2 py-1 rounded-full bg-black/10">Serif fonts</span>
+              <span className="px-2 py-1 rounded-full bg-black/10">Clean layout</span>
+              <span className="px-2 py-1 rounded-full bg-black/10">Fast loading</span>
+            </div>
+            <p className={`text-xs mt-3 font-medium ${selectedStyle === 'classic' ? 'text-white/60' : 'text-gray-400'}`}>
+              Best for: Law, medical, accounting, real estate, insurance
+            </p>
+          </button>
+        </div>
+      </motion.div>
+
       {/* Action Buttons */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -225,11 +309,11 @@ export function PreviewStep({ businessInfo, onGenerate, onDownloadOnly, onBack }
           <Button
             variant="outline"
             size="lg"
-            onClick={onDownloadOnly}
+            onClick={() => onDownloadOnly(selectedStyle)}
             className="w-full"
           >
             <Download className="mr-2 w-4 h-4" />
-            Download Data
+            Download Data ({selectedStyle === 'modern' ? 'Modern' : 'Classic'})
           </Button>
         </div>
 
@@ -247,7 +331,7 @@ export function PreviewStep({ businessInfo, onGenerate, onDownloadOnly, onBack }
             className="w-full"
           >
             <Sparkles className="mr-2 w-4 h-4" />
-            Generate Website
+            Generate ({selectedStyle === 'modern' ? 'Modern' : 'Classic'})
           </Button>
           {setupComplete && (
             <p className="text-white/60 text-xs mt-2">Watcher is set up</p>

@@ -4,6 +4,10 @@ import * as fs from 'fs'
 import * as path from 'path'
 import archiver from 'archiver'
 import { Writable } from 'stream'
+import { WEBSITE_DESIGN_PROMPT } from '@/lib/website-design-prompt'
+import { WEBSITE_DESIGN_PROMPT_CLASSIC } from '@/lib/website-design-prompt-classic'
+
+type WebsiteStyle = 'modern' | 'classic'
 
 async function downloadImage(url: string, filepath: string): Promise<boolean> {
   try {
@@ -36,8 +40,10 @@ export async function POST(request: NextRequest) {
   console.log('Download API called')
 
   try {
-    const businessInfo: BusinessInfo = await request.json()
-    console.log('Business name:', businessInfo.name)
+    const body = await request.json()
+    const businessInfo: BusinessInfo = body.businessInfo || body
+    const style: WebsiteStyle = body.style || 'modern'
+    console.log('Business name:', businessInfo.name, '| Style:', style)
 
     // Use /tmp for Vercel serverless compatibility (required for write access)
     const tempDir = '/tmp/download-' + Date.now()
@@ -201,7 +207,7 @@ export async function POST(request: NextRequest) {
     )
 
     // Create the Claude prompt file
-    const promptContent = generateClaudePrompt(businessInfo)
+    const promptContent = generateClaudePrompt(businessInfo, style)
     fs.writeFileSync(
       path.join(dataDir, 'CLAUDE_PROMPT.md'),
       promptContent
@@ -269,7 +275,88 @@ function sanitizeFilename(name: string): string {
     .substring(0, 50) || 'business'
 }
 
-function generateClaudePrompt(info: BusinessInfo): string {
+function generateClaudePrompt(info: BusinessInfo, style: WebsiteStyle): string {
+  const isClassic = style === 'classic'
+
+  const styleSection = isClassic ? `
+## Design Style: CLASSIC PROFESSIONAL
+
+This website should convey **trust, professionalism, and reliability**. Think established law firm, medical practice, or financial advisor - not a trendy startup.
+
+### Design Philosophy
+- Clean, organized layouts with clear visual hierarchy
+- Subtle animations ONLY (simple fade-ins, max 0.3s duration)
+- NO parallax, NO glassmorphism, NO complex animations
+- Solid color backgrounds (white, light gray, navy)
+- Professional color palette (navy, dark blue, forest green, or burgundy + gold accents)
+
+### Typography
+- **Headings**: Serif fonts (Georgia, Playfair Display) for elegance and trust
+- **Body**: Clean sans-serif (Inter, Open Sans) for readability
+- Large, readable text sizes
+
+### Component Style
+- Clean white cards with subtle box shadows
+- Simple icon + text service blocks
+- Grid-based testimonial layouts (NO carousels)
+- Straightforward contact forms
+- Professional footer with organized columns
+- Button hover: darken color + subtle shadow only
+
+### AVOID These Effects
+- Glassmorphism
+- Parallax scrolling
+- Magnetic/animated buttons
+- Staggered animations
+- Text reveal animations
+- Floating elements
+- Complex gradients
+- Neon or vibrant colors
+
+### Trust Elements to Include
+- Years in business prominently displayed
+- Professional certifications/credentials
+- Clear contact information on every page
+- Client testimonials with full names
+` : `
+## Design Style: MODERN & CREATIVE
+
+This website should be **Awwwards-level, premium, and cutting-edge**. Think design agency, tech startup, or trendy restaurant - visually stunning and memorable.
+
+### Design Philosophy
+- Bold, innovative layouts that push boundaries
+- Rich animations and micro-interactions throughout
+- Glassmorphism, gradients, and layered depth
+- Dynamic backgrounds with visual interest
+
+### Required Animation Libraries
+You MUST use components from these libraries:
+
+#### 1. Aceternity UI (Primary Animation Library)
+\`\`\`bash
+npm install framer-motion clsx tailwind-merge
+\`\`\`
+Use these Aceternity components (copy from https://ui.aceternity.com/components):
+- **Hero sections**: Spotlight, Lamp Effect, Aurora Background, Vortex
+- **Text effects**: Text Generate Effect, Typewriter Effect, Flip Words
+- **Cards**: 3D Card Effect, Hover Border Gradient, Moving Border
+- **Backgrounds**: Background Beams, Gradient Animation, Grid Background
+- **Interactive**: Bento Grid, Infinite Moving Cards, Parallax Scroll
+
+#### 2. 21st.dev Components (Premium UI Blocks)
+Browse at: https://21st.dev/
+
+### Component Style
+- Floating cards with glassmorphism effects
+- Animated counters for statistics
+- Testimonial carousels with smooth transitions
+- Magnetic buttons with hover effects
+- Scroll-triggered animations
+- Parallax effects on images
+- Text reveal animations
+- Staggered list animations
+`
+
   return `# Website Generation Prompt for Claude
 
 ## IMPORTANT: Read This First
@@ -278,8 +365,10 @@ You have been provided with business data files in this folder. Use the data fro
 ---
 
 ## Your Mission
-Create an **Awwwards-level, premium, high-end website** for "${info.name || 'this business'}" that would genuinely compete for design awards. This is NOT a basic template - it must be a sophisticated, visually stunning website that demonstrates cutting-edge web design.
+Create a **${isClassic ? 'professional, trustworthy, and clean' : 'premium, high-end, Awwwards-level'}** website for "${info.name || 'this business'}" ${isClassic ? 'that conveys reliability and expertise.' : 'that would genuinely compete for design awards.'}
 
+---
+${styleSection}
 ---
 
 ## Tech Stack Requirements
@@ -288,28 +377,9 @@ Create an **Awwwards-level, premium, high-end website** for "${info.name || 'thi
 - **Next.js 14+** with App Router
 - **TypeScript** (strict mode)
 - **Tailwind CSS** for styling
+${isClassic ? '- **Minimal Framer Motion** (subtle fades only)' : '- **Framer Motion** for animations'}
 
-### Required Component Libraries
-You MUST use components from these libraries to achieve the premium look:
-
-#### 1. Aceternity UI (Primary Animation Library)
-\`\`\`bash
-npm install framer-motion clsx tailwind-merge
-\`\`\`
-Use these Aceternity components (copy from https://ui.aceternity.com/components):
-- **Hero sections**: Spotlight, Lamp Effect, Aurora Background, Vortex
-- **Text effects**: Text Generate Effect, Typewriter Effect, Flip Words, Wavy Background
-- **Cards**: 3D Card Effect, Hover Border Gradient, Moving Border, Glowing Stars
-- **Navigation**: Floating Navbar, Sidebar with animation
-- **Backgrounds**: Background Beams, Background Gradient Animation, Dot Background, Grid Background
-- **Interactive**: Bento Grid, Infinite Moving Cards, Parallax Scroll, Tracing Beam
-- **Testimonials**: Animated Testimonials, 3D Testimonial Cards
-
-#### 2. 21st.dev Components (Premium UI Blocks)
-Install via: \`npx shadcn@latest add "https://21st.dev/r/[component-path]"\`
-Browse components at: https://21st.dev/
-
-#### 3. shadcn/ui (Base Components)
+### Base Components
 \`\`\`bash
 npx shadcn@latest init
 \`\`\`
@@ -343,7 +413,7 @@ ${info.linkedinUrl ? `- LinkedIn: ${info.linkedinUrl}` : ''}
 ${info.yelpUrl ? `- Yelp: ${info.yelpUrl}` : ''}
 
 ### Hero Image:
-${info.heroImage ? `**IMPORTANT**: Use the provided hero image located at \`images/hero.jpg\` (or similar extension) as the background for the landing page hero section.` : 'No hero image provided - use a dynamic gradient or Aceternity background effect instead.'}
+${info.heroImage ? `**IMPORTANT**: Use the provided hero image located at \`images/hero.jpg\` (or similar extension) as the background for the landing page hero section.` : isClassic ? 'No hero image provided - use a clean solid color or subtle gradient background.' : 'No hero image provided - use a dynamic gradient or Aceternity background effect instead.'}
 
 ### Testimonials:
 ${info.testimonials?.length ? info.testimonials.map(t => `
@@ -388,7 +458,12 @@ ${sanitizeFilename(info.name || 'business')}-website/
 
 ---
 
-**Remember: This website should look like it belongs on Awwwards. Every pixel matters. Every animation should feel intentional.**
+**Style Selected: ${isClassic ? 'CLASSIC PROFESSIONAL' : 'MODERN & CREATIVE'}**
+
+${isClassic
+  ? '**Remember: This website should convey trust and professionalism. Clean layouts, readable typography, and subtle interactions. No flashy effects.**'
+  : '**Remember: This website should look like it belongs on Awwwards. Every pixel matters. Every animation should feel intentional.**'
+}
 `
 }
 
