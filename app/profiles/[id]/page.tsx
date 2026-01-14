@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare, Mail, PenTool } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare, Mail, PenTool, CalendarDays, Bell, Users, Smartphone } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -28,7 +28,7 @@ interface SavedProfile {
   updated_at: string
 }
 
-type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'business-email' | 'email-signature' | 'social-media' | 'llc'
+type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'business-email' | 'email-signature' | 'social-media' | 'appointment-booking' | 'llc'
 
 export default function ProfileDetailPage() {
   const params = useParams()
@@ -55,6 +55,7 @@ export default function ProfileDetailPage() {
   const [showEmailSignatureDetails, setShowEmailSignatureDetails] = useState(false)
   const [emailSignaturePromptIndex, setEmailSignaturePromptIndex] = useState(0)
   const [emailSignaturePromptCopied, setEmailSignaturePromptCopied] = useState(false)
+  const [showBookingDetails, setShowBookingDetails] = useState(false)
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -2202,6 +2203,415 @@ Output: HTML signature perfect for service businesses and local shops`
                     Start
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Appointment Booking */}
+            <Card variant="outlined" className={`border-2 ${isSectionComplete('appointment-booking') ? 'border-green-300 bg-green-50/30' : 'border-indigo-200 bg-indigo-50/50'}`}>
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('appointment-booking')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('appointment-booking') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('appointment-booking') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
+                    <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                      <CalendarDays className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div>
+                      <h3 className={`font-semibold ${isSectionComplete('appointment-booking') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Appointment Booking</h3>
+                      <p className="text-sm text-gray-500">Let customers book appointments online</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowBookingDetails(!showBookingDetails)}
+                    className="border-indigo-300"
+                  >
+                    {showBookingDetails ? 'Hide Details' : 'View Options'}
+                  </Button>
+                </div>
+
+                {showBookingDetails && (
+                  <div className="space-y-6">
+                    {/* Why Booking Software */}
+                    <div className="p-4 bg-white rounded-lg border border-indigo-200">
+                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                        <CalendarDays className="w-4 h-4 text-indigo-600" />
+                        Why Use Booking Software?
+                      </h4>
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>• <strong>24/7 Booking</strong> - Customers book anytime, even when you're closed</li>
+                        <li>• <strong>Automatic Reminders</strong> - Reduce no-shows with email/SMS notifications</li>
+                        <li>• <strong>Calendar Sync</strong> - Appointments appear on your Google/Outlook calendar</li>
+                        <li>• <strong>Professional Image</strong> - Modern booking experience builds trust</li>
+                        <li>• <strong>Save Time</strong> - No more back-and-forth scheduling emails</li>
+                      </ul>
+                    </div>
+
+                    {/* Key Features to Look For */}
+                    <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                      <h4 className="font-semibold text-indigo-900 mb-2">Key Features for Your Website</h4>
+                      <div className="grid sm:grid-cols-2 gap-2 text-sm text-indigo-800">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-indigo-600" />
+                          Embeddable widget for your site
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-indigo-600" />
+                          Google/Outlook calendar sync
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-indigo-600" />
+                          Email & SMS reminders
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-indigo-600" />
+                          Mobile-friendly booking page
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Booking Platforms */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Recommended Booking Platforms</h4>
+                      <div className="grid gap-3">
+
+                        {/* Calendly - Top Recommendation */}
+                        <div className="p-4 bg-white rounded-lg border-2 border-green-200 relative">
+                          <div className="absolute -top-2 left-3 px-2 py-0.5 bg-green-500 text-white text-xs font-medium rounded">
+                            TOP PICK
+                          </div>
+                          <div className="flex items-start justify-between mt-1">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h5 className="font-semibold text-gray-900">Calendly</h5>
+                                <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">Free Tier</span>
+                              </div>
+                              <p className="text-xs text-gray-500 mb-2">Most popular scheduling tool - perfect for any business</p>
+                              <div className="flex flex-wrap gap-2 text-xs mb-2">
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <DollarSign className="w-3 h-3" />
+                                  Free / $10/mo Pro
+                                </span>
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <Zap className="w-3 h-3" />
+                                  Easiest to use
+                                </span>
+                              </div>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Beautiful embed widget for website</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Google, Outlook, iCloud calendar sync</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Automatic email reminders</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> 1 event type free, unlimited on paid</li>
+                              </ul>
+                              <p className="text-xs text-green-700 mt-2 font-medium">Best for: Most businesses, consultants, service providers</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-green-300 hover:bg-green-50 ml-3"
+                              onClick={() => window.open('https://calendly.com/signup', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Sign Up Free
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Cal.com - Best Free Option */}
+                        <div className="p-4 bg-white rounded-lg border-2 border-blue-200 relative">
+                          <div className="absolute -top-2 left-3 px-2 py-0.5 bg-blue-500 text-white text-xs font-medium rounded">
+                            BEST FREE
+                          </div>
+                          <div className="flex items-start justify-between mt-1">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h5 className="font-semibold text-gray-900">Cal.com</h5>
+                                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">Generous Free</span>
+                              </div>
+                              <p className="text-xs text-gray-500 mb-2">Open-source Calendly alternative with more free features</p>
+                              <div className="flex flex-wrap gap-2 text-xs mb-2">
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <DollarSign className="w-3 h-3" />
+                                  Free / $15/mo Pro
+                                </span>
+                                <span className="flex items-center gap-1 text-blue-600">
+                                  <Users className="w-3 h-3" />
+                                  Unlimited event types free
+                                </span>
+                              </div>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Unlimited event types on free plan</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Embed widget, calendar sync</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Highly customizable</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Open source - no vendor lock-in</li>
+                              </ul>
+                              <p className="text-xs text-blue-700 mt-2 font-medium">Best for: Budget-conscious, tech-savvy users wanting full features free</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-blue-300 hover:bg-blue-50 ml-3"
+                              onClick={() => window.open('https://cal.com/signup', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Sign Up Free
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Square Appointments - Best for Service Businesses */}
+                        <div className="p-4 bg-white rounded-lg border-2 border-orange-200 relative">
+                          <div className="absolute -top-2 left-3 px-2 py-0.5 bg-orange-500 text-white text-xs font-medium rounded">
+                            BEST FOR SERVICES
+                          </div>
+                          <div className="flex items-start justify-between mt-1">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h5 className="font-semibold text-gray-900">Square Appointments</h5>
+                                <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">Free for Solo</span>
+                              </div>
+                              <p className="text-xs text-gray-500 mb-2">Perfect for salons, spas, fitness, and service businesses</p>
+                              <div className="flex flex-wrap gap-2 text-xs mb-2">
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <DollarSign className="w-3 h-3" />
+                                  Free solo / $29/mo team
+                                </span>
+                                <span className="flex items-center gap-1 text-orange-600">
+                                  <CreditCard className="w-3 h-3" />
+                                  Built-in payments
+                                </span>
+                              </div>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Free for individuals</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Accept payments & deposits</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> SMS reminders included</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Instagram & Google integration</li>
+                              </ul>
+                              <p className="text-xs text-orange-700 mt-2 font-medium">Best for: Salons, spas, trainers, contractors, home services</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-orange-300 hover:bg-orange-50 ml-3"
+                              onClick={() => window.open('https://squareup.com/appointments', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Sign Up Free
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Acuity Scheduling */}
+                        <div className="p-4 bg-white rounded-lg border border-indigo-200">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h5 className="font-semibold text-gray-900">Acuity Scheduling</h5>
+                                <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">Premium</span>
+                              </div>
+                              <p className="text-xs text-gray-500 mb-2">Feature-rich scheduling by Squarespace</p>
+                              <div className="flex flex-wrap gap-2 text-xs mb-2">
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <DollarSign className="w-3 h-3" />
+                                  From $16/mo
+                                </span>
+                                <span className="flex items-center gap-1 text-purple-600">
+                                  <Award className="w-3 h-3" />
+                                  Most features
+                                </span>
+                              </div>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Advanced customization</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Packages, memberships, gift cards</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> HIPAA compliant option</li>
+                              </ul>
+                              <p className="text-xs text-purple-700 mt-2 font-medium">Best for: Established businesses needing advanced features</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-indigo-300 ml-3"
+                              onClick={() => window.open('https://acuityscheduling.com/', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Try Free
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Setmore */}
+                        <div className="p-4 bg-white rounded-lg border border-indigo-200">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h5 className="font-semibold text-gray-900">Setmore</h5>
+                                <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">Free Tier</span>
+                              </div>
+                              <p className="text-xs text-gray-500 mb-2">Simple and generous free plan</p>
+                              <div className="flex flex-wrap gap-2 text-xs mb-2">
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <DollarSign className="w-3 h-3" />
+                                  Free / $12/mo Pro
+                                </span>
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <Users className="w-3 h-3" />
+                                  Up to 4 users free
+                                </span>
+                              </div>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Free for up to 4 staff</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Zoom integration</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Social media booking</li>
+                              </ul>
+                              <p className="text-xs text-gray-600 mt-2 font-medium">Best for: Small teams on a budget</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-indigo-300 ml-3"
+                              onClick={() => window.open('https://www.setmore.com/', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Sign Up Free
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* TidyCal - Lifetime Deal */}
+                        <div className="p-4 bg-white rounded-lg border border-indigo-200">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h5 className="font-semibold text-gray-900">TidyCal</h5>
+                                <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full font-medium">Lifetime Deal</span>
+                              </div>
+                              <p className="text-xs text-gray-500 mb-2">One-time payment, no monthly fees ever</p>
+                              <div className="flex flex-wrap gap-2 text-xs mb-2">
+                                <span className="flex items-center gap-1 text-gray-600">
+                                  <DollarSign className="w-3 h-3" />
+                                  $29 one-time
+                                </span>
+                                <span className="flex items-center gap-1 text-yellow-600">
+                                  <Zap className="w-3 h-3" />
+                                  No subscription
+                                </span>
+                              </div>
+                              <ul className="text-xs text-gray-500 space-y-1">
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> Pay once, use forever</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> All essential features</li>
+                                <li className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-green-500" /> By AppSumo (trusted)</li>
+                              </ul>
+                              <p className="text-xs text-yellow-700 mt-2 font-medium">Best for: Those who hate subscriptions</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-indigo-300 ml-3"
+                              onClick={() => window.open('https://tidycal.com/', '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Get Deal
+                            </Button>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    {/* Quick Comparison Table */}
+                    <div className="overflow-x-auto">
+                      <h4 className="font-semibold text-gray-900 mb-3">Quick Comparison</h4>
+                      <table className="w-full text-xs border border-indigo-200 rounded-lg overflow-hidden">
+                        <thead className="bg-indigo-50">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-semibold text-indigo-900">Platform</th>
+                            <th className="px-3 py-2 text-left font-semibold text-indigo-900">Free Plan</th>
+                            <th className="px-3 py-2 text-left font-semibold text-indigo-900">Paid From</th>
+                            <th className="px-3 py-2 text-left font-semibold text-indigo-900">Best For</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-indigo-100">
+                          <tr>
+                            <td className="px-3 py-2 font-medium">Calendly</td>
+                            <td className="px-3 py-2 text-green-600">1 event type</td>
+                            <td className="px-3 py-2">$10/mo</td>
+                            <td className="px-3 py-2">Most businesses</td>
+                          </tr>
+                          <tr>
+                            <td className="px-3 py-2 font-medium">Cal.com</td>
+                            <td className="px-3 py-2 text-green-600">Unlimited events</td>
+                            <td className="px-3 py-2">$15/mo</td>
+                            <td className="px-3 py-2">Budget-conscious</td>
+                          </tr>
+                          <tr>
+                            <td className="px-3 py-2 font-medium">Square</td>
+                            <td className="px-3 py-2 text-green-600">Full (solo)</td>
+                            <td className="px-3 py-2">$29/mo (team)</td>
+                            <td className="px-3 py-2">Service businesses</td>
+                          </tr>
+                          <tr>
+                            <td className="px-3 py-2 font-medium">Acuity</td>
+                            <td className="px-3 py-2 text-gray-400">7-day trial</td>
+                            <td className="px-3 py-2">$16/mo</td>
+                            <td className="px-3 py-2">Advanced needs</td>
+                          </tr>
+                          <tr>
+                            <td className="px-3 py-2 font-medium">Setmore</td>
+                            <td className="px-3 py-2 text-green-600">Up to 4 users</td>
+                            <td className="px-3 py-2">$12/mo</td>
+                            <td className="px-3 py-2">Small teams</td>
+                          </tr>
+                          <tr>
+                            <td className="px-3 py-2 font-medium">TidyCal</td>
+                            <td className="px-3 py-2 text-gray-400">-</td>
+                            <td className="px-3 py-2">$29 once</td>
+                            <td className="px-3 py-2">No subscriptions</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Setup Steps */}
+                    <div className="p-4 bg-white rounded-lg border border-indigo-200">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <Rocket className="w-4 h-4 text-indigo-600" />
+                        Setup Steps
+                      </h4>
+                      <ol className="text-sm text-gray-600 space-y-2 list-decimal list-inside">
+                        <li><strong>Sign up</strong> for your chosen platform (we recommend Calendly or Cal.com)</li>
+                        <li><strong>Connect your calendar</strong> - Link Google Calendar or Outlook so bookings appear automatically</li>
+                        <li><strong>Set availability</strong> - Define your working hours and buffer time between appointments</li>
+                        <li><strong>Create event types</strong> - Set up different appointment types (consultation, service, etc.)</li>
+                        <li><strong>Customize notifications</strong> - Set up email/SMS reminders for you and customers</li>
+                        <li><strong>Get your embed code</strong> - Copy the widget code for your website</li>
+                        <li><strong>Add to website</strong> - Paste the code on your contact or booking page</li>
+                        <li><strong>Test it</strong> - Book a test appointment to make sure it works</li>
+                      </ol>
+                    </div>
+
+                    {/* Pro Tips */}
+                    <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                      <h4 className="font-semibold text-indigo-900 mb-2">Pro Tips</h4>
+                      <ul className="text-sm text-indigo-800 space-y-1">
+                        <li>• <strong>Add buffer time</strong> between appointments (15-30 min) to avoid back-to-back stress</li>
+                        <li>• <strong>Set SMS reminders</strong> - reduces no-shows by up to 90%</li>
+                        <li>• <strong>Require deposits</strong> for high-value services to reduce cancellations</li>
+                        <li>• <strong>Add intake questions</strong> to gather info before the appointment</li>
+                        <li>• <strong>Share your booking link</strong> everywhere - email signature, social media, Google Business</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
