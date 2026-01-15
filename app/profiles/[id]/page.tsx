@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare, Mail, PenTool, CalendarDays, Bell, Users, Smartphone } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare, Mail, PenTool, CalendarDays, Bell, Users, Smartphone, Send } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -28,7 +28,7 @@ interface SavedProfile {
   updated_at: string
 }
 
-type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'business-email' | 'email-signature' | 'social-media' | 'appointment-booking' | 'llc'
+type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'business-email' | 'email-signature' | 'social-media' | 'appointment-booking' | 'llc' | 'client-outreach'
 
 export default function ProfileDetailPage() {
   const params = useParams()
@@ -56,6 +56,9 @@ export default function ProfileDetailPage() {
   const [emailSignaturePromptIndex, setEmailSignaturePromptIndex] = useState(0)
   const [emailSignaturePromptCopied, setEmailSignaturePromptCopied] = useState(false)
   const [showBookingDetails, setShowBookingDetails] = useState(false)
+  const [showOutreachDetails, setShowOutreachDetails] = useState(false)
+  const [clientWebsiteUrl, setClientWebsiteUrl] = useState('')
+  const [outreachMessageCopied, setOutreachMessageCopied] = useState(false)
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -2991,6 +2994,150 @@ Output: HTML signature perfect for service businesses and local shops`
                           Find your state's business portal →
                         </a>
                       </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Client Outreach Message */}
+            <Card variant="outlined" className={`border-2 ${isSectionComplete('client-outreach') ? 'border-green-300 bg-green-50/30' : 'border-cyan-200 bg-cyan-50/50'}`}>
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('client-outreach')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('client-outreach') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('client-outreach') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
+                    <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center">
+                      <Send className="w-5 h-5 text-cyan-600" />
+                    </div>
+                    <div>
+                      <h3 className={`font-semibold ${isSectionComplete('client-outreach') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Send to Client</h3>
+                      <p className="text-sm text-gray-500">Ready-to-send message with everything you've built</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowOutreachDetails(!showOutreachDetails)}
+                    className="border-cyan-300"
+                  >
+                    {showOutreachDetails ? 'Hide' : 'Get Message'}
+                  </Button>
+                </div>
+
+                {showOutreachDetails && (
+                  <div className="space-y-4">
+                    {/* Website URL Input */}
+                    <div className="p-4 bg-white rounded-lg border border-cyan-200">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Client's Website URL
+                      </label>
+                      <input
+                        type="url"
+                        value={clientWebsiteUrl}
+                        onChange={(e) => setClientWebsiteUrl(e.target.value)}
+                        placeholder="https://clientbusiness.vercel.app"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Enter the deployed website URL for this client</p>
+                    </div>
+
+                    {/* Message Preview */}
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-gray-900">Your Outreach Message</h4>
+                        <Button
+                          size="sm"
+                          variant={outreachMessageCopied ? "default" : "outline"}
+                          className={outreachMessageCopied ? "bg-green-600" : ""}
+                          onClick={() => {
+                            const message = `Hi there!
+
+I noticed ${profile?.name || 'your business'} and thought you might be interested in what I've put together.
+
+I've created a complete professional website package for your business that includes:
+
+✅ Fully responsive, mobile-friendly website
+✅ SEO optimized for local search
+✅ Fast-loading, modern design
+✅ Contact forms & business information
+✅ Ready to launch immediately
+
+${clientWebsiteUrl ? `🌐 Preview your website here: ${clientWebsiteUrl}` : '🌐 [Website link will appear here once you enter it above]'}
+
+This is a ready-to-go solution - no technical knowledge needed on your end.
+
+If you're interested in owning this website for your business, I'd love to chat about how we can get this live for you.
+
+Feel free to check out more of our work at: https://beirux.vercel.app/
+
+Looking forward to hearing from you!
+
+Best regards`
+                            navigator.clipboard.writeText(message)
+                            setOutreachMessageCopied(true)
+                            setTimeout(() => setOutreachMessageCopied(false), 3000)
+                          }}
+                        >
+                          {outreachMessageCopied ? (
+                            <>
+                              <Check className="w-3 h-3 mr-1" />
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3 h-3 mr-1" />
+                              Copy Message
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      <div className="bg-white p-4 rounded-lg border border-gray-200 text-sm text-gray-700 whitespace-pre-wrap font-mono">
+{`Hi there!
+
+I noticed ${profile?.name || 'your business'} and thought you might be interested in what I've put together.
+
+I've created a complete professional website package for your business that includes:
+
+✅ Fully responsive, mobile-friendly website
+✅ SEO optimized for local search
+✅ Fast-loading, modern design
+✅ Contact forms & business information
+✅ Ready to launch immediately
+
+${clientWebsiteUrl ? `🌐 Preview your website here: ${clientWebsiteUrl}` : '🌐 [Website link will appear here once you enter it above]'}
+
+This is a ready-to-go solution - no technical knowledge needed on your end.
+
+If you're interested in owning this website for your business, I'd love to chat about how we can get this live for you.
+
+Feel free to check out more of our work at: https://beirux.vercel.app/
+
+Looking forward to hearing from you!
+
+Best regards`}
+                      </div>
+                    </div>
+
+                    {/* Tips */}
+                    <div className="p-3 bg-cyan-50 rounded-lg border border-cyan-200">
+                      <h4 className="font-medium text-cyan-800 text-sm mb-2">Outreach Tips</h4>
+                      <ul className="text-xs text-cyan-700 space-y-1">
+                        <li>• Send via email, LinkedIn, Facebook, or their contact form</li>
+                        <li>• Personalize the opening line based on their business</li>
+                        <li>• Follow up after 3-5 days if no response</li>
+                        <li>• Include a screenshot of their website in the message if possible</li>
+                      </ul>
                     </div>
                   </div>
                 )}
