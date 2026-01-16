@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare, Mail, PenTool, CalendarDays, Bell, Users, Smartphone, Send } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare, Mail, PenTool, CalendarDays, Bell, Users, Smartphone, Send, Apple, ChevronDown, Settings, MapPin, Camera, ShoppingBag, Home, Utensils, Stethoscope, Dumbbell, Car, Scissors, GraduationCap, Heart } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -28,7 +28,7 @@ interface SavedProfile {
   updated_at: string
 }
 
-type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'business-email' | 'email-signature' | 'social-media' | 'appointment-booking' | 'llc' | 'client-outreach'
+type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'business-email' | 'email-signature' | 'social-media' | 'appointment-booking' | 'ios-app' | 'llc' | 'client-outreach'
 
 export default function ProfileDetailPage() {
   const params = useParams()
@@ -59,6 +59,13 @@ export default function ProfileDetailPage() {
   const [showOutreachDetails, setShowOutreachDetails] = useState(false)
   const [clientWebsiteUrl, setClientWebsiteUrl] = useState('')
   const [outreachMessageCopied, setOutreachMessageCopied] = useState(false)
+  const [showIosAppDetails, setShowIosAppDetails] = useState(false)
+  const [iosAppCategory, setIosAppCategory] = useState<string>('')
+  const [iosAppEnablePayments, setIosAppEnablePayments] = useState(false)
+  const [iosAppEnableNotifications, setIosAppEnableNotifications] = useState(true)
+  const [iosAppPrimaryColor, setIosAppPrimaryColor] = useState('#3B82F6')
+  const [iosAppSpecialFeatures, setIosAppSpecialFeatures] = useState('')
+  const [iosAppPromptCopied, setIosAppPromptCopied] = useState(false)
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -2731,6 +2738,673 @@ Output: HTML signature perfect for service businesses and local shops`
                     </div>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* iOS App Generator */}
+            <Card variant="outlined" className={`border-2 ${isSectionComplete('ios-app') ? 'border-green-300 bg-green-50/30' : 'border-purple-200 bg-purple-50/50'}`}>
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('ios-app')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('ios-app') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('ios-app') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
+                    <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                      <Smartphone className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className={`font-semibold ${isSectionComplete('ios-app') ? 'text-green-700 line-through' : 'text-gray-900'}`}>iOS App</h3>
+                      <p className="text-sm text-gray-500">Generate a native mobile app with AI</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowIosAppDetails(!showIosAppDetails)}
+                    className="border-purple-300"
+                  >
+                    {showIosAppDetails ? 'Hide' : 'Generate App'}
+                  </Button>
+                </div>
+
+                {showIosAppDetails && (() => {
+                  // App category definitions
+                  const appCategories = [
+                    {
+                      id: 'home-services',
+                      name: 'Home Services',
+                      icon: Home,
+                      keywords: ['plumber', 'plumbing', 'electrician', 'electrical', 'hvac', 'heating', 'cooling', 'air conditioning', 'roofer', 'roofing', 'landscaper', 'landscaping', 'lawn', 'garden', 'cleaning', 'cleaner', 'maid', 'janitorial', 'pest', 'exterminator', 'moving', 'mover', 'handyman', 'painter', 'painting', 'contractor', 'remodel', 'renovation', 'pool', 'fence', 'garage', 'gutter', 'pressure wash', 'carpet', 'flooring', 'tile', 'drywall', 'insulation'],
+                      features: [
+                        'Service request & booking system with date/time selection',
+                        'Emergency service button with instant call/text option',
+                        'Service area coverage map with zip code checker',
+                        'Quote request form with photo upload for job assessment',
+                        'Before/after project gallery',
+                        'Service packages & pricing display',
+                        'Real-time job status tracking',
+                        'Invoice viewing & payment processing',
+                        'Appointment reminders & notifications',
+                        'Loyalty program & referral rewards',
+                        'Service history for repeat customers',
+                        'Live chat support'
+                      ],
+                      screens: ['Home', 'Services', 'Book Now', 'My Jobs', 'Gallery', 'Contact', 'Profile', 'Payments']
+                    },
+                    {
+                      id: 'food-dining',
+                      name: 'Food & Dining',
+                      icon: Utensils,
+                      keywords: ['restaurant', 'cafe', 'coffee', 'bakery', 'bar', 'pub', 'grill', 'pizzeria', 'pizza', 'sushi', 'food truck', 'catering', 'diner', 'bistro', 'kitchen', 'eatery', 'deli', 'sandwich', 'burger', 'taco', 'mexican', 'italian', 'chinese', 'thai', 'indian', 'mediterranean', 'seafood', 'steakhouse', 'bbq', 'barbecue', 'ice cream', 'dessert', 'juice', 'smoothie', 'tea', 'bubble tea', 'donut', 'bagel', 'brunch'],
+                      features: [
+                        'Full digital menu with photos & descriptions',
+                        'Online ordering with customization options',
+                        'Table reservation system',
+                        'Real-time order tracking',
+                        'Delivery & pickup scheduling',
+                        'Loyalty points & rewards program',
+                        'Special offers & daily deals',
+                        'Push notifications for promotions',
+                        'Multiple payment options (card, Apple Pay)',
+                        'Order history & quick reorder',
+                        'Dietary filters (vegan, gluten-free, etc.)',
+                        'Catering request form for large orders'
+                      ],
+                      screens: ['Home', 'Menu', 'Order', 'Cart', 'Track Order', 'Reservations', 'Rewards', 'Profile']
+                    },
+                    {
+                      id: 'professional-services',
+                      name: 'Professional Services',
+                      icon: Briefcase,
+                      keywords: ['lawyer', 'attorney', 'law firm', 'legal', 'accountant', 'accounting', 'cpa', 'tax', 'financial', 'advisor', 'consultant', 'consulting', 'insurance', 'agent', 'broker', 'mortgage', 'notary', 'paralegal', 'bookkeeper', 'hr', 'human resources', 'marketing', 'agency', 'architect', 'engineer', 'surveyor', 'appraiser', 'investment'],
+                      features: [
+                        'Consultation booking with calendar integration',
+                        'Secure document upload & sharing portal',
+                        'Case/project status tracking dashboard',
+                        'Secure messaging with attorney-client privilege',
+                        'Appointment reminders & follow-ups',
+                        'Service packages & fee structure',
+                        'Client intake forms',
+                        'Resource library & FAQ section',
+                        'Invoice viewing & secure payment',
+                        'Video consultation integration',
+                        'Multi-location office finder',
+                        'Team member profiles & expertise areas'
+                      ],
+                      screens: ['Home', 'Services', 'Book Consultation', 'Documents', 'Messages', 'My Cases', 'Resources', 'Profile']
+                    },
+                    {
+                      id: 'beauty-wellness',
+                      name: 'Beauty & Wellness',
+                      icon: Scissors,
+                      keywords: ['salon', 'hair', 'barber', 'barbershop', 'spa', 'massage', 'nail', 'manicure', 'pedicure', 'facial', 'skincare', 'esthetician', 'beauty', 'cosmetic', 'makeup', 'lash', 'brow', 'waxing', 'tanning', 'med spa', 'botox', 'laser', 'tattoo', 'piercing', 'threading'],
+                      features: [
+                        'Service menu with pricing & duration',
+                        'Appointment booking with stylist/staff selection',
+                        'Staff profiles with photos & specialties',
+                        'Real-time availability calendar',
+                        'Service add-ons & package deals',
+                        'Loyalty points & referral rewards',
+                        'Push notification reminders',
+                        'Photo gallery of work/portfolio',
+                        'Product recommendations & shop',
+                        'Gift card purchase & redemption',
+                        'Membership/subscription plans',
+                        'Before/after transformation gallery'
+                      ],
+                      screens: ['Home', 'Services', 'Book', 'Our Team', 'Gallery', 'Shop', 'Rewards', 'Profile']
+                    },
+                    {
+                      id: 'healthcare',
+                      name: 'Healthcare',
+                      icon: Stethoscope,
+                      keywords: ['doctor', 'physician', 'medical', 'clinic', 'dentist', 'dental', 'orthodontist', 'chiropractor', 'chiropractic', 'physical therapy', 'therapist', 'psychologist', 'psychiatrist', 'counselor', 'veterinarian', 'vet', 'animal', 'pet', 'optometrist', 'eye', 'vision', 'dermatologist', 'pediatric', 'obgyn', 'urgent care', 'pharmacy', 'lab', 'imaging', 'home health', 'nurse', 'acupuncture', 'holistic', 'wellness'],
+                      features: [
+                        'Appointment scheduling with provider selection',
+                        'Patient portal with health records access',
+                        'Secure messaging with healthcare providers',
+                        'Prescription refill requests',
+                        'Telehealth/video visit integration',
+                        'Appointment reminders & follow-up scheduling',
+                        'Insurance information & billing',
+                        'Lab results viewing',
+                        'Health forms & questionnaires',
+                        'Provider profiles & credentials',
+                        'Multiple location support',
+                        'Emergency contact information'
+                      ],
+                      screens: ['Home', 'Book Appointment', 'My Health', 'Messages', 'Prescriptions', 'Providers', 'Billing', 'Profile']
+                    },
+                    {
+                      id: 'fitness',
+                      name: 'Fitness & Recreation',
+                      icon: Dumbbell,
+                      keywords: ['gym', 'fitness', 'workout', 'crossfit', 'yoga', 'pilates', 'personal trainer', 'training', 'boxing', 'martial arts', 'karate', 'jiu jitsu', 'mma', 'dance', 'studio', 'spin', 'cycling', 'swimming', 'pool', 'tennis', 'golf', 'sports', 'athletic', 'bootcamp', 'barre', 'zumba', 'aerobics', 'wellness center'],
+                      features: [
+                        'Class schedule with easy booking',
+                        'Membership management & renewal',
+                        'Trainer booking & personal sessions',
+                        'Workout tracking & progress photos',
+                        'Check-in via QR code or digital pass',
+                        'Push notifications for class reminders',
+                        'Workout plans & exercise library',
+                        'Nutrition tips & meal planning',
+                        'Achievement badges & challenges',
+                        'Social features & community',
+                        'Virtual class access',
+                        'Merchandise shop'
+                      ],
+                      screens: ['Home', 'Classes', 'Book', 'My Workouts', 'Progress', 'Trainers', 'Shop', 'Profile']
+                    },
+                    {
+                      id: 'automotive',
+                      name: 'Automotive',
+                      icon: Car,
+                      keywords: ['auto', 'car', 'mechanic', 'repair', 'garage', 'body shop', 'collision', 'oil change', 'tire', 'brake', 'transmission', 'car wash', 'detailing', 'towing', 'roadside', 'dealer', 'dealership', 'rental', 'windshield', 'muffler', 'exhaust', 'alignment', 'inspection', 'smog', 'emissions', 'motorcycle', 'rv', 'boat', 'marine'],
+                      features: [
+                        'Service appointment booking',
+                        'Vehicle profile with service history',
+                        'Real-time repair status tracking',
+                        'Digital inspection reports with photos',
+                        'Cost estimates & approval workflow',
+                        'Towing/roadside assistance request',
+                        'Maintenance reminders by mileage',
+                        'Service packages & pricing',
+                        'Loyalty rewards program',
+                        'Invoice & payment history',
+                        'Multiple vehicle support',
+                        'Shuttle/loaner car scheduling'
+                      ],
+                      screens: ['Home', 'My Vehicles', 'Book Service', 'Service Status', 'History', 'Estimates', 'Rewards', 'Profile']
+                    },
+                    {
+                      id: 'retail',
+                      name: 'Retail & Shopping',
+                      icon: ShoppingBag,
+                      keywords: ['store', 'shop', 'retail', 'boutique', 'clothing', 'fashion', 'jewelry', 'florist', 'flower', 'gift', 'toy', 'pet store', 'hardware', 'furniture', 'antique', 'thrift', 'consignment', 'bookstore', 'music', 'electronics', 'appliance', 'sporting goods', 'outdoor', 'home decor', 'garden center', 'nursery', 'craft', 'hobby', 'liquor', 'wine', 'smoke', 'vape', 'convenience', 'grocery', 'market', 'pharmacy'],
+                      features: [
+                        'Product catalog with categories',
+                        'Online ordering & checkout',
+                        'In-store pickup scheduling',
+                        'Local delivery options',
+                        'Wishlist & favorites',
+                        'Push notifications for sales & new arrivals',
+                        'Loyalty program & rewards',
+                        'Gift card purchase & balance check',
+                        'Store locator with hours',
+                        'Product search & filters',
+                        'Order tracking',
+                        'Customer reviews'
+                      ],
+                      screens: ['Home', 'Shop', 'Categories', 'Cart', 'Wishlist', 'Orders', 'Rewards', 'Profile']
+                    },
+                    {
+                      id: 'real-estate',
+                      name: 'Real Estate',
+                      icon: Building2,
+                      keywords: ['real estate', 'realtor', 'realty', 'property', 'broker', 'agent', 'home', 'house', 'apartment', 'condo', 'rental', 'property management', 'leasing', 'commercial', 'mortgage', 'title', 'escrow', 'appraisal', 'inspection', 'staging'],
+                      features: [
+                        'Property listings with photos & details',
+                        'Advanced search & filters',
+                        'Save favorite properties',
+                        'Schedule property viewings',
+                        'Mortgage calculator',
+                        'Virtual tour integration',
+                        'Agent contact & messaging',
+                        'Push notifications for new listings',
+                        'Neighborhood information',
+                        'Recently sold comparables',
+                        'Open house calendar',
+                        'Document signing integration'
+                      ],
+                      screens: ['Home', 'Search', 'Listings', 'Favorites', 'Schedule Tour', 'Calculator', 'Agent', 'Profile']
+                    },
+                    {
+                      id: 'events-creative',
+                      name: 'Events & Creative',
+                      icon: Camera,
+                      keywords: ['photography', 'photographer', 'videography', 'videographer', 'dj', 'music', 'band', 'entertainment', 'event', 'planner', 'wedding', 'party', 'catering', 'florist', 'decorator', 'rental', 'venue', 'photo booth', 'printing', 'design', 'graphic', 'web', 'marketing', 'advertising', 'media', 'production', 'film', 'podcast', 'studio'],
+                      features: [
+                        'Portfolio gallery with categories',
+                        'Package selection & pricing',
+                        'Date availability checker',
+                        'Event/session booking',
+                        'Mood board & inspiration sharing',
+                        'Client questionnaire forms',
+                        'Contract viewing & e-signature',
+                        'Project timeline & milestones',
+                        'Private gallery for clients',
+                        'Download & share options',
+                        'Payment schedule tracking',
+                        'Referral program'
+                      ],
+                      screens: ['Home', 'Portfolio', 'Packages', 'Book', 'My Events', 'Gallery', 'Contracts', 'Profile']
+                    },
+                    {
+                      id: 'education',
+                      name: 'Education & Childcare',
+                      icon: GraduationCap,
+                      keywords: ['school', 'daycare', 'childcare', 'preschool', 'tutoring', 'tutor', 'learning', 'academy', 'education', 'music lessons', 'art class', 'dance class', 'driving school', 'language', 'test prep', 'sat', 'act', 'college', 'enrichment', 'after school', 'summer camp', 'martial arts', 'swimming lessons', 'coaching', 'sports training', 'montessori'],
+                      features: [
+                        'Class schedule & enrollment',
+                        'Student progress tracking',
+                        'Parent/guardian communication portal',
+                        'Attendance tracking',
+                        'Assignment & homework submission',
+                        'Grade & report card viewing',
+                        'Payment & tuition management',
+                        'Photo & video sharing',
+                        'Calendar with events & holidays',
+                        'Emergency contact information',
+                        'Resource library & materials',
+                        'Carpool coordination'
+                      ],
+                      screens: ['Home', 'Classes', 'Schedule', 'Progress', 'Messages', 'Resources', 'Payments', 'Profile']
+                    }
+                  ]
+
+                  // Detect category from business type
+                  const detectCategory = () => {
+                    if (iosAppCategory) return iosAppCategory
+                    const businessType = (profile?.business_type || profile?.data?.businessType || '').toLowerCase()
+                    const businessName = (profile?.name || '').toLowerCase()
+                    const combined = `${businessType} ${businessName}`
+
+                    for (const cat of appCategories) {
+                      for (const keyword of cat.keywords) {
+                        if (combined.includes(keyword)) {
+                          return cat.id
+                        }
+                      }
+                    }
+                    return 'home-services' // Default fallback
+                  }
+
+                  const selectedCategoryId = detectCategory()
+                  const selectedCategory = appCategories.find(c => c.id === selectedCategoryId) || appCategories[0]
+
+                  // Generate the comprehensive prompt
+                  const generateAppPrompt = () => {
+                    const info = profile?.data
+                    const businessName = profile?.name || 'Business'
+                    const businessType = profile?.business_type || info?.businessType || 'Local Business'
+                    const tagline = profile?.tagline || info?.tagline || ''
+                    const description = info?.description || ''
+                    const services = info?.services || []
+                    const phone = info?.phone || ''
+                    const email = info?.email || ''
+                    const address = info?.address || ''
+                    const city = profile?.city || info?.city || ''
+                    const state = profile?.state || info?.state || ''
+                    const zipCode = info?.zipCode || ''
+                    const hours = info?.openingHours || {}
+                    const testimonials = info?.testimonials || []
+                    const socialLinks = {
+                      facebook: info?.facebookUrl,
+                      instagram: info?.instagramUrl,
+                      linkedin: info?.linkedinUrl,
+                      yelp: info?.yelpUrl,
+                      google: info?.googleProfileUrl
+                    }
+
+                    const hoursFormatted = Object.entries(hours)
+                      .filter(([_, value]) => value)
+                      .map(([day, time]) => `${day}: ${time}`)
+                      .join(', ') || 'Contact for hours'
+
+                    return `Create a professional iOS app for "${businessName}" - a ${businessType} business.
+
+===== BUSINESS INFORMATION =====
+Business Name: ${businessName}
+Business Type: ${businessType}
+${tagline ? `Tagline: ${tagline}` : ''}
+${description ? `Description: ${description}` : ''}
+
+Location:
+${address ? `- Address: ${address}` : ''}
+${city && state ? `- City/State: ${city}, ${state} ${zipCode}` : ''}
+
+Contact Information:
+${phone ? `- Phone: ${phone}` : ''}
+${email ? `- Email: ${email}` : ''}
+
+Business Hours: ${hoursFormatted}
+
+${services.length > 0 ? `Services Offered:\n${services.map(s => `- ${s}`).join('\n')}` : ''}
+
+${testimonials.length > 0 ? `Customer Testimonials:\n${testimonials.slice(0, 3).map(t => `- "${t.text}" - ${t.name}`).join('\n')}` : ''}
+
+Social Media:
+${Object.entries(socialLinks).filter(([_, url]) => url).map(([platform, url]) => `- ${platform}: ${url}`).join('\n') || '- None provided'}
+
+===== APP CATEGORY =====
+This is a ${selectedCategory.name} business app.
+
+===== REQUIRED SCREENS =====
+${selectedCategory.screens.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+
+===== REQUIRED FEATURES =====
+${selectedCategory.features.map((f, i) => `${i + 1}. ${f}`).join('\n')}
+
+===== DESIGN SPECIFICATIONS =====
+Primary Color: ${iosAppPrimaryColor}
+Style: Modern, clean, professional iOS design following Apple Human Interface Guidelines
+Typography: San Francisco (system font) for optimal readability
+Icons: SF Symbols for native iOS feel
+
+===== FUNCTIONALITY REQUIREMENTS =====
+${iosAppEnablePayments ? `
+PAYMENTS (ENABLED):
+- Integrate Apple Pay for seamless checkout
+- Support credit/debit card payments
+- Secure payment processing with encryption
+- Payment history and receipts
+- Saved payment methods for returning customers
+` : `
+PAYMENTS: Basic app without payment processing (contact business directly)
+`}
+
+${iosAppEnableNotifications ? `
+PUSH NOTIFICATIONS (ENABLED):
+- Appointment/booking reminders (1 day before, 1 hour before)
+- Order status updates
+- Promotional offers and special deals
+- New service/product announcements
+- Loyalty reward milestones
+- Important business updates
+` : `
+PUSH NOTIFICATIONS: Disabled
+`}
+
+===== CORE APP STRUCTURE =====
+
+1. ONBOARDING FLOW:
+   - Welcome screen with business branding
+   - Quick feature highlights (3 slides)
+   - Sign up / Sign in options (email, Apple ID, phone)
+   - Location permission request
+   - Notification permission request
+
+2. HOME SCREEN:
+   - Business logo and name prominently displayed
+   - Quick action buttons for main features
+   - Featured services/products carousel
+   - Current promotions banner
+   - One-tap contact options (call, message, directions)
+
+3. NAVIGATION:
+   - Bottom tab bar with 4-5 main sections
+   - Clean, intuitive navigation hierarchy
+   - Back buttons and clear breadcrumbs
+
+4. USER PROFILE:
+   - Account information management
+   - ${selectedCategory.id === 'automotive' ? 'Saved vehicles' : selectedCategory.id === 'healthcare' ? 'Health information' : selectedCategory.id === 'education' ? 'Student profiles' : 'Saved preferences'}
+   - Order/booking history
+   - Saved favorites
+   - Payment methods (if enabled)
+   - Notification preferences
+   - Sign out option
+
+5. BOOKING/ORDERING SYSTEM:
+   - Date and time selection calendar
+   - ${selectedCategory.id === 'beauty-wellness' || selectedCategory.id === 'healthcare' ? 'Staff/provider selection' : selectedCategory.id === 'fitness' ? 'Class/trainer selection' : 'Service selection'}
+   - Real-time availability display
+   - Booking confirmation with details
+   - Easy modification/cancellation
+   - Add to device calendar option
+
+6. CONTACT & SUPPORT:
+   - One-tap phone call
+   - In-app messaging/chat
+   - Email contact form
+   - Business location with map
+   - Get directions (Apple Maps integration)
+   - FAQ section
+
+===== TECHNICAL REQUIREMENTS =====
+- Native iOS app (Swift/SwiftUI preferred)
+- Minimum iOS version: 15.0
+- Support for iPhone (all sizes) and iPad
+- Dark mode support
+- Offline capability for viewing saved data
+- Fast loading times (< 2 seconds)
+- Smooth 60fps animations
+- Accessibility support (VoiceOver, Dynamic Type)
+- Secure data storage (Keychain for sensitive data)
+
+===== DATA & BACKEND =====
+- User authentication system
+- Real-time database for bookings/orders
+- Cloud storage for images and documents
+- API integration for business operations
+- Analytics tracking for user behavior
+
+${iosAppSpecialFeatures ? `
+===== ADDITIONAL CUSTOM FEATURES =====
+${iosAppSpecialFeatures}
+` : ''}
+
+===== DELIVERABLES =====
+Please create:
+1. Complete Xcode project with all source code
+2. All required screens and navigation
+3. Reusable UI components
+4. Data models and services
+5. Mock data for testing
+6. App icons and launch screen
+7. README with setup instructions
+
+Make the app production-ready, polished, and professional. The business owner should be proud to show this to their customers.`
+                  }
+
+                  return (
+                    <div className="space-y-6">
+                      {/* Category Selection */}
+                      <div className="p-4 bg-white rounded-lg border border-purple-200">
+                        <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                          <Settings className="w-4 h-4 text-purple-600" />
+                          App Configuration
+                        </h4>
+
+                        <div className="space-y-4">
+                          {/* Category Selector */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Business Category
+                            </label>
+                            <div className="relative">
+                              <select
+                                value={iosAppCategory || selectedCategoryId}
+                                onChange={(e) => setIosAppCategory(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm pr-10"
+                              >
+                                {appCategories.map(cat => (
+                                  <option key={cat.id} value={cat.id}>
+                                    {cat.name} {selectedCategoryId === cat.id && !iosAppCategory ? '(Auto-detected)' : ''}
+                                  </option>
+                                ))}
+                              </select>
+                              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Auto-detected from "{profile?.business_type || profile?.data?.businessType || 'business type'}". Change if incorrect.
+                            </p>
+                          </div>
+
+                          {/* Primary Color */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Primary App Color
+                            </label>
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="color"
+                                value={iosAppPrimaryColor}
+                                onChange={(e) => setIosAppPrimaryColor(e.target.value)}
+                                className="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer"
+                              />
+                              <input
+                                type="text"
+                                value={iosAppPrimaryColor}
+                                onChange={(e) => setIosAppPrimaryColor(e.target.value)}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                                placeholder="#3B82F6"
+                              />
+                              <div className="flex gap-1">
+                                {['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899'].map(color => (
+                                  <button
+                                    key={color}
+                                    onClick={() => setIosAppPrimaryColor(color)}
+                                    className="w-6 h-6 rounded border-2 transition-transform hover:scale-110"
+                                    style={{ backgroundColor: color, borderColor: iosAppPrimaryColor === color ? '#000' : 'transparent' }}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Toggle Options */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={iosAppEnablePayments}
+                                onChange={(e) => setIosAppEnablePayments(e.target.checked)}
+                                className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                              />
+                              <div>
+                                <span className="text-sm font-medium text-gray-900">Enable Payments</span>
+                                <p className="text-xs text-gray-500">Apple Pay & card processing</p>
+                              </div>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={iosAppEnableNotifications}
+                                onChange={(e) => setIosAppEnableNotifications(e.target.checked)}
+                                className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                              />
+                              <div>
+                                <span className="text-sm font-medium text-gray-900">Push Notifications</span>
+                                <p className="text-xs text-gray-500">Reminders & promotions</p>
+                              </div>
+                            </label>
+                          </div>
+
+                          {/* Special Features */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Special Features (Optional)
+                            </label>
+                            <textarea
+                              value={iosAppSpecialFeatures}
+                              onChange={(e) => setIosAppSpecialFeatures(e.target.value)}
+                              placeholder="Any specific features you want? E.g., 'Integration with Square POS', 'Multi-language support (Spanish)', 'Customer referral program with QR codes', etc."
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                              rows={3}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Category Features Preview */}
+                      <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                        <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
+                          {(() => {
+                            const IconComponent = selectedCategory.icon
+                            return <IconComponent className="w-4 h-4" />
+                          })()}
+                          {selectedCategory.name} App Features
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm text-purple-800">
+                          {selectedCategory.features.slice(0, 8).map((feature, i) => (
+                            <div key={i} className="flex items-start gap-1">
+                              <CheckCircle2 className="w-3 h-3 mt-1 flex-shrink-0 text-purple-600" />
+                              <span className="text-xs">{feature.split(' with ')[0].split(' - ')[0]}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {selectedCategory.features.length > 8 && (
+                          <p className="text-xs text-purple-600 mt-2">+ {selectedCategory.features.length - 8} more features included</p>
+                        )}
+                      </div>
+
+                      {/* Generated Prompt */}
+                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-gray-900">Generated App Prompt</h4>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant={iosAppPromptCopied ? "default" : "outline"}
+                              className={iosAppPromptCopied ? "bg-green-600" : ""}
+                              onClick={() => {
+                                navigator.clipboard.writeText(generateAppPrompt())
+                                setIosAppPromptCopied(true)
+                                setTimeout(() => setIosAppPromptCopied(false), 3000)
+                              }}
+                            >
+                              {iosAppPromptCopied ? (
+                                <>
+                                  <Check className="w-3 h-3 mr-1" />
+                                  Copied!
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3 mr-1" />
+                                  Copy Prompt
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 max-h-64 overflow-y-auto">
+                          <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">
+                            {generateAppPrompt()}
+                          </pre>
+                        </div>
+                      </div>
+
+                      {/* Natively Link */}
+                      <div className="p-4 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-lg border border-purple-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold text-gray-900 mb-1">Create with Natively</h4>
+                            <p className="text-sm text-gray-600">Paste your prompt into Natively to generate the iOS app</p>
+                          </div>
+                          <Button
+                            className="bg-purple-600 hover:bg-purple-700"
+                            onClick={() => window.open('https://natively.dev', '_blank')}
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Open Natively
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Tips */}
+                      <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                        <h4 className="font-medium text-purple-800 text-sm mb-2">Tips for Best Results</h4>
+                        <ul className="text-xs text-purple-700 space-y-1">
+                          <li>• Make sure all business information is filled in for a more complete app</li>
+                          <li>• Choose the correct category - it determines which features are included</li>
+                          <li>• Add special features if your business has unique requirements</li>
+                          <li>• Review the generated prompt before copying to ensure accuracy</li>
+                          <li>• You may need to iterate with Natively to refine the app</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )
+                })()}
               </CardContent>
             </Card>
 
