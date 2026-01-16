@@ -3080,7 +3080,7 @@ Business Hours: ${hoursFormatted}
 
 ${services.length > 0 ? `Services Offered:\n${services.map(s => `- ${s}`).join('\n')}` : ''}
 
-${testimonials.length > 0 ? `Customer Testimonials:\n${testimonials.slice(0, 3).map(t => `- "${t.text}" - ${t.name}`).join('\n')}` : ''}
+${testimonials.length > 0 ? `Customer Testimonials:\n${testimonials.slice(0, 3).map(t => `- "${t.content}" - ${t.author}`).join('\n')}` : ''}
 
 Social Media:
 ${Object.entries(socialLinks).filter(([_, url]) => url).map(([platform, url]) => `- ${platform}: ${url}`).join('\n') || '- None provided'}
