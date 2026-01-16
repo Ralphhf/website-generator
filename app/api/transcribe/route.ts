@@ -120,7 +120,7 @@ Please provide the summary in a clear, professional format. If any section has n
     )
 
     const { error: updateError } = await supabase
-      .from('profiles')
+      .from('business_profiles')
       .update({
         meeting_transcript: transcript,
         meeting_summary: summary,
