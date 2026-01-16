@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare, Mail, PenTool, CalendarDays, Bell, Users, Smartphone, Send, ChevronDown, Settings, MapPin, Camera, ShoppingBag, Home, Utensils, Stethoscope, Dumbbell, Car, Scissors, GraduationCap, Mic, MicOff, ChevronRight, RotateCcw } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare, Mail, PenTool, CalendarDays, Bell, Users, Smartphone, Send, ChevronDown, Settings, MapPin, Camera, ShoppingBag, Home, Utensils, Stethoscope, Dumbbell, Car, Scissors, GraduationCap, Mic, MicOff, ChevronRight, RotateCcw, Megaphone, Image, Video, Facebook, Instagram, Youtube, Play } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -31,7 +31,7 @@ interface SavedProfile {
   updated_at: string
 }
 
-type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'business-email' | 'email-signature' | 'social-media' | 'appointment-booking' | 'ios-app' | 'meeting-recording' | 'llc' | 'client-outreach'
+type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'business-email' | 'email-signature' | 'social-media' | 'appointment-booking' | 'ios-app' | 'ad-creation' | 'meeting-recording' | 'llc' | 'client-outreach'
 
 export default function ProfileDetailPage() {
   const params = useParams()
@@ -69,6 +69,10 @@ export default function ProfileDetailPage() {
   const [iosAppPrimaryColor, setIosAppPrimaryColor] = useState('#3B82F6')
   const [iosAppSpecialFeatures, setIosAppSpecialFeatures] = useState('')
   const [iosAppPromptCopied, setIosAppPromptCopied] = useState(false)
+  const [showAdCreationDetails, setShowAdCreationDetails] = useState(false)
+  const [adCreationTab, setAdCreationTab] = useState<'image' | 'video'>('image')
+  const [adPlatform, setAdPlatform] = useState<string>('facebook')
+  const [adPromptCopied, setAdPromptCopied] = useState<string | null>(null)
   const [showMeetingDetails, setShowMeetingDetails] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
@@ -3544,6 +3548,778 @@ Make the app production-ready, polished, and professional. The business owner sh
                           <li>• Add special features if your business has unique requirements</li>
                           <li>• Review the generated prompt before copying to ensure accuracy</li>
                           <li>• You may need to iterate with Natively to refine the app</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )
+                })()}
+              </CardContent>
+            </Card>
+
+            {/* Ad Creation */}
+            <Card variant="outlined" className={`border-2 ${isSectionComplete('ad-creation') ? 'border-green-300 bg-green-50/30' : 'border-orange-200 bg-orange-50/50'}`}>
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('ad-creation')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('ad-creation') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('ad-creation') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
+                    <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                      <Megaphone className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className={`font-semibold ${isSectionComplete('ad-creation') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Ad Creation</h3>
+                      <p className="text-sm text-gray-500">Generate platform-specific image & video ad prompts</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAdCreationDetails(!showAdCreationDetails)}
+                    className="border-orange-300"
+                  >
+                    {showAdCreationDetails ? 'Hide' : 'Create Ads'}
+                  </Button>
+                </div>
+
+                {showAdCreationDetails && (() => {
+                  const businessName = profile?.name || 'Business'
+                  const businessType = profile?.business_type || profile?.data?.businessType || 'local business'
+                  const tagline = profile?.tagline || profile?.data?.tagline || ''
+                  const description = profile?.data?.description || ''
+                  const services = profile?.data?.services || []
+                  const city = profile?.city || profile?.data?.city || ''
+
+                  // Platform definitions
+                  const platforms = {
+                    facebook: {
+                      name: 'Facebook',
+                      color: 'blue',
+                      audience: 'Older adults and mature users',
+                      style: 'Formal to semi-formal tone. Direct messaging that clearly explains value. Focus on trust, usefulness, and real outcomes.',
+                      characteristics: 'More traditional, prefer clarity and credibility, respond to straightforward messaging'
+                    },
+                    instagram: {
+                      name: 'Instagram',
+                      color: 'pink',
+                      audience: 'Younger adults and teens',
+                      style: 'Eye-catching and fast-scroll-friendly. Entertaining, stylish, engaging. Strong visuals and curiosity hooks.',
+                      characteristics: 'Visually driven, attention-limited, enjoy trends and aesthetics'
+                    },
+                    youtube: {
+                      name: 'YouTube',
+                      color: 'red',
+                      audience: 'Broad age range (general audience)',
+                      style: 'Educational or informative. Clear explanations and storytelling. Engaging but focused on learning.',
+                      characteristics: 'Actively chooses content, willing to spend time if value is clear'
+                    },
+                    tiktok: {
+                      name: 'TikTok',
+                      color: 'slate',
+                      audience: 'Teens, young adults, and kids',
+                      style: 'Highly entertaining and dynamic. Informal, playful, fast-paced. Emphasis on fun, trends, humor.',
+                      characteristics: 'Extremely short attention span, trend-driven, entertainment-focused'
+                    }
+                  }
+
+                  // Generate image ad prompts
+                  const generateImagePrompts = (platform: 'facebook' | 'instagram') => {
+                    const p = platforms[platform]
+                    const prompts = []
+
+                    if (platform === 'facebook') {
+                      prompts.push({
+                        title: 'Trust & Credibility Ad',
+                        prompt: `Create a professional, clean advertisement image for "${businessName}", a ${businessType}${city ? ` in ${city}` : ''}.
+
+STYLE: Corporate, trustworthy, mature aesthetic. Clean backgrounds (white, light gray, or soft blue). Professional lighting.
+
+VISUAL ELEMENTS:
+- Show the service/product being delivered professionally
+- Include subtle trust indicators (checkmarks, shields, or professional setting)
+- Use warm, approachable colors with professional undertones
+${tagline ? `- Incorporate the tagline: "${tagline}"` : ''}
+
+TEXT OVERLAY SPACE: Leave clear area for headline text about benefits and value proposition.
+
+MOOD: Reliable, established, competent. Appeals to practical decision-makers who value quality and dependability.
+
+ASPECT RATIO: 1200x628 pixels (Facebook feed optimal)`
+                      })
+
+                      prompts.push({
+                        title: 'Value Proposition Ad',
+                        prompt: `Design a straightforward advertisement for "${businessName}" (${businessType}) that clearly communicates value.
+
+STYLE: Direct, informative, professional. No flashy effects - focus on clarity.
+
+VISUAL CONCEPT:
+- Before/after comparison OR clear product/service showcase
+- Real-world application of the service
+${services.length > 0 ? `- Highlight key services: ${services.slice(0, 3).join(', ')}` : ''}
+- Professional person or setting that represents the target customer
+
+COLORS: Conservative palette - blues, greens, or earth tones. High contrast for readability.
+
+LAYOUT: Clear visual hierarchy. Main benefit visible within 2 seconds of viewing.
+
+TARGET: Adults 35-65 who make careful purchasing decisions.
+
+ASPECT RATIO: 1080x1080 pixels (Facebook square format)`
+                      })
+
+                      prompts.push({
+                        title: 'Social Proof Ad',
+                        prompt: `Create a testimonial-style advertisement for "${businessName}", a trusted ${businessType}${city ? ` serving ${city}` : ''}.
+
+STYLE: Authentic, relatable, community-focused.
+
+VISUAL ELEMENTS:
+- Happy customer or family in realistic setting (not overly polished)
+- Warm, natural lighting
+- Subtle brand elements without overwhelming
+- Space for customer quote overlay
+
+MOOD: "Your neighbors trust us" - local, reliable, proven.
+
+BACKGROUND: Home setting, local neighborhood feel, or professional service environment.
+
+DEMOGRAPHIC APPEAL: Middle-aged adults, homeowners, family decision-makers.
+
+ASPECT RATIO: 1200x628 pixels (Facebook feed)`
+                      })
+                    } else {
+                      // Instagram prompts
+                      prompts.push({
+                        title: 'Aesthetic Showcase Ad',
+                        prompt: `Create a visually stunning, scroll-stopping advertisement for "${businessName}" (${businessType}) optimized for Instagram.
+
+STYLE: Modern, trendy, aesthetically pleasing. Instagram-worthy visuals that encourage saves and shares.
+
+VISUAL ELEMENTS:
+- Bold colors or striking contrast
+- Clean, minimalist composition with one clear focal point
+- Lifestyle imagery showing aspirational outcome
+${tagline ? `- Stylized text: "${tagline}"` : ''}
+
+MOOD: Inspirational, desirable, "I want that" feeling.
+
+AESTHETIC: Choose ONE - Minimal & Clean / Bold & Vibrant / Warm & Cozy / Luxe & Premium
+
+IMPORTANT: Must look native to Instagram - not like an ad. Think influencer content quality.
+
+ASPECT RATIO: 1080x1350 pixels (Instagram portrait - highest engagement)`
+                      })
+
+                      prompts.push({
+                        title: 'Story/Reel Cover Ad',
+                        prompt: `Design an eye-catching Instagram Story/Reel cover image for "${businessName}" - a ${businessType}.
+
+STYLE: Vertical format, bold and attention-grabbing. Must stop the scroll in 0.5 seconds.
+
+VISUAL ELEMENTS:
+- Dynamic composition with movement implied
+- Bright, saturated colors OR dramatic contrast
+- Large, readable text element (3-5 words max)
+- Face or human element if possible
+${services.length > 0 ? `- Feature: ${services[0]}` : ''}
+
+HOOKS TO INCLUDE (choose one):
+- "You need to see this..."
+- Curiosity gap visual
+- Transformation tease
+- Behind-the-scenes peek
+
+VIBE: Energetic, current, FOMO-inducing.
+
+ASPECT RATIO: 1080x1920 pixels (9:16 vertical)`
+                      })
+
+                      prompts.push({
+                        title: 'Carousel First Slide',
+                        prompt: `Create the first slide of an Instagram carousel for "${businessName}" (${businessType}) that makes users swipe.
+
+STYLE: Clean, intriguing, incomplete - users MUST swipe to get the full picture.
+
+VISUAL CONCEPT:
+- Provocative question or bold statement as text
+- Teaser image that hints at value but doesn't reveal all
+- Arrow or swipe indicator subtly included
+- On-brand colors and aesthetic
+
+HOOK IDEAS:
+- "3 things you didn't know about [service]..."
+- "Why everyone in ${city || 'your area'} is talking about..."
+- "The secret to [benefit]..."
+
+PSYCHOLOGY: Create curiosity gap. Promise value on next slides.
+
+ASPECT RATIO: 1080x1080 pixels (Instagram square carousel)`
+                      })
+                    }
+
+                    return prompts
+                  }
+
+                  // Generate video ad prompts
+                  const generateVideoPrompts = (platform: 'facebook' | 'instagram' | 'youtube' | 'tiktok') => {
+                    const p = platforms[platform]
+                    const prompts = []
+
+                    if (platform === 'facebook') {
+                      prompts.push({
+                        title: 'Explainer Video Ad (60-90 sec)',
+                        prompt: `Create a professional explainer video ad for "${businessName}", a ${businessType}${city ? ` in ${city}` : ''}.
+
+TARGET AUDIENCE: Adults 35-65, practical decision-makers who value clear information.
+
+VIDEO STRUCTURE:
+0:00-0:05 - Hook: State the problem your audience faces
+0:05-0:20 - Agitate: Show the frustration of not having a solution
+0:20-0:50 - Solution: Introduce ${businessName} and show how you solve the problem
+${services.length > 0 ? `0:50-1:10 - Features: Highlight ${services.slice(0, 3).join(', ')}` : '0:50-1:10 - Features: Show key benefits'}
+1:10-1:20 - Social proof: Quick testimonial or trust indicators
+1:20-1:30 - CTA: Clear call-to-action with contact info
+
+TONE: Professional, trustworthy, informative. No hype - just facts and benefits.
+
+VISUALS: Real footage preferred over animation. Show actual service delivery. Professional lighting and audio.
+
+MUSIC: Subtle, corporate-friendly background music. Not distracting.
+
+TEXT OVERLAYS: Key points as subtitles (85% of Facebook videos watched without sound).`
+                      })
+
+                      prompts.push({
+                        title: 'Testimonial Video Ad (30-45 sec)',
+                        prompt: `Script a customer testimonial video ad for "${businessName}" (${businessType}).
+
+AUDIENCE: Facebook users 40+, value peer recommendations.
+
+STRUCTURE:
+0:00-0:05 - Customer introduces themselves and their problem
+0:05-0:15 - What they tried before that didn't work
+0:15-0:30 - How ${businessName} solved their problem
+0:30-0:40 - Specific results or benefits they experienced
+0:40-0:45 - Recommendation and CTA
+
+FILMING STYLE:
+- Customer in their home or business (authentic setting)
+- Natural lighting, casual but clear audio
+- Cut to B-roll of service being performed
+- End with logo and contact info
+
+AUTHENTICITY: Must feel real, not scripted. Conversational language.`
+                      })
+
+                      prompts.push({
+                        title: 'Before/After Video Ad (15-30 sec)',
+                        prompt: `Create a before/after transformation video for "${businessName}" - ${businessType}.
+
+AUDIENCE: Facebook users who need visual proof of results.
+
+STRUCTURE:
+0:00-0:03 - "BEFORE" text with problem state
+0:03-0:08 - Show the problem in detail
+0:08-0:10 - Transition effect (swipe, dissolve)
+0:10-0:13 - "AFTER" text with solution
+0:13-0:20 - Reveal the transformation
+0:20-0:25 - ${businessName} logo and "We can do this for you"
+0:25-0:30 - CTA with phone/website
+
+VISUALS: Same angle/lighting for before and after. Dramatic but believable transformation.
+
+MUSIC: Building anticipation, satisfying reveal.`
+                      })
+                    } else if (platform === 'instagram') {
+                      prompts.push({
+                        title: 'Reel Hook Video (15-30 sec)',
+                        prompt: `Create a viral Instagram Reel for "${businessName}" (${businessType}).
+
+AUDIENCE: 18-35, scrolling quickly, needs instant hook.
+
+HOOK (First 1-2 seconds) - Choose one:
+- "POV: You finally found a ${businessType} that actually..."
+- "This is your sign to [action related to service]"
+- "Nobody talks about this but..."
+- Start mid-action with something visually striking
+
+STRUCTURE:
+0:00-0:02 - HOOK (text on screen + movement)
+0:02-0:08 - The reveal/value/transformation
+0:08-0:12 - Quick benefit showcase
+0:12-0:15 - CTA or loop point
+${tagline ? `Include: "${tagline}"` : ''}
+
+STYLE: Trendy transitions, popular audio track, text overlays. Fast-paced cuts. Vertical 9:16.
+
+VIBE: Relatable, aspirational, share-worthy. NOT salesy.
+
+END: Encourage saves ("Save this for later") or shares.`
+                      })
+
+                      prompts.push({
+                        title: 'Behind-the-Scenes Reel (20-40 sec)',
+                        prompt: `Script a behind-the-scenes Instagram Reel for "${businessName}" - ${businessType}.
+
+CONCEPT: "Day in the life" or "How we do X" content that feels authentic.
+
+AUDIENCE: Young adults who value transparency and authenticity.
+
+STRUCTURE:
+0:00-0:03 - "Come with me to..." or "Watch me [do service]"
+0:03-0:15 - Process montage with trendy transitions
+0:15-0:25 - Satisfying result or completion moment
+0:25-0:30 - Casual CTA ("DM us if you want this")
+${services.length > 0 ? `Feature service: ${services[0]}` : ''}
+
+STYLE:
+- Handheld, authentic feel (not overly produced)
+- Popular trending audio
+- Quick cuts synced to beat
+- Mix of wide shots and detail close-ups
+- Text captions for key moments
+
+MOOD: "We love what we do" - passionate, skilled, personable.`
+                      })
+
+                      prompts.push({
+                        title: 'Transformation Reel (10-20 sec)',
+                        prompt: `Create a satisfying transformation Reel for "${businessName}" (${businessType}).
+
+HOOK: Start with the "after" for 0.5 seconds, then "wait for it..." rewind.
+
+STRUCTURE:
+0:00-0:01 - Flash of amazing result
+0:01-0:03 - "Let me show you how we got here"
+0:03-0:12 - Sped-up transformation process
+0:12-0:15 - Final reveal with trending audio drop
+
+MUST HAVE:
+- Satisfying moment (cleaning, organizing, transformation)
+- ASMR-quality audio if applicable
+- Smooth transitions
+- Before/after side-by-side at end
+
+AUDIO: Use trending sound or satisfying audio track.
+
+GOAL: Saves and shares. "So satisfying" comments.`
+                      })
+                    } else if (platform === 'youtube') {
+                      prompts.push({
+                        title: 'Educational How-To Video (3-5 min)',
+                        prompt: `Script an educational YouTube video for "${businessName}" - ${businessType}${city ? ` in ${city}` : ''}.
+
+AUDIENCE: People actively searching for solutions, all ages, value depth.
+
+TITLE IDEAS:
+- "How to Choose the Right ${businessType} (5 Things to Look For)"
+- "${businessType} 101: What Every Homeowner Should Know"
+- "The Complete Guide to [service] - Expert Tips from ${businessName}"
+
+STRUCTURE:
+0:00-0:30 - Hook + Introduce topic + Why it matters
+0:30-1:00 - Brief intro of ${businessName} and credentials
+1:00-3:30 - Main content (3-5 valuable tips or steps)
+3:30-4:00 - Common mistakes to avoid
+4:00-4:30 - Recap + Soft pitch for ${businessName}
+4:30-5:00 - CTA (Subscribe, comment, contact)
+
+TONE: Educational, helpful, authoritative but approachable. You're the expert sharing knowledge freely.
+
+VISUALS:
+- Talking head + B-roll of work being done
+- Graphics for key points
+- Before/after examples
+- Professional but not corporate
+
+${services.length > 0 ? `Highlight expertise in: ${services.join(', ')}` : ''}
+
+END SCREEN: Subscribe button + Related video + Contact info.`
+                      })
+
+                      prompts.push({
+                        title: 'Case Study Video (2-3 min)',
+                        prompt: `Create a YouTube case study video for "${businessName}" showcasing a successful project.
+
+AUDIENCE: Potential customers researching options, want proof of quality.
+
+TITLE: "How We [Solved Problem] for [Customer Type] - ${businessName} Case Study"
+
+STRUCTURE:
+0:00-0:15 - Dramatic before shot + "Here's what we were working with"
+0:15-0:45 - Customer's situation and challenges
+0:45-1:30 - Our approach and process (show work being done)
+1:30-2:00 - Challenges we overcame
+2:00-2:30 - The final result (dramatic reveal)
+2:30-3:00 - Customer reaction/testimonial + CTA
+
+PRODUCTION:
+- Documentary style
+- Interview snippets with team/customer
+- Time-lapse of work
+- Professional voiceover or on-camera host
+
+GOAL: "If they did this, they can help me too" feeling.`
+                      })
+
+                      prompts.push({
+                        title: 'YouTube Shorts Ad (30-60 sec)',
+                        prompt: `Script a YouTube Shorts vertical video for "${businessName}" (${businessType}).
+
+AUDIENCE: YouTube mobile users, quick content consumers.
+
+HOOK (First 2 seconds):
+- Controversial opinion about your industry
+- Surprising fact
+- "Stop making this mistake..."
+
+STRUCTURE:
+0:00-0:02 - Hook (text + visual)
+0:02-0:15 - Quick value delivery (tip, hack, or insight)
+0:15-0:25 - Show proof/example
+0:25-0:30 - "Follow for more" + Contact
+
+STYLE:
+- Vertical 9:16
+- Fast-paced but clear
+- Subtitles throughout
+- Clean cuts, no fancy transitions
+
+CONTENT IDEAS:
+- "3 signs you need a ${businessType}"
+- "What your ${businessType} won't tell you"
+- "Quick tip that saves you money on [service]"
+
+${tagline ? `Brand message: "${tagline}"` : ''}`
+                      })
+                    } else {
+                      // TikTok
+                      prompts.push({
+                        title: 'Trending Hook Video (15-30 sec)',
+                        prompt: `Create a TikTok using trending format for "${businessName}" - ${businessType}.
+
+AUDIENCE: Gen Z and young millennials. 3-second attention span. Entertainment first.
+
+TRENDING FORMATS TO USE (pick one):
+- "POV: You're a ${businessType} and..."
+- "Things that just make sense" with your service
+- "I don't know who needs to hear this but..."
+- "The difference between cheap vs quality ${businessType}"
+- Story time format with visual demonstration
+
+STRUCTURE:
+0:00-0:01 - HOOK (movement + text + curiosity)
+0:01-0:05 - Setup the scenario
+0:05-0:12 - The entertaining/relatable middle
+0:12-0:15 - Punchline or satisfying conclusion
+Loop point back to start
+
+MUST HAVE:
+- Trending sound (check TikTok trending page)
+- On-screen captions
+- Fast cuts (every 2-3 seconds max)
+- Personality! Be funny, relatable, or shocking
+
+${city ? `Local angle: Mention ${city} for local reach` : ''}
+
+DO NOT: Be boring, overly promotional, or use corporate language.`
+                      })
+
+                      prompts.push({
+                        title: 'Day-in-the-Life TikTok (30-60 sec)',
+                        prompt: `Script an entertaining "day in the life" TikTok for "${businessName}" (${businessType}).
+
+AUDIENCE: Young people who love authentic, raw content.
+
+HOOK: "Day in my life as a ${businessType} in ${city || 'the city'}..."
+
+STRUCTURE:
+0:00-0:03 - Morning routine/heading to job (relatable moment)
+0:03-0:10 - Arriving at job site + what we're dealing with
+0:10-0:25 - Montage of work with funny commentary
+0:25-0:35 - Unexpected moment or challenge (drama!)
+0:35-0:45 - Satisfying completion
+0:45-0:50 - End of day + teaser for next video
+
+VIBE:
+- Raw, unfiltered, real
+- Self-deprecating humor welcome
+- Show the not-so-glamorous parts too
+- Personality over polish
+
+AUDIO: Trending sound or viral audio clip that fits the narrative.
+
+GOAL: Comments like "I could watch this all day" and follows for more content.`
+                      })
+
+                      prompts.push({
+                        title: 'Satisfying Process TikTok (10-20 sec)',
+                        prompt: `Create a satisfying, addictive TikTok for "${businessName}" showing ${businessType} work.
+
+AUDIENCE: Anyone who loves satisfying content (huge reach potential).
+
+CONCEPT: Pure visual satisfaction - minimal talking, maximum "oddly satisfying" vibes.
+
+IDEAS:
+- Cleaning something very dirty
+- Perfect technique demonstration
+- Transformation reveal
+- Symmetry and precision
+- ASMR-worthy sounds
+
+STRUCTURE:
+0:00-0:02 - Tease the mess/before state
+0:02-0:12 - The satisfying process (slow-mo or real-time)
+0:12-0:15 - Clean reveal + logo
+
+AUDIO:
+- Trending satisfying audio
+- OR original sound for ASMR
+- OR popular song with beat drop at reveal
+
+HASHTAGS: #satisfying #oddlysatisfying #${businessType.replace(/\s+/g, '')} #asmr
+
+GOAL: Shares, saves, and "watch it again" loops.`
+                      })
+                    }
+
+                    return prompts
+                  }
+
+                  const imagePlatforms = ['facebook', 'instagram'] as const
+                  const videoPlatforms = ['facebook', 'instagram', 'youtube', 'tiktok'] as const
+
+                  const imageTools = [
+                    { name: 'Midjourney', url: 'https://midjourney.com', description: 'Best for artistic, creative visuals' },
+                    { name: 'DALL·E', url: 'https://openai.com/dall-e-3', description: 'Great for realistic, detailed images' },
+                    { name: 'Leonardo AI', url: 'https://leonardo.ai', description: 'Good for marketing visuals, free tier' },
+                    { name: 'Adobe Firefly', url: 'https://firefly.adobe.com', description: 'Commercial-safe, integrates with Adobe' }
+                  ]
+
+                  const videoTools = [
+                    { name: 'Runway', url: 'https://runwayml.com', description: 'Best for short AI video generation' },
+                    { name: 'Pika', url: 'https://pika.art', description: 'Easy text-to-video, good for ads' },
+                    { name: 'Synthesia', url: 'https://synthesia.io', description: 'AI avatars for professional videos' },
+                    { name: 'HeyGen', url: 'https://heygen.com', description: 'AI spokesperson videos' }
+                  ]
+
+                  const copyPrompt = (promptId: string, text: string) => {
+                    navigator.clipboard.writeText(text)
+                    setAdPromptCopied(promptId)
+                    setTimeout(() => setAdPromptCopied(null), 3000)
+                  }
+
+                  return (
+                    <div className="space-y-6">
+                      {/* Tab Selection */}
+                      <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+                        <button
+                          onClick={() => setAdCreationTab('image')}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                            adCreationTab === 'image' ? 'bg-white shadow text-orange-600' : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          <Image className="w-4 h-4" />
+                          Image Ads
+                        </button>
+                        <button
+                          onClick={() => setAdCreationTab('video')}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                            adCreationTab === 'video' ? 'bg-white shadow text-orange-600' : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          <Video className="w-4 h-4" />
+                          Video Ads
+                        </button>
+                      </div>
+
+                      {/* Image Ads Section */}
+                      {adCreationTab === 'image' && (
+                        <div className="space-y-4">
+                          {/* Platform Tabs */}
+                          <div className="flex gap-2">
+                            {imagePlatforms.map(p => (
+                              <button
+                                key={p}
+                                onClick={() => setAdPlatform(p)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                  adPlatform === p
+                                    ? p === 'facebook' ? 'bg-blue-100 text-blue-700 border-2 border-blue-300' : 'bg-pink-100 text-pink-700 border-2 border-pink-300'
+                                    : 'bg-gray-50 text-gray-600 border-2 border-transparent hover:bg-gray-100'
+                                }`}
+                              >
+                                {p === 'facebook' ? <Facebook className="w-4 h-4" /> : <Instagram className="w-4 h-4" />}
+                                {p.charAt(0).toUpperCase() + p.slice(1)}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Platform Info */}
+                          <div className={`p-3 rounded-lg ${adPlatform === 'facebook' ? 'bg-blue-50 border border-blue-200' : 'bg-pink-50 border border-pink-200'}`}>
+                            <p className="text-sm">
+                              <strong>Audience:</strong> {platforms[adPlatform as keyof typeof platforms].audience}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1">{platforms[adPlatform as keyof typeof platforms].characteristics}</p>
+                          </div>
+
+                          {/* Prompts */}
+                          <div className="space-y-4">
+                            {generateImagePrompts(adPlatform as 'facebook' | 'instagram').map((item, idx) => (
+                              <div key={idx} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                <div className="flex items-center justify-between p-3 bg-gray-50 border-b border-gray-200">
+                                  <h4 className="font-medium text-gray-900">{item.title}</h4>
+                                  <Button
+                                    size="sm"
+                                    variant={adPromptCopied === `img-${adPlatform}-${idx}` ? "default" : "outline"}
+                                    className={adPromptCopied === `img-${adPlatform}-${idx}` ? "bg-green-600" : ""}
+                                    onClick={() => copyPrompt(`img-${adPlatform}-${idx}`, item.prompt)}
+                                  >
+                                    {adPromptCopied === `img-${adPlatform}-${idx}` ? (
+                                      <><Check className="w-3 h-3 mr-1" /> Copied!</>
+                                    ) : (
+                                      <><Copy className="w-3 h-3 mr-1" /> Copy</>
+                                    )}
+                                  </Button>
+                                </div>
+                                <div className="p-3 max-h-48 overflow-y-auto">
+                                  <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">{item.prompt}</pre>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Image AI Tools */}
+                          <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                            <h4 className="font-semibold text-gray-900 mb-3">Recommended Image AI Tools</h4>
+                            <div className="grid grid-cols-2 gap-2">
+                              {imageTools.map(tool => (
+                                <a
+                                  key={tool.name}
+                                  href={tool.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-between p-2 bg-white rounded-lg border border-orange-200 hover:border-orange-400 transition-colors"
+                                >
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-900">{tool.name}</p>
+                                    <p className="text-xs text-gray-500">{tool.description}</p>
+                                  </div>
+                                  <ExternalLink className="w-4 h-4 text-orange-500" />
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Video Ads Section */}
+                      {adCreationTab === 'video' && (
+                        <div className="space-y-4">
+                          {/* Platform Tabs */}
+                          <div className="flex flex-wrap gap-2">
+                            {videoPlatforms.map(p => (
+                              <button
+                                key={p}
+                                onClick={() => setAdPlatform(p)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                  adPlatform === p
+                                    ? p === 'facebook' ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
+                                    : p === 'instagram' ? 'bg-pink-100 text-pink-700 border-2 border-pink-300'
+                                    : p === 'youtube' ? 'bg-red-100 text-red-700 border-2 border-red-300'
+                                    : 'bg-slate-100 text-slate-700 border-2 border-slate-300'
+                                    : 'bg-gray-50 text-gray-600 border-2 border-transparent hover:bg-gray-100'
+                                }`}
+                              >
+                                {p === 'facebook' ? <Facebook className="w-4 h-4" /> :
+                                 p === 'instagram' ? <Instagram className="w-4 h-4" /> :
+                                 p === 'youtube' ? <Youtube className="w-4 h-4" /> :
+                                 <Play className="w-4 h-4" />}
+                                {p.charAt(0).toUpperCase() + p.slice(1)}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Platform Info */}
+                          <div className={`p-3 rounded-lg ${
+                            adPlatform === 'facebook' ? 'bg-blue-50 border border-blue-200' :
+                            adPlatform === 'instagram' ? 'bg-pink-50 border border-pink-200' :
+                            adPlatform === 'youtube' ? 'bg-red-50 border border-red-200' :
+                            'bg-slate-50 border border-slate-200'
+                          }`}>
+                            <p className="text-sm">
+                              <strong>Audience:</strong> {platforms[adPlatform as keyof typeof platforms]?.audience || platforms.facebook.audience}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1">{platforms[adPlatform as keyof typeof platforms]?.style || platforms.facebook.style}</p>
+                          </div>
+
+                          {/* Prompts */}
+                          <div className="space-y-4">
+                            {generateVideoPrompts(adPlatform as 'facebook' | 'instagram' | 'youtube' | 'tiktok').map((item, idx) => (
+                              <div key={idx} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                <div className="flex items-center justify-between p-3 bg-gray-50 border-b border-gray-200">
+                                  <h4 className="font-medium text-gray-900">{item.title}</h4>
+                                  <Button
+                                    size="sm"
+                                    variant={adPromptCopied === `vid-${adPlatform}-${idx}` ? "default" : "outline"}
+                                    className={adPromptCopied === `vid-${adPlatform}-${idx}` ? "bg-green-600" : ""}
+                                    onClick={() => copyPrompt(`vid-${adPlatform}-${idx}`, item.prompt)}
+                                  >
+                                    {adPromptCopied === `vid-${adPlatform}-${idx}` ? (
+                                      <><Check className="w-3 h-3 mr-1" /> Copied!</>
+                                    ) : (
+                                      <><Copy className="w-3 h-3 mr-1" /> Copy</>
+                                    )}
+                                  </Button>
+                                </div>
+                                <div className="p-3 max-h-64 overflow-y-auto">
+                                  <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">{item.prompt}</pre>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Video AI Tools */}
+                          <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                            <h4 className="font-semibold text-gray-900 mb-3">Recommended Video AI Tools</h4>
+                            <div className="grid grid-cols-2 gap-2">
+                              {videoTools.map(tool => (
+                                <a
+                                  key={tool.name}
+                                  href={tool.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-between p-2 bg-white rounded-lg border border-orange-200 hover:border-orange-400 transition-colors"
+                                >
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-900">{tool.name}</p>
+                                    <p className="text-xs text-gray-500">{tool.description}</p>
+                                  </div>
+                                  <ExternalLink className="w-4 h-4 text-orange-500" />
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Tips */}
+                      <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <h4 className="font-medium text-orange-800 text-sm mb-2">Pro Tips</h4>
+                        <ul className="text-xs text-orange-700 space-y-1">
+                          <li>• Copy prompts directly into AI image/video generators like Midjourney, DALL·E, or Runway</li>
+                          <li>• Each platform has 3 unique prompts tailored to its audience behavior</li>
+                          <li>• For videos, use the scripts as storyboards for AI video tools or human production</li>
+                          <li>• Test multiple variations - small changes can significantly impact performance</li>
+                          <li>• Always A/B test your ads to find what resonates with your specific audience</li>
                         </ul>
                       </div>
                     </div>
