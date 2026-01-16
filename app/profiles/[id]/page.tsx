@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare, Mail, PenTool, CalendarDays, Bell, Users, Smartphone, Send, Apple, ChevronDown, Settings, MapPin, Camera, ShoppingBag, Home, Utensils, Stethoscope, Dumbbell, Car, Scissors, GraduationCap, Heart } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, AlertCircle, Download, Palette, Share2, CheckCircle2, Rocket, Globe, Copy, Check, Search, ExternalLink, QrCode, Briefcase, Star, DollarSign, Clock, Shield, CreditCard, Zap, Award, Shuffle, Sparkles, FileText, Square, CheckSquare, Mail, PenTool, CalendarDays, Bell, Users, Smartphone, Send, ChevronDown, Settings, MapPin, Camera, ShoppingBag, Home, Utensils, Stethoscope, Dumbbell, Car, Scissors, GraduationCap, Mic, MicOff, ChevronRight, RotateCcw } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/ui'
 import Link from 'next/link'
 import { BusinessInfo } from '@/lib/types'
@@ -24,11 +24,14 @@ interface SavedProfile {
   state: string | null
   data: BusinessInfo
   completed_sections: string[]
+  meeting_transcript: string | null
+  meeting_summary: string | null
+  meeting_recorded_at: string | null
   created_at: string
   updated_at: string
 }
 
-type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'business-email' | 'email-signature' | 'social-media' | 'appointment-booking' | 'ios-app' | 'llc' | 'client-outreach'
+type SectionId = 'generate' | 'download' | 'deploy' | 'domain' | 'logo' | 'business-cards' | 'flyers' | 'qr-code' | 'business-email' | 'email-signature' | 'social-media' | 'appointment-booking' | 'ios-app' | 'meeting-recording' | 'llc' | 'client-outreach'
 
 export default function ProfileDetailPage() {
   const params = useParams()
@@ -66,6 +69,19 @@ export default function ProfileDetailPage() {
   const [iosAppPrimaryColor, setIosAppPrimaryColor] = useState('#3B82F6')
   const [iosAppSpecialFeatures, setIosAppSpecialFeatures] = useState('')
   const [iosAppPromptCopied, setIosAppPromptCopied] = useState(false)
+  const [showMeetingDetails, setShowMeetingDetails] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [meetingTranscript, setMeetingTranscript] = useState<string | null>(null)
+  const [meetingSummary, setMeetingSummary] = useState<string | null>(null)
+  const [meetingRecordedAt, setMeetingRecordedAt] = useState<string | null>(null)
+  const [showTranscript, setShowTranscript] = useState(false)
+  const [showSummary, setShowSummary] = useState(false)
+  const [recordingError, setRecordingError] = useState<string | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -80,6 +96,24 @@ export default function ProfileDetailPage() {
       setCompletedSections(new Set(profile.completed_sections))
     }
   }, [profile])
+
+  // Load meeting data when profile loads
+  useEffect(() => {
+    if (profile) {
+      setMeetingTranscript(profile.meeting_transcript)
+      setMeetingSummary(profile.meeting_summary)
+      setMeetingRecordedAt(profile.meeting_recorded_at)
+    }
+  }, [profile])
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [])
 
   const toggleSectionComplete = async (sectionId: SectionId) => {
     if (!profile) return
@@ -108,6 +142,116 @@ export default function ProfileDetailPage() {
   }
 
   const isSectionComplete = (sectionId: SectionId) => completedSections.has(sectionId)
+
+  // Recording functions
+  const startRecording = async () => {
+    try {
+      setRecordingError(null)
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      })
+
+      mediaRecorderRef.current = mediaRecorder
+      audioChunksRef.current = []
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      mediaRecorder.onstop = async () => {
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop())
+
+        // Process the recording
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        await processRecording(audioBlob)
+      }
+
+      mediaRecorder.start(1000) // Collect data every second
+      setIsRecording(true)
+      setRecordingTime(0)
+
+      // Start timer
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1)
+      }, 1000)
+
+    } catch (err) {
+      console.error('Error starting recording:', err)
+      setRecordingError('Could not access microphone. Please check permissions.')
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop()
+      setIsRecording(false)
+
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
+  }
+
+  const processRecording = async (audioBlob: Blob) => {
+    if (!profile) return
+
+    setIsProcessing(true)
+    setRecordingError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('audio', audioBlob, 'recording.webm')
+      formData.append('profileId', profile.id)
+      formData.append('businessName', profile.name)
+
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to process recording')
+      }
+
+      setMeetingTranscript(data.transcript)
+      setMeetingSummary(data.summary)
+      setMeetingRecordedAt(data.recorded_at)
+
+      // Auto-expand summary after processing
+      setShowSummary(true)
+
+    } catch (err) {
+      console.error('Error processing recording:', err)
+      setRecordingError(err instanceof Error ? err.message : 'Failed to process recording')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
 
   const fetchProfile = async (id: string) => {
     try {
@@ -3405,6 +3549,192 @@ Make the app production-ready, polished, and professional. The business owner sh
                     </div>
                   )
                 })()}
+              </CardContent>
+            </Card>
+
+            {/* Meeting Recording */}
+            <Card variant="outlined" className={`border-2 ${isSectionComplete('meeting-recording') ? 'border-green-300 bg-green-50/30' : 'border-rose-200 bg-rose-50/50'}`}>
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSectionComplete('meeting-recording')}
+                      className="flex-shrink-0 hover:scale-110 transition-transform"
+                      title={isSectionComplete('meeting-recording') ? 'Mark as incomplete' : 'Mark as complete'}
+                    >
+                      {isSectionComplete('meeting-recording') ? (
+                        <CheckSquare className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                      )}
+                    </button>
+                    <div className="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center">
+                      <Mic className="w-5 h-5 text-rose-600" />
+                    </div>
+                    <div>
+                      <h3 className={`font-semibold ${isSectionComplete('meeting-recording') ? 'text-green-700 line-through' : 'text-gray-900'}`}>Meeting Recording</h3>
+                      <p className="text-sm text-gray-500">Record & summarize client meetings with AI</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowMeetingDetails(!showMeetingDetails)}
+                    className="border-rose-300"
+                  >
+                    {showMeetingDetails ? 'Hide' : meetingRecordedAt ? 'View Recording' : 'Record Meeting'}
+                  </Button>
+                </div>
+
+                {showMeetingDetails && (
+                  <div className="space-y-4">
+                    {/* Recording Controls */}
+                    <div className="p-4 bg-white rounded-lg border border-rose-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-1">
+                            {isRecording ? 'Recording in Progress...' : isProcessing ? 'Processing...' : 'Record Client Meeting'}
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            {isRecording
+                              ? `Recording: ${formatTime(recordingTime)}`
+                              : isProcessing
+                              ? 'Transcribing and summarizing with AI...'
+                              : meetingRecordedAt
+                              ? `Last recorded: ${formatDate(meetingRecordedAt)}`
+                              : 'Click to start recording your meeting'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isRecording ? (
+                            <Button
+                              onClick={stopRecording}
+                              className="bg-rose-600 hover:bg-rose-700"
+                            >
+                              <MicOff className="w-4 h-4 mr-2" />
+                              Stop Recording
+                            </Button>
+                          ) : isProcessing ? (
+                            <Button disabled className="bg-gray-400">
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Processing...
+                            </Button>
+                          ) : (
+                            <>
+                              {meetingRecordedAt && (
+                                <Button
+                                  variant="outline"
+                                  onClick={startRecording}
+                                  className="border-rose-300"
+                                >
+                                  <RotateCcw className="w-4 h-4 mr-2" />
+                                  Re-record
+                                </Button>
+                              )}
+                              {!meetingRecordedAt && (
+                                <Button
+                                  onClick={startRecording}
+                                  className="bg-rose-600 hover:bg-rose-700"
+                                >
+                                  <Mic className="w-4 h-4 mr-2" />
+                                  Start Recording
+                                </Button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Recording indicator */}
+                      {isRecording && (
+                        <div className="mt-4 flex items-center gap-3 p-3 bg-rose-50 rounded-lg">
+                          <div className="w-3 h-3 bg-rose-500 rounded-full animate-pulse" />
+                          <span className="text-sm text-rose-700 font-medium">
+                            Recording... Speak clearly into your microphone
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Error message */}
+                      {recordingError && (
+                        <div className="mt-4 flex items-center gap-2 p-3 bg-red-50 rounded-lg text-red-700">
+                          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-sm">{recordingError}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Transcript Section */}
+                    {meetingTranscript && (
+                      <div className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+                        <button
+                          onClick={() => setShowTranscript(!showTranscript)}
+                          className="w-full flex items-center justify-between p-4 hover:bg-gray-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-gray-600" />
+                            <span className="font-medium text-gray-900">Full Transcript</span>
+                            <span className="text-xs text-gray-500">({meetingTranscript.split(' ').length} words)</span>
+                          </div>
+                          <ChevronRight className={`w-5 h-5 text-gray-400 transition-transform ${showTranscript ? 'rotate-90' : ''}`} />
+                        </button>
+                        {showTranscript && (
+                          <div className="p-4 border-t border-gray-200 bg-white">
+                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{meetingTranscript}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Summary Section */}
+                    {meetingSummary && (
+                      <div className="bg-rose-50 rounded-lg border border-rose-200 overflow-hidden">
+                        <button
+                          onClick={() => setShowSummary(!showSummary)}
+                          className="w-full flex items-center justify-between p-4 hover:bg-rose-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-rose-600" />
+                            <span className="font-medium text-gray-900">AI Meeting Summary</span>
+                          </div>
+                          <ChevronRight className={`w-5 h-5 text-rose-400 transition-transform ${showSummary ? 'rotate-90' : ''}`} />
+                        </button>
+                        {showSummary && (
+                          <div className="p-4 border-t border-rose-200 bg-white">
+                            <div className="prose prose-sm max-w-none text-gray-700">
+                              {meetingSummary.split('\n').map((line, i) => {
+                                if (line.startsWith('## ')) {
+                                  return <h4 key={i} className="font-semibold text-gray-900 mt-4 mb-2">{line.replace('## ', '')}</h4>
+                                }
+                                if (line.startsWith('- ')) {
+                                  return <li key={i} className="ml-4 text-sm">{line.replace('- ', '')}</li>
+                                }
+                                if (line.trim() === '') {
+                                  return <br key={i} />
+                                }
+                                return <p key={i} className="text-sm mb-2">{line}</p>
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Tips */}
+                    {!meetingTranscript && !isRecording && !isProcessing && (
+                      <div className="p-3 bg-rose-50 rounded-lg border border-rose-200">
+                        <h4 className="font-medium text-rose-800 text-sm mb-2">Recording Tips</h4>
+                        <ul className="text-xs text-rose-700 space-y-1">
+                          <li>• Use a quiet environment for best results</li>
+                          <li>• Speak clearly and at a moderate pace</li>
+                          <li>• The AI will transcribe and summarize automatically</li>
+                          <li>• Recording is saved to this profile for future reference</li>
+                          <li>• You can re-record to overwrite the previous meeting</li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
