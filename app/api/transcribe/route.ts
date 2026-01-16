@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for Anthropic API key
-    const anthropicKey = process.env.ANTHROPIC_API_KEY
+    const anthropicKey = process.env.CLAUDE_API_KEY
     if (!anthropicKey) {
       return NextResponse.json({ error: 'Anthropic API key not configured' }, { status: 500 })
     }
