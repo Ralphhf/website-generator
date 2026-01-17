@@ -811,6 +811,135 @@ export const PLATFORM_SPECS = {
   },
 }
 
+// Deep Platform Psychology - The REAL differences between platforms
+export const PLATFORM_PSYCHOLOGY = {
+  facebook: {
+    name: 'Facebook',
+    audienceAge: '35-65+',
+    audienceDescription: 'Older adults, parents, homeowners, established professionals',
+    userBehavior: 'Scroll slowly, read captions, value information, share with family',
+    attentionSpan: '3-5 seconds to hook, willing to watch longer content',
+    contentExpectation: 'Informative, trustworthy, community-oriented, family-friendly',
+    visualStyle: {
+      aesthetic: 'Clean, professional, warm, trustworthy',
+      colors: 'Blues (trust), greens (growth), warm earth tones, conservative palette',
+      lighting: 'Bright, natural, warm - like a well-lit home or office',
+      subjects: 'Real people (not models), families, professionals at work, before/after results',
+      mood: 'Reliable, established, community-focused, practical',
+      avoid: 'Trendy filters, chaotic compositions, overly youthful energy, meme formats',
+    },
+    copyStyle: {
+      tone: 'Professional but warm, like talking to a trusted neighbor',
+      length: 'Medium to long - they will read if valuable',
+      format: 'Clear paragraphs, bullet points, complete sentences',
+      cta: 'Direct and clear - "Call Now", "Get Free Quote", "Learn More"',
+      emoji: 'Minimal - checkmarks, phone, professional symbols only',
+    },
+    whatWorks: 'Trust signals, testimonials, before/after, educational content, community involvement',
+    whatFails: 'Trendy slang, chaotic energy, anything that feels "too young", clickbait',
+  },
+  instagram: {
+    name: 'Instagram',
+    audienceAge: '18-40',
+    audienceDescription: 'Young professionals, lifestyle-focused, aesthetically-driven, aspirational',
+    userBehavior: 'Fast scroll, judge in 0.5 seconds, save for later, influenced by aesthetics',
+    attentionSpan: '1-2 seconds to hook, visual-first judgment',
+    contentExpectation: 'Beautiful, aspirational, lifestyle-integrated, Instagram-worthy',
+    visualStyle: {
+      aesthetic: 'Polished, curated, magazine-quality, lifestyle-focused',
+      colors: 'Cohesive palette, trending colors, high contrast or soft pastels',
+      lighting: 'Golden hour, studio quality, aesthetic and intentional',
+      subjects: 'Lifestyle moments, aspirational scenes, beautiful results, influencer-style',
+      mood: 'Aspirational, desirable, "I want that life" feeling',
+      avoid: 'Cluttered images, poor lighting, corporate stock photos, text-heavy images',
+    },
+    copyStyle: {
+      tone: 'Casual, relatable, lifestyle-focused, slightly aspirational',
+      length: 'Short hook + optional longer caption (most wont read past line 2)',
+      format: 'Line breaks for readability, storytelling style',
+      cta: 'Soft CTAs - "Link in bio", "DM us", "Save this for later"',
+      emoji: 'Liberal use, adds personality: ✨💫🙌',
+    },
+    whatWorks: 'Aesthetic transformations, lifestyle integration, relatable moments, trending formats',
+    whatFails: 'Corporate messaging, walls of text, ugly visuals, desperate sales pitches',
+  },
+  tiktok: {
+    name: 'TikTok',
+    audienceAge: '16-35',
+    audienceDescription: 'Gen Z and young millennials, entertainment-first, trend-aware, authenticity-obsessed',
+    userBehavior: 'Extremely fast scroll, judge in 0.3 seconds, skip immediately if bored, reward authenticity',
+    attentionSpan: '0.5-1 second to hook - BRUTAL. If not hooked instantly, they scroll.',
+    contentExpectation: 'Raw, authentic, entertaining, NOT polished, trend-aware, human',
+    visualStyle: {
+      aesthetic: 'Raw, unpolished, authentic, filmed-on-phone look, NOT professional',
+      colors: 'Natural, unfiltered, or trending filter of the moment',
+      lighting: 'Natural/phone lighting, NOT studio - too polished = instant skip',
+      subjects: 'Real person talking to camera, POV shots, behind-scenes, raw moments',
+      mood: 'Authentic, relatable, slightly chaotic, human, entertaining',
+      avoid: 'Corporate polish, stock photos, overly produced content, anything that feels like an "ad"',
+    },
+    copyStyle: {
+      tone: 'Ultra-casual, conversational, trend-aware, slightly unhinged energy OK',
+      length: 'VERY short - they read fast. 1-2 sentences max on screen',
+      format: 'Text overlays synced to video, punchy phrases',
+      cta: 'Casual - "Follow for more", "Link in bio if you need this"',
+      emoji: 'Trendy use, but text overlays more common than captions',
+    },
+    whatWorks: 'Authenticity, trending sounds, POV format, satisfying content, story time, humor',
+    whatFails: 'Polished ads, corporate speak, anything that feels scripted or fake',
+  },
+  youtube: {
+    name: 'YouTube',
+    audienceAge: '25-55',
+    audienceDescription: 'Intentional viewers actively seeking content, researchers, learners',
+    userBehavior: 'Actively chose to watch, willing to invest time, searching for value',
+    attentionSpan: '5 seconds before skip button, but will watch 10+ minutes if valuable',
+    contentExpectation: 'Valuable, educational, worth their time, professional but personal',
+    visualStyle: {
+      aesthetic: 'Professional but approachable, good production quality expected',
+      colors: 'Clean, readable, good contrast for thumbnails',
+      lighting: 'Professional lighting expected, shows you take content seriously',
+      subjects: 'Talking head, demonstrations, tutorials, storytelling visuals',
+      mood: 'Expert but relatable, helpful, trustworthy educator',
+      avoid: 'Clickbait that doesnt deliver, poor audio quality, wasting their time',
+    },
+    copyStyle: {
+      tone: 'Educational, helpful, expert positioning, conversational',
+      length: 'Can be longer - they came to learn',
+      format: 'Clear structure, chapters, value-first',
+      cta: 'Subscribe, like, comment - plus clear business CTA',
+      emoji: 'Thumbnails use them strategically, descriptions minimal',
+    },
+    whatWorks: 'Value delivery, expertise demonstration, solving problems, tutorials',
+    whatFails: 'Wasting time, clickbait without delivery, poor production quality',
+  },
+  google: {
+    name: 'Google Ads',
+    audienceAge: '25-65',
+    audienceDescription: 'Active searchers with intent, ready to take action',
+    userBehavior: 'Searching for solutions, high intent, comparing options',
+    attentionSpan: '1-2 seconds - scanning search results quickly',
+    contentExpectation: 'Clear, direct, answers their search query, trustworthy',
+    visualStyle: {
+      aesthetic: 'Clean, professional, high contrast, readable',
+      colors: 'Brand colors with high contrast CTA buttons',
+      lighting: 'Clean, professional product/service photography',
+      subjects: 'Clear product/service representation, trust badges, results',
+      mood: 'Professional, trustworthy, direct, solution-focused',
+      avoid: 'Cluttered designs, unclear value proposition, stock photo clichés',
+    },
+    copyStyle: {
+      tone: 'Direct, benefit-focused, keyword-aware',
+      length: 'Concise - every word must earn its place',
+      format: 'Headline + value prop + CTA',
+      cta: 'Action-oriented: "Get Quote", "Call Now", "Book Today"',
+      emoji: 'None or minimal',
+    },
+    whatWorks: 'Clear value proposition, trust signals, strong CTAs, keyword relevance',
+    whatFails: 'Vague messaging, weak CTAs, irrelevant to search intent',
+  },
+}
+
 // Ad copy templates
 export interface AdCopyTemplate {
   platform: string
@@ -869,48 +998,205 @@ export function generateAdCopy(
   }
 }
 
-// DALL-E prompt generator
+// DALL-E prompt generator - Platform-Specific
 export function generateImagePrompt(
   industry: IndustryProfile,
   businessName: string,
   platform: 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'google',
   promptType: 'hero' | 'service' | 'testimonial' | 'promo'
 ): string {
-  const style = industry.visualStyle
+  const industryStyle = industry.visualStyle
+  const platformPsych = PLATFORM_PSYCHOLOGY[platform]
+  const platformVisual = platformPsych.visualStyle
   const specs = PLATFORM_SPECS[platform]
   const primaryFormat = specs.imageFormats[0]
+  const platformStrategy = industry.platformStrategy[platform === 'google' ? 'facebook' : platform]
 
+  // Platform-specific subject based on what works for that audience
   let subject = ''
-  switch (promptType) {
-    case 'hero':
-      subject = style.subjects[0]
+  switch (platform) {
+    case 'facebook':
+      // Older audience: trust, professionalism, real people
+      switch (promptType) {
+        case 'hero':
+          subject = `Professional ${industry.name.toLowerCase()} service in action, trustworthy appearance, real professional (not a model) age 35-55 serving a customer, clean organized environment`
+          break
+        case 'service':
+          subject = `Clear before/after or demonstration of ${industryStyle.subjects[0]}, showing quality workmanship, trust-building imagery`
+          break
+        case 'testimonial':
+          subject = `Genuine happy customer age 40-60 in their home, authentic smile, relatable homeowner appearance, natural setting`
+          break
+        case 'promo':
+          subject = `Professional service scene with clear space for promotional text, trustworthy business imagery, ${industryStyle.subjects[0]}`
+          break
+      }
       break
-    case 'service':
-      subject = style.subjects[Math.floor(Math.random() * style.subjects.length)]
+
+    case 'instagram':
+      // Younger audience: aesthetic, aspirational, lifestyle
+      switch (promptType) {
+        case 'hero':
+          subject = `Aesthetically beautiful ${industry.name.toLowerCase()} scene, Instagram-worthy composition, aspirational lifestyle feel, magazine-quality shot`
+          break
+        case 'service':
+          subject = `Stunning transformation or beautiful result, aesthetic composition, influencer-style photography of ${industryStyle.subjects[0]}`
+          break
+        case 'testimonial':
+          subject = `Stylish young professional age 25-40, lifestyle setting, aspirational but relatable, beautiful natural lighting`
+          break
+        case 'promo':
+          subject = `Visually striking scene with clean space for text overlay, aesthetic and desirable, ${industryStyle.subjects[0]} in beautiful setting`
+          break
+      }
       break
-    case 'testimonial':
-      subject = 'Happy satisfied customer giving genuine smile, authentic moment'
+
+    case 'tiktok':
+      // Gen Z: raw, authentic, NOT polished
+      switch (promptType) {
+        case 'hero':
+          subject = `Behind-the-scenes authentic moment of ${industry.name.toLowerCase()} work, raw and real feel, like a phone screenshot from a video, NOT professionally staged`
+          break
+        case 'service':
+          subject = `Satisfying work-in-progress shot, oddly satisfying visual, raw authentic capture of ${industryStyle.subjects[0]}, unpolished genuine moment`
+          break
+        case 'testimonial':
+          subject = `Real person age 20-35 casual selfie-style, authentic unfiltered look, relatable young person, NOT professional photography`
+          break
+        case 'promo':
+          subject = `Casual phone-camera style shot, authentic and raw, thumbnail for video content, ${industryStyle.subjects[0]} in candid moment`
+          break
+      }
       break
-    case 'promo':
-      subject = `${style.subjects[0]}, promotional feel with space for text overlay`
+
+    case 'youtube':
+      // Educational audience: professional but approachable
+      switch (promptType) {
+        case 'hero':
+          subject = `Expert ${industry.name.toLowerCase()} professional ready to educate, approachable expert vibe, good lighting like a YouTube video thumbnail`
+          break
+        case 'service':
+          subject = `Clear demonstration setup of ${industryStyle.subjects[0]}, tutorial-ready scene, educational visual`
+          break
+        case 'testimonial':
+          subject = `Genuine customer sharing experience, interview-style setting, trustworthy and relatable person age 30-55`
+          break
+        case 'promo':
+          subject = `YouTube thumbnail style - bold, clear subject, high contrast, ${industryStyle.subjects[0]} with engaging composition`
+          break
+      }
+      break
+
+    case 'google':
+      // High-intent searchers: clear, professional, trust signals
+      switch (promptType) {
+        case 'hero':
+          subject = `Clean professional ${industry.name.toLowerCase()} business image, clear service representation, trust-building professional appearance`
+          break
+        case 'service':
+          subject = `Crystal clear product/service shot of ${industryStyle.subjects[0]}, professional quality, no distractions`
+          break
+        case 'testimonial':
+          subject = `Professional customer portrait, trustworthy appearance, clean background, confidence-inspiring`
+          break
+        case 'promo':
+          subject = `Professional business imagery with clear CTA space, ${industryStyle.subjects[0]}, conversion-focused composition`
+          break
+      }
       break
   }
 
-  const avoid = style.avoid.join(', ')
+  // Platform-specific style modifiers
+  const platformStyleGuide = {
+    facebook: `
+PLATFORM CONTEXT (FACEBOOK - Ages ${platformPsych.audienceAge}):
+- Audience: ${platformPsych.audienceDescription}
+- They expect: ${platformPsych.contentExpectation}
+- Visual aesthetic: ${platformVisual.aesthetic}
 
-  return `Professional ${platform} ad photo for ${industry.name}:
+STYLE REQUIREMENTS:
+- Lighting: ${platformVisual.lighting}
+- Mood: ${platformVisual.mood}
+- Colors: ${platformVisual.colors}
+- Subject style: ${platformVisual.subjects}`,
+
+    instagram: `
+PLATFORM CONTEXT (INSTAGRAM - Ages ${platformPsych.audienceAge}):
+- Audience: ${platformPsych.audienceDescription}
+- They expect: ${platformPsych.contentExpectation}
+- Visual aesthetic: ${platformVisual.aesthetic}
+
+STYLE REQUIREMENTS:
+- Lighting: ${platformVisual.lighting}
+- Mood: ${platformVisual.mood}
+- Colors: ${platformVisual.colors}
+- Subject style: ${platformVisual.subjects}
+- MUST be Instagram-worthy - think influencer content quality`,
+
+    tiktok: `
+PLATFORM CONTEXT (TIKTOK - Ages ${platformPsych.audienceAge}):
+- Audience: ${platformPsych.audienceDescription}
+- They expect: ${platformPsych.contentExpectation}
+- Visual aesthetic: ${platformVisual.aesthetic}
+
+CRITICAL STYLE REQUIREMENTS:
+- Must look AUTHENTIC and RAW - NOT professionally produced
+- Lighting: ${platformVisual.lighting}
+- Mood: ${platformVisual.mood}
+- If it looks like a professional ad, it will FAIL on TikTok
+- Should look like a frame from a phone video`,
+
+    youtube: `
+PLATFORM CONTEXT (YOUTUBE - Ages ${platformPsych.audienceAge}):
+- Audience: ${platformPsych.audienceDescription}
+- They expect: ${platformPsych.contentExpectation}
+- Visual aesthetic: ${platformVisual.aesthetic}
+
+STYLE REQUIREMENTS:
+- Lighting: ${platformVisual.lighting}
+- Mood: ${platformVisual.mood}
+- Colors: ${platformVisual.colors}
+- Professional quality expected but approachable
+- Think: Thumbnail that gets clicks, not stock photo`,
+
+    google: `
+PLATFORM CONTEXT (GOOGLE ADS - Ages ${platformPsych.audienceAge}):
+- Audience: ${platformPsych.audienceDescription}
+- They expect: ${platformPsych.contentExpectation}
+- Visual aesthetic: ${platformVisual.aesthetic}
+
+STYLE REQUIREMENTS:
+- Lighting: ${platformVisual.lighting}
+- Mood: ${platformVisual.mood}
+- Colors: ${platformVisual.colors}
+- High contrast, clear value proposition visible
+- Trust signals and professionalism paramount`,
+  }
+
+  const industryColors = industryStyle.colors
+  const avoidList = [...industryStyle.avoid, platformVisual.avoid].join(', ')
+
+  return `Create a ${platform.toUpperCase()} advertisement image for "${businessName}" - a ${industry.name}.
+${platformStyleGuide[platform]}
 
 SUBJECT: ${subject}
 
-STYLE: ${style.mood}
-COLORS: ${style.colors}
-LIGHTING: ${style.lighting}
+INDUSTRY-SPECIFIC STYLING:
+- Business vibe: ${industryStyle.mood}
+- Color palette: ${industryColors}
+- Focus: ${platformStrategy.focus}
 
-COMPOSITION: ${primaryFormat.ratio} aspect ratio, ${primaryFormat.width}x${primaryFormat.height}px, clean composition with rule of thirds, space for text overlay on one side
+COMPOSITION:
+- Aspect ratio: ${primaryFormat.ratio} (${primaryFormat.width}x${primaryFormat.height}px)
+- Rule of thirds composition
+- Leave space for text overlay on one side
 
-QUALITY: Ultra high quality, professional photography, sharp focus, natural look, NOT stock photo style, authentic and genuine feeling
+QUALITY REQUIREMENTS:
+- Ultra high quality, sharp focus
+- Authentic and genuine feeling
+- NOT generic stock photo style
 
-AVOID: ${avoid}, generic stock photo feel, overly posed, artificial lighting, low quality, blurry, text or watermarks in image`
+ABSOLUTELY AVOID: ${avoidList}, generic stock photo feel, overly posed, artificial looking, low quality, blurry, any text or watermarks in the image`
 }
 
 // Video script generator

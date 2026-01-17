@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { PLATFORM_PSYCHOLOGY, findIndustryProfile } from '@/lib/marketing-library'
 
 interface GenerateCopyRequest {
   businessName: string
@@ -26,7 +27,6 @@ export async function POST(request: NextRequest) {
       tagline,
       platform,
       adType,
-      tone = 'professional',
       includeEmoji = true,
     } = body
 
@@ -41,70 +41,143 @@ export async function POST(request: NextRequest) {
 
     const anthropic = new Anthropic({ apiKey: anthropicKey })
 
+    // Get platform psychology
+    const platformPsych = PLATFORM_PSYCHOLOGY[platform]
+    const copyStyle = platformPsych.copyStyle
+
+    // Get industry profile for additional context
+    const industryProfile = findIndustryProfile(businessType, businessName, services)
+    const platformStrategy = industryProfile.platformStrategy[platform === 'google' ? 'facebook' : platform]
+
     // Platform-specific constraints
-    const platformSpecs: Record<string, { maxLength: number; style: string; hashtagCount: number }> = {
-      facebook: {
-        maxLength: 125,
-        style: 'Conversational, community-focused, longer-form OK. Can be educational or emotional. Works well with questions and storytelling.',
-        hashtagCount: 3,
-      },
-      instagram: {
-        maxLength: 150,
-        style: 'Visual-first, lifestyle-focused, aspirational. Use line breaks for readability. Emoji-friendly. Caption should complement image.',
-        hashtagCount: 10,
-      },
-      youtube: {
-        maxLength: 100,
-        style: 'Value-driven, educational, direct. Mention what viewers will learn or gain. Include call to subscribe/like.',
-        hashtagCount: 5,
-      },
-      tiktok: {
-        maxLength: 80,
-        style: 'Ultra-casual, trendy, authentic. Use current slang appropriately. Short punchy sentences. Native feel is critical.',
-        hashtagCount: 4,
-      },
-      google: {
-        maxLength: 90,
-        style: 'Direct, benefit-focused, keyword-rich. Clear value proposition. Strong action words.',
-        hashtagCount: 0,
-      },
+    const platformConstraints: Record<string, { maxLength: number; hashtagCount: number }> = {
+      facebook: { maxLength: 150, hashtagCount: 3 },
+      instagram: { maxLength: 150, hashtagCount: 10 },
+      youtube: { maxLength: 120, hashtagCount: 5 },
+      tiktok: { maxLength: 80, hashtagCount: 4 },
+      google: { maxLength: 90, hashtagCount: 0 },
     }
 
-    const spec = platformSpecs[platform]
+    const constraints = platformConstraints[platform]
 
     // Ad type objectives
     const objectives: Record<string, string> = {
-      awareness: 'Make people aware of the business and what makes it unique. Focus on brand story and differentiation.',
-      consideration: 'Get people to consider this business as a solution. Highlight benefits, social proof, and expertise.',
-      conversion: 'Drive immediate action - calls, visits, purchases. Create urgency and clear next steps.',
+      awareness: 'Make people aware of the business. Focus on brand story, what makes them unique, and creating memorable impression.',
+      consideration: 'Get people to seriously consider this business. Highlight benefits, social proof, expertise, and why they should choose this over competitors.',
+      conversion: 'Drive immediate action NOW - phone calls, website visits, bookings. Create urgency, remove friction, make the next step crystal clear.',
     }
 
-    const prompt = `You are an expert social media marketer at a top agency. Generate high-converting ad copy for ${platform.toUpperCase()}.
+    // Build the platform-specific prompt
+    const prompt = `You are a senior copywriter at a top marketing agency that specializes in ${platform.toUpperCase()} advertising.
 
-BUSINESS DETAILS:
-- Name: ${businessName}
-- Type: ${businessType || 'Local Business'}
-- Services: ${services.join(', ') || 'Various services'}
-- Location: ${city}, ${state}
-- Tagline: ${tagline || 'N/A'}
+====================================
+CRITICAL: PLATFORM-SPECIFIC REQUIREMENTS
+====================================
 
+PLATFORM: ${platform.toUpperCase()}
+TARGET AUDIENCE AGE: ${platformPsych.audienceAge}
+WHO THEY ARE: ${platformPsych.audienceDescription}
+
+HOW THEY USE ${platform.toUpperCase()}:
+${platformPsych.userBehavior}
+
+ATTENTION SPAN: ${platformPsych.attentionSpan}
+
+WHAT THEY EXPECT FROM CONTENT:
+${platformPsych.contentExpectation}
+
+====================================
+COPY STYLE REQUIREMENTS FOR ${platform.toUpperCase()}
+====================================
+
+TONE: ${copyStyle.tone}
+LENGTH: ${copyStyle.length}
+FORMAT: ${copyStyle.format}
+CTA STYLE: ${copyStyle.cta}
+EMOJI USAGE: ${includeEmoji ? copyStyle.emoji : 'Do NOT use any emojis'}
+
+WHAT WORKS ON ${platform.toUpperCase()}: ${platformPsych.whatWorks}
+WHAT FAILS ON ${platform.toUpperCase()}: ${platformPsych.whatFails}
+
+====================================
+BUSINESS DETAILS
+====================================
+
+Business Name: ${businessName}
+Business Type: ${businessType || 'Local Business'}
+Industry: ${industryProfile.name}
+Services: ${services.join(', ') || 'Various services'}
+Location: ${city}, ${state}
+Tagline: ${tagline || 'N/A'}
+
+INDUSTRY INSIGHTS:
+- Target audience: ${industryProfile.audience.primary}
+- Their pain points: ${industryProfile.audience.painPoints.join(', ')}
+- What they want: ${industryProfile.audience.desires.join(', ')}
+- Platform focus for this industry: ${platformStrategy.focus}
+- Recommended tone: ${platformStrategy.tone}
+
+====================================
 AD OBJECTIVE: ${adType.toUpperCase()}
+====================================
+
 ${objectives[adType]}
 
-PLATFORM STYLE:
-${spec.style}
+====================================
+YOUR TASK
+====================================
 
-TONE: ${tone}
-${includeEmoji ? 'Include relevant emojis to increase engagement.' : 'Do NOT use emojis.'}
+Generate EXACTLY 3 ad copy variations that are SPECIFICALLY crafted for ${platform.toUpperCase()}.
 
-Generate EXACTLY 3 complete ad variations. Each must include:
-1. HOOK: First line that stops the scroll (${platform === 'tiktok' ? '1 second read' : '3 second read'})
-2. BODY: Main message (max ${spec.maxLength} characters for primary text)
-3. CTA: Clear call-to-action
-4. HEADLINE: Short punchy headline for the ad (max 40 chars)
-5. HASHTAGS: ${spec.hashtagCount} relevant hashtags ${spec.hashtagCount === 0 ? '(skip for Google)' : ''}
+${platform === 'tiktok' ? `
+TIKTOK-SPECIFIC RULES:
+- Must sound like a real person, NOT a brand
+- Use casual language, contractions, even slight imperfection
+- If it sounds like "corporate wrote this", it will FAIL
+- Think: How would a 25-year-old business owner talk to their friend?
+- Hooks must work in under 1 second of reading
+` : ''}
 
-FORMAT YOUR RESPONSE AS JSON:
+${platform === 'instagram' ? `
+INSTAGRAM-SPECIFIC RULES:
+- Lead with something visually/emotionally compelling
+- Use line breaks for easy reading
+- Make it lifestyle-aspirational
+- Think: Would someone screenshot this? Would they tag a friend?
+` : ''}
+
+${platform === 'facebook' ? `
+FACEBOOK-SPECIFIC RULES:
+- Write like you're talking to a neighbor, not a customer
+- Can be longer and more informative
+- Trust and credibility matter most
+- Include specific details that build confidence
+` : ''}
+
+${platform === 'youtube' ? `
+YOUTUBE-SPECIFIC RULES:
+- They came here to learn or be entertained
+- Lead with value proposition immediately
+- Expert positioning is important
+- Clear and structured delivery
+` : ''}
+
+${platform === 'google' ? `
+GOOGLE-SPECIFIC RULES:
+- They are actively searching for this service
+- Be direct and benefit-focused
+- Strong keywords naturally integrated
+- Clear, action-oriented CTAs
+` : ''}
+
+Each variation must include:
+1. HOOK: The opening line that stops the scroll (must work in ${platform === 'tiktok' ? '0.5 seconds' : platform === 'instagram' ? '1 second' : '2-3 seconds'})
+2. BODY: Main message (max ${constraints.maxLength} characters, formatted for ${platform})
+3. CTA: Call-to-action appropriate for ${platform} (${copyStyle.cta})
+4. HEADLINE: Ad headline (max 40 chars)
+5. HASHTAGS: ${constraints.hashtagCount} platform-appropriate hashtags ${constraints.hashtagCount === 0 ? '(empty array for Google)' : ''}
+
+FORMAT YOUR RESPONSE AS VALID JSON:
 {
   "variations": [
     {
@@ -115,17 +188,16 @@ FORMAT YOUR RESPONSE AS JSON:
       "hashtags": ["...", "..."]
     }
   ],
-  "targetAudience": "Brief description of who this ad targets",
-  "bestTimeToPost": "Recommended posting times for ${platform}",
-  "proTip": "One specific tip to maximize this ad's performance"
+  "targetAudience": "Specific description of who sees this ad on ${platform}",
+  "bestTimeToPost": "Best times to post on ${platform} for this audience",
+  "proTip": "One insider tip for maximizing this ad's performance on ${platform}"
 }
 
-Important:
-- Make each variation distinctly different in approach
-- Use proven copywriting frameworks (PAS, AIDA, etc.)
-- Be specific to ${businessType || 'this type of business'}
-- Localize to ${city} where natural
-- Sound human, not robotic or generic`
+IMPORTANT:
+- Each variation should use a DIFFERENT copywriting approach (problem/solution, social proof, direct benefit, curiosity, etc.)
+- Write like a ${platform} native, not like a generic marketer
+- Local references to ${city} where it feels natural
+- Sound human and authentic to the platform`
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -156,6 +228,7 @@ Important:
     return NextResponse.json({
       success: true,
       platform,
+      platformAudience: `${platformPsych.audienceAge} - ${platformPsych.audienceDescription}`,
       adType,
       ...adCopy,
     })
