@@ -256,6 +256,7 @@ export function AdCreationSection({
     setIsGeneratingImage(true)
     try {
       // Use enhanced prompt with UGC and scroll-stop if selected
+      // NOW PASSES SERVICES AND TAGLINE for business-specific imagery
       const promptData = selectedUgcStyle || selectedScrollStop
         ? generateImagePromptWithStyle(
             industryProfile,
@@ -263,16 +264,22 @@ export function AdCreationSection({
             selectedPlatform,
             imagePromptType,
             selectedUgcStyle || undefined,
-            selectedScrollStop || undefined
+            selectedScrollStop || undefined,
+            true,                     // autoOptimize
+            businessInfo.services,    // NEW: Pass actual services
+            businessInfo.tagline      // NEW: Pass tagline
           )
         : {
             prompt: generateImagePrompt(
               industryProfile,
               businessInfo.name,
               selectedPlatform,
-              imagePromptType
+              imagePromptType,
+              businessInfo.services,  // NEW: Pass actual services
+              businessInfo.tagline    // NEW: Pass tagline
             ),
             format: IMAGE_FORMAT_PRESETS[selectedPlatform].formats[0],
+            autoSelected: { ugcStyle: null, scrollStopTechnique: null, reasoning: 'Manual mode' },
           }
 
       // Determine size based on selected format or platform default
@@ -1008,7 +1015,7 @@ export function AdCreationSection({
               {/* Prompt Preview */}
               {industryProfile && (
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <label className="text-xs font-medium text-gray-500 uppercase mb-2 block">AI Prompt Preview</label>
+                  <label className="text-xs font-medium text-gray-500 uppercase mb-2 block">AI Prompt Preview (Service-Specific)</label>
                   <p className="text-sm text-gray-600 whitespace-pre-wrap line-clamp-6">
                     {selectedUgcStyle || selectedScrollStop
                       ? generateImagePromptWithStyle(
@@ -1017,9 +1024,12 @@ export function AdCreationSection({
                           selectedPlatform,
                           imagePromptType,
                           selectedUgcStyle || undefined,
-                          selectedScrollStop || undefined
+                          selectedScrollStop || undefined,
+                          true,
+                          businessInfo.services,
+                          businessInfo.tagline
                         ).prompt.substring(0, 500) + '...'
-                      : generateImagePrompt(industryProfile, businessInfo.name, selectedPlatform, imagePromptType).substring(0, 500) + '...'
+                      : generateImagePrompt(industryProfile, businessInfo.name, selectedPlatform, imagePromptType, businessInfo.services, businessInfo.tagline).substring(0, 500) + '...'
                     }
                   </p>
                 </div>

@@ -2147,6 +2147,492 @@ function getIndustryScenarios(industryId: string): IndustryVisualScenarios {
 }
 
 // ===========================================
+// SERVICE-SPECIFIC VISUAL MAPPING (2026)
+// ===========================================
+// This is what makes prompts ACTUALLY relevant to the business
+// Maps specific services to detailed visual scenarios
+// A plumber who does "tankless water heaters" gets tankless imagery, not generic faucets
+
+interface ServiceVisual {
+  keywords: string[]  // Service name variations that trigger this
+  hero: {
+    action: string
+    equipment: string
+    setting: string
+  }
+  service: {
+    action: string
+    details: string
+    tools: string
+    result: string
+  }
+  broll: string[]
+  painPoint: string
+  transformation: string
+}
+
+const SERVICE_VISUAL_MAPPING: Record<string, ServiceVisual> = {
+  // ===== PLUMBING SERVICES =====
+  'tankless_water_heater': {
+    keywords: ['tankless', 'tankless water heater', 'on-demand water heater', 'instant hot water'],
+    hero: {
+      action: 'installing modern tankless water heater unit on wall',
+      equipment: 'sleek white Rinnai or Navien tankless unit, digital temperature display showing 120°F',
+      setting: 'clean utility room or garage wall, copper pipes visible',
+    },
+    service: {
+      action: 'hands connecting gas line and water pipes to wall-mounted tankless unit',
+      details: 'stainless steel venting, copper fittings, digital control panel with temperature readout',
+      tools: 'pipe wrench, gas leak detector, level, copper fittings kit',
+      result: 'modern tankless unit mounted flush on wall, LED display glowing, endless hot water label visible',
+    },
+    broll: ['old rusty tank being removed', 'tankless unit unboxing', 'temperature dial adjustment', 'hot water flowing from tap instantly', 'energy bill comparison graphic'],
+    painPoint: 'running out of hot water mid-shower',
+    transformation: 'from bulky old tank to sleek wall-mounted unit, from cold surprises to endless hot water',
+  },
+  'drain_cleaning': {
+    keywords: ['drain', 'drain cleaning', 'clogged drain', 'slow drain', 'drain clearing', 'sewer cleaning'],
+    hero: {
+      action: 'operating professional drain camera inspection system',
+      equipment: 'drain camera monitor showing pipe interior, professional snake machine',
+      setting: 'bathroom or kitchen with floor drain access open',
+    },
+    service: {
+      action: 'feeding professional drain snake into floor drain, camera monitor showing blockage being cleared',
+      details: 'drain camera screen showing before/after of pipe interior, murky water clearing to clean flow',
+      tools: 'motorized drain snake, inspection camera, hydro-jet nozzle, drain auger',
+      result: 'crystal clear water flowing freely down drain, camera showing clean pipe walls',
+    },
+    broll: ['slow draining sink time-lapse', 'camera entering drain pipe', 'blockage being broken up', 'water whooshing down clear drain', 'satisfied customer'],
+    painPoint: 'standing in ankle-deep water during shower',
+    transformation: 'from backed-up nightmare to free-flowing drains',
+  },
+  'water_heater': {
+    keywords: ['water heater', 'hot water heater', 'water heater installation', 'water heater replacement', 'water heater repair'],
+    hero: {
+      action: 'positioning new 50-gallon water heater into place',
+      equipment: 'brand new Rheem or AO Smith water heater with energy star rating visible',
+      setting: 'basement or utility closet, old unit removed',
+    },
+    service: {
+      action: 'connecting water lines and gas/electric to new water heater',
+      details: 'new copper connections, expansion tank, proper venting, temperature dial',
+      tools: 'pipe wrench, tubing cutter, Teflon tape, multimeter for electric models',
+      result: 'gleaming new water heater installed, pilot light lit, temperature set to optimal 120°F',
+    },
+    broll: ['rusty old water heater', 'new unit delivery', 'installation process', 'first hot water test', 'family enjoying hot shower'],
+    painPoint: 'ice cold shower, puddle under old water heater',
+    transformation: 'from rusty leak-prone tank to reliable hot water for years',
+  },
+  'leak_repair': {
+    keywords: ['leak', 'leak repair', 'pipe leak', 'water leak', 'leak detection', 'pipe repair'],
+    hero: {
+      action: 'using electronic leak detection equipment on wall',
+      equipment: 'acoustic leak detector, thermal camera showing moisture',
+      setting: 'residential wall or ceiling with water damage visible',
+    },
+    service: {
+      action: 'repairing copper pipe with precision soldering, or replacing burst section',
+      details: 'clean pipe cut, new coupling being soldered, water completely stopped',
+      tools: 'pipe cutter, propane torch, solder, leak detection spray',
+      result: 'perfectly sealed joint, dry wall, leak completely stopped',
+    },
+    broll: ['water dripping from ceiling', 'thermal camera showing leak location', 'pipe being cut out', 'new section soldered in', 'pressure test confirming fix'],
+    painPoint: 'water dripping, damage spreading, emergency panic',
+    transformation: 'from water emergency to completely dry and fixed',
+  },
+  'sump_pump': {
+    keywords: ['sump pump', 'sump pump installation', 'sump pump repair', 'basement flooding', 'flood prevention'],
+    hero: {
+      action: 'installing sump pump in basement pit',
+      equipment: 'professional sump pump with battery backup, float switch visible',
+      setting: 'basement corner with sump pit, discharge pipe running to exterior',
+    },
+    service: {
+      action: 'lowering sump pump into pit, connecting discharge line and battery backup',
+      details: 'check valve installation, battery backup system, alarm unit',
+      tools: 'PVC cutter, check valve, discharge hose, battery backup unit',
+      result: 'sump pump running test cycle, water being pumped out, battery backup indicator green',
+    },
+    broll: ['flooded basement footage', 'sump pit close-up', 'pump installation', 'water being evacuated', 'dry basement'],
+    painPoint: 'basement flooding during storms, ruined belongings',
+    transformation: 'from flood anxiety to peace of mind during every storm',
+  },
+  'toilet': {
+    keywords: ['toilet', 'toilet repair', 'toilet installation', 'toilet replacement', 'clogged toilet', 'running toilet'],
+    hero: {
+      action: 'installing new modern toilet',
+      equipment: 'new elongated toilet with soft-close seat, water-efficient model',
+      setting: 'clean bathroom, old toilet removed',
+    },
+    service: {
+      action: 'setting new toilet on wax ring, securing to flange, connecting water supply',
+      details: 'new wax ring seal, stainless steel bolts, braided supply line',
+      tools: 'adjustable wrench, wax ring, closet bolts, level',
+      result: 'gleaming new toilet, perfect seal, no wobble, efficient flush demonstration',
+    },
+    broll: ['running toilet wasting water', 'old toilet removal', 'new wax ring placement', 'toilet installation', 'satisfying flush test'],
+    painPoint: 'constantly running toilet driving up water bill',
+    transformation: 'from wasting gallons daily to efficient modern fixture',
+  },
+  'faucet': {
+    keywords: ['faucet', 'faucet installation', 'faucet repair', 'faucet replacement', 'kitchen faucet', 'bathroom faucet', 'dripping faucet'],
+    hero: {
+      action: 'installing premium touchless kitchen faucet',
+      equipment: 'modern pull-down faucet with touchless sensor, brushed nickel finish',
+      setting: 'kitchen sink with granite countertop',
+    },
+    service: {
+      action: 'hands tightening faucet mounting hardware under sink, connecting supply lines',
+      details: 'touchless sensor, pull-down sprayer, supply line connections',
+      tools: 'basin wrench, adjustable pliers, Teflon tape, flashlight',
+      result: 'stunning new faucet with water flowing perfectly, touchless operation demo',
+    },
+    broll: ['dripping faucet close-up', 'old faucet removal', 'new faucet unboxing', 'installation under sink', 'touchless activation test'],
+    painPoint: 'drip drip drip all night, outdated ugly faucet',
+    transformation: 'from leaky eyesore to modern touchless convenience',
+  },
+  'garbage_disposal': {
+    keywords: ['garbage disposal', 'disposal', 'disposal installation', 'disposal repair', 'insinkerator'],
+    hero: {
+      action: 'installing InSinkErator garbage disposal under kitchen sink',
+      equipment: 'new 3/4 HP disposal unit, mounting hardware',
+      setting: 'under kitchen sink cabinet, disposal mounted',
+    },
+    service: {
+      action: 'mounting disposal to sink flange, connecting drain and electrical',
+      details: 'quick-mount system, dishwasher drain connection, splash guard',
+      tools: 'disposal wrench, screwdriver, wire nuts, pliers',
+      result: 'disposal grinding food waste effortlessly, quiet operation',
+    },
+    broll: ['old jammed disposal', 'removal process', 'new unit mounting', 'power connection', 'grinding test with ice cubes'],
+    painPoint: 'jammed disposal, smelly sink, fear of the unknown under there',
+    transformation: 'from scary grinding noises to whisper-quiet food waste elimination',
+  },
+  'pipe_replacement': {
+    keywords: ['pipe replacement', 'repiping', 'repipe', 'pipe upgrade', 'galvanized pipe', 'polybutylene', 'copper repipe', 'pex repipe'],
+    hero: {
+      action: 'running new PEX piping through wall cavity',
+      equipment: 'coil of red and blue PEX tubing, crimp fittings, manifold',
+      setting: 'exposed wall studs with new piping being installed',
+    },
+    service: {
+      action: 'crimping PEX connections, installing manifold system',
+      details: 'color-coded hot/cold lines, neat parallel runs, proper support straps',
+      tools: 'PEX crimper, tubing cutter, manifold, crimp rings',
+      result: 'clean organized manifold with labeled lines, perfect water pressure throughout',
+    },
+    broll: ['rusty galvanized pipe with buildup', 'pipe cutout showing corrosion', 'new PEX installation', 'manifold close-up', 'water pressure test'],
+    painPoint: 'rusty water, low pressure, fear of pipe bursting',
+    transformation: 'from corroded time bomb to modern reliable plumbing for 50+ years',
+  },
+
+  // ===== HVAC SERVICES =====
+  'ac_installation': {
+    keywords: ['ac installation', 'air conditioning', 'ac unit', 'central air', 'air conditioner installation', 'new ac'],
+    hero: {
+      action: 'positioning new condenser unit on concrete pad',
+      equipment: 'modern Carrier or Trane condenser unit, efficiency rating visible',
+      setting: 'side of house, old unit removed, new pad ready',
+    },
+    service: {
+      action: 'connecting refrigerant lines and electrical to new condenser',
+      details: 'copper line set, proper brazing, electrical disconnect, thermostat wire',
+      tools: 'manifold gauges, recovery machine, brazing torch, vacuum pump',
+      result: 'new AC unit running quietly, cool air flowing from vents inside',
+    },
+    broll: ['sweating family before', 'old rusty unit', 'new unit crane lift', 'refrigerant charging', 'thermostat showing 72°F'],
+    painPoint: 'sweating through summer, sky-high electric bills',
+    transformation: 'from sweat-soaked misery to perfect 72-degree comfort',
+  },
+  'furnace': {
+    keywords: ['furnace', 'furnace installation', 'furnace repair', 'heating system', 'gas furnace', 'furnace replacement'],
+    hero: {
+      action: 'installing high-efficiency furnace in basement',
+      equipment: 'new 96% efficiency furnace, variable speed blower visible',
+      setting: 'basement mechanical room, proper venting',
+    },
+    service: {
+      action: 'connecting gas line and flue pipe to new furnace',
+      details: 'PVC venting for high-efficiency, gas valve, igniter visible',
+      tools: 'combustion analyzer, gas leak detector, manometer, drill',
+      result: 'furnace running first heat cycle, warm air flowing, efficiency readout',
+    },
+    broll: ['freezing family in coats indoors', 'old furnace removal', 'new unit positioning', 'gas connection', 'thermostat rising to 70°F'],
+    painPoint: 'freezing house, furnace dying on coldest night',
+    transformation: 'from space heater survival to whole-home warmth',
+  },
+  'mini_split': {
+    keywords: ['mini split', 'ductless', 'ductless ac', 'ductless mini split', 'split system', 'heat pump'],
+    hero: {
+      action: 'mounting indoor mini split head unit on wall',
+      equipment: 'sleek Mitsubishi or Fujitsu indoor unit, remote control',
+      setting: 'living room or bedroom wall, clean installation',
+    },
+    service: {
+      action: 'drilling line set hole, connecting refrigerant lines to indoor unit',
+      details: 'copper line set cover, condensate drain, wall bracket',
+      tools: 'core drill, flare tool, vacuum pump, manifold gauges',
+      result: 'silent mini split blowing cool/warm air, remote control demo',
+    },
+    broll: ['room without AC window unit', 'wall mounting bracket', 'line set installation', 'outdoor unit setup', 'cool air demonstration'],
+    painPoint: 'rooms without ductwork, ugly window AC units',
+    transformation: 'from noisy window unit to whisper-quiet climate control',
+  },
+  'thermostat': {
+    keywords: ['thermostat', 'smart thermostat', 'thermostat installation', 'nest', 'ecobee', 'programmable thermostat'],
+    hero: {
+      action: 'programming new smart thermostat on wall',
+      equipment: 'Nest or Ecobee smart thermostat, colorful display',
+      setting: 'hallway wall, modern home interior',
+    },
+    service: {
+      action: 'wiring smart thermostat, connecting to WiFi',
+      details: 'labeled wire connections, C-wire adapter if needed, app setup',
+      tools: 'screwdriver, wire stripper, smartphone for setup',
+      result: 'smart thermostat glowing, app control demo, energy savings display',
+    },
+    broll: ['old mercury thermostat', 'wiring close-up', 'thermostat mounting', 'WiFi connection', 'phone app control from couch'],
+    painPoint: 'coming home to freezing/hot house, wasted energy',
+    transformation: 'from guessing game to smart automated comfort',
+  },
+  'duct_cleaning': {
+    keywords: ['duct cleaning', 'air duct cleaning', 'vent cleaning', 'hvac cleaning', 'ductwork cleaning'],
+    hero: {
+      action: 'operating professional duct cleaning equipment',
+      equipment: 'truck-mounted vacuum system, rotating brush tool',
+      setting: 'home with vent cover removed, hose inserted',
+    },
+    service: {
+      action: 'rotating brush agitating dust inside ductwork, powerful vacuum extracting debris',
+      details: 'before/after duct camera footage, pile of extracted debris',
+      tools: 'rotary brush system, powerful vacuum, duct camera, sanitizer fogger',
+      result: 'gleaming clean duct interior on camera, improved airflow test',
+    },
+    broll: ['dirty vent with dust bunnies', 'duct camera showing buildup', 'brush cleaning inside', 'debris pile extracted', 'clean vent reinstalled'],
+    painPoint: 'allergies, dust everywhere, musty smell from vents',
+    transformation: 'from dust factory to clean fresh air in every room',
+  },
+
+  // ===== ELECTRICAL SERVICES =====
+  'panel_upgrade': {
+    keywords: ['panel upgrade', 'electrical panel', 'breaker box', '200 amp', 'panel replacement', 'service upgrade'],
+    hero: {
+      action: 'installing new 200-amp electrical panel',
+      equipment: 'modern Square D or Siemens panel, copper bus bars visible',
+      setting: 'garage or basement wall, meter and panel area',
+    },
+    service: {
+      action: 'connecting main breaker, organizing circuit wiring by room',
+      details: 'labeled breakers, proper wire gauges, neat wire management',
+      tools: 'wire strippers, torque screwdriver, cable clamps, labeler',
+      result: 'organized panel with clear labels, main breaker on, all circuits tested',
+    },
+    broll: ['old fuse box sparking', 'panel cover removal', 'new panel mounting', 'wire organization', 'breaker testing'],
+    painPoint: 'tripping breakers constantly, fear of electrical fire',
+    transformation: 'from fire hazard fuse box to safe modern power center',
+  },
+  'outlet_installation': {
+    keywords: ['outlet', 'outlet installation', 'electrical outlet', 'gfci', 'usb outlet', 'outlet replacement'],
+    hero: {
+      action: 'installing GFCI outlet near kitchen sink',
+      equipment: 'white GFCI outlet with test/reset buttons, USB combo outlet',
+      setting: 'kitchen or bathroom backsplash area',
+    },
+    service: {
+      action: 'wiring GFCI outlet, testing ground fault protection',
+      details: 'proper wire connections, test button verification, outlet tester lights',
+      tools: 'outlet tester, screwdriver, wire nuts, voltage tester',
+      result: 'new outlet installed, GFCI test successful, device charging from USB',
+    },
+    broll: ['old two-prong outlet', 'outlet cover removal', 'wiring connection', 'outlet testing', 'phone charging from new USB outlet'],
+    painPoint: 'not enough outlets, unsafe two-prong, no USB charging',
+    transformation: 'from extension cord chaos to convenient safe power everywhere',
+  },
+  'lighting': {
+    keywords: ['lighting', 'light installation', 'recessed lighting', 'can lights', 'led lighting', 'lighting upgrade'],
+    hero: {
+      action: 'installing recessed LED lighting in ceiling',
+      equipment: 'slim LED recessed fixtures, dimmer switch',
+      setting: 'living room or kitchen ceiling, ladder positioned',
+    },
+    service: {
+      action: 'cutting ceiling hole, wiring new recessed light fixture',
+      details: 'LED driver connection, proper spacing pattern, dimmer compatibility',
+      tools: 'hole saw, fish tape, wire connectors, dimmable LED fixtures',
+      result: 'row of recessed lights illuminating room beautifully, dimmer demo',
+    },
+    broll: ['dark room with single fixture', 'ceiling marking for layout', 'hole cutting', 'fixture installation', 'dramatic before/after lighting'],
+    painPoint: 'dark gloomy rooms, outdated boob lights',
+    transformation: 'from cave-like darkness to designer showroom lighting',
+  },
+  'ceiling_fan': {
+    keywords: ['ceiling fan', 'fan installation', 'ceiling fan installation', 'fan replacement'],
+    hero: {
+      action: 'mounting new ceiling fan with light kit',
+      equipment: 'modern ceiling fan with remote control, LED light',
+      setting: 'bedroom or living room ceiling',
+    },
+    service: {
+      action: 'securing fan bracket to ceiling box, balancing blades',
+      details: 'reinforced ceiling box, down rod installation, remote receiver wiring',
+      tools: 'ladder, screwdriver, wire connectors, balance kit',
+      result: 'fan spinning silently on all speeds, light dimming smoothly',
+    },
+    broll: ['old wobbly fan', 'ceiling box reinforcement', 'fan assembly', 'blade installation', 'remote control demonstration'],
+    painPoint: 'noisy wobbly fan, no air circulation',
+    transformation: 'from wobbling disaster to whisper-quiet comfort',
+  },
+  'ev_charger': {
+    keywords: ['ev charger', 'electric vehicle charger', 'tesla charger', 'level 2 charger', 'car charger installation'],
+    hero: {
+      action: 'mounting Level 2 EV charger in garage',
+      equipment: 'Tesla Wall Connector or ChargePoint unit, cable management',
+      setting: 'garage wall near parking spot',
+    },
+    service: {
+      action: 'running 240V circuit from panel, mounting charger unit',
+      details: '50-amp circuit, proper wire gauge, NEMA 14-50 or hardwired',
+      tools: '6-gauge wire, 50-amp breaker, conduit, mounting hardware',
+      result: 'EV plugged in and charging, app showing charge rate',
+    },
+    broll: ['car at public charger', 'panel circuit installation', 'charger mounting', 'cable plugging in', 'app showing "charging at home"'],
+    painPoint: 'waiting at public chargers, range anxiety',
+    transformation: 'from charger hunting to waking up with full battery daily',
+  },
+  'generator': {
+    keywords: ['generator', 'standby generator', 'whole house generator', 'backup generator', 'generac'],
+    hero: {
+      action: 'installing whole-home standby generator',
+      equipment: 'Generac or Kohler standby generator, transfer switch',
+      setting: 'side of house on concrete pad',
+    },
+    service: {
+      action: 'connecting generator to transfer switch, running gas line',
+      details: 'automatic transfer switch, natural gas connection, weekly self-test',
+      tools: 'conduit, transfer switch, gas fittings, concrete pad',
+      result: 'generator running test cycle, automatic transfer demo, lights staying on',
+    },
+    broll: ['neighborhood blackout', 'generator delivery', 'transfer switch installation', 'gas line connection', 'house lit while neighbors dark'],
+    painPoint: 'power outages, losing food, no heat/AC during storms',
+    transformation: 'from powerless victim to the only lit house on the block',
+  },
+
+  // ===== ROOFING SERVICES =====
+  'roof_replacement': {
+    keywords: ['roof replacement', 'new roof', 'reroof', 'roof installation', 'shingle replacement'],
+    hero: {
+      action: 'crew installing architectural shingles on roof',
+      equipment: 'GAF or Owens Corning shingle bundles, nail guns',
+      setting: 'residential roof with old shingles stripped',
+    },
+    service: {
+      action: 'nailing shingles in perfect rows, installing ridge cap',
+      details: 'ice and water shield, proper underlayment, starter strips',
+      tools: 'roofing nailer, chalk line, shingle cutter, ladder',
+      result: 'beautiful new roof completed, dramatic curb appeal improvement',
+    },
+    broll: ['damaged old roof', 'tear-off process', 'underlayment installation', 'shingle rows going up', 'aerial view of finished roof'],
+    painPoint: 'leaks during rain, curling shingles, insurance worry',
+    transformation: 'from eyesore leak risk to stunning protective crown',
+  },
+  'roof_repair': {
+    keywords: ['roof repair', 'roof leak', 'roof fix', 'shingle repair', 'roof patch'],
+    hero: {
+      action: 'inspecting roof damage and preparing repair',
+      equipment: 'matching shingles, roofing cement, inspection tools',
+      setting: 'roof with visible damage area',
+    },
+    service: {
+      action: 'removing damaged shingles, sealing and replacing',
+      details: 'proper shingle weaving, flashing repair, sealant application',
+      tools: 'pry bar, roofing nails, sealant gun, replacement shingles',
+      result: 'seamless repair that matches existing roof, leak stopped',
+    },
+    broll: ['water stain on ceiling', 'damaged shingle close-up', 'removal process', 'new shingle installation', 'rain test success'],
+    painPoint: 'bucket catching drips, water damage spreading',
+    transformation: 'from active leak to watertight protection',
+  },
+  'gutter': {
+    keywords: ['gutter', 'gutter installation', 'gutter replacement', 'seamless gutter', 'gutter cleaning', 'gutter guard'],
+    hero: {
+      action: 'installing seamless aluminum gutters',
+      equipment: 'seamless gutter machine on truck, downspout components',
+      setting: 'house fascia, old gutters removed',
+    },
+    service: {
+      action: 'forming and hanging seamless gutter sections, proper slope',
+      details: 'hidden hangers, mitered corners, oversized downspouts',
+      tools: 'gutter machine, crimper, level, rivet gun',
+      result: 'rainwater flowing perfectly through gutters and downspouts away from foundation',
+    },
+    broll: ['overflowing damaged gutters', 'gutter machine forming', 'installation process', 'gutter guards added', 'rain test with perfect drainage'],
+    painPoint: 'waterfalls off roof edges, foundation damage, ice dams',
+    transformation: 'from destructive waterfall to controlled drainage protecting your home',
+  },
+
+  // ===== GENERAL/FALLBACK =====
+  'general_service': {
+    keywords: ['service', 'repair', 'installation', 'maintenance', 'fix'],
+    hero: {
+      action: 'professional technician arriving with service vehicle',
+      equipment: 'fully stocked service truck, professional tools',
+      setting: 'residential driveway, clean uniform',
+    },
+    service: {
+      action: 'skilled hands performing precise repair work',
+      details: 'professional tools, quality materials, attention to detail',
+      tools: 'professional toolkit, safety equipment, diagnostic tools',
+      result: 'job completed to perfection, customer satisfaction',
+    },
+    broll: ['service truck arrival', 'tool preparation', 'work in progress', 'quality check', 'handshake with customer'],
+    painPoint: 'something broken, needs expert help',
+    transformation: 'from problem to solution with professional service',
+  },
+}
+
+// Helper function to find matching service visual
+export function findServiceVisual(service: string): ServiceVisual | null {
+  const normalizedService = service.toLowerCase().trim()
+
+  for (const [key, visual] of Object.entries(SERVICE_VISUAL_MAPPING)) {
+    // Check if service matches any keyword
+    if (visual.keywords.some(keyword =>
+      normalizedService.includes(keyword) || keyword.includes(normalizedService)
+    )) {
+      return visual
+    }
+  }
+
+  return null
+}
+
+// Helper to get visuals for an array of services
+export function getServiceVisuals(services: string[]): ServiceVisual[] {
+  const visuals: ServiceVisual[] = []
+
+  for (const service of services) {
+    const visual = findServiceVisual(service)
+    if (visual) {
+      visuals.push(visual)
+    }
+  }
+
+  // If no matches, return general service
+  if (visuals.length === 0) {
+    visuals.push(SERVICE_VISUAL_MAPPING.general_service)
+  }
+
+  return visuals
+}
+
+// Helper to get the most relevant service visual for a prompt
+export function getPrimaryServiceVisual(services: string[]): ServiceVisual {
+  const visuals = getServiceVisuals(services)
+  return visuals[0] || SERVICE_VISUAL_MAPPING.general_service
+}
+
+// ===========================================
 // PLATFORM CAMERA/QUALITY SPECIFICATIONS
 // ===========================================
 // Specific technical instructions for each platform's visual style
@@ -2198,13 +2684,15 @@ const PLATFORM_CAMERA_SPECS: Record<string, {
 // ===========================================
 // DALL-E PROMPT GENERATOR - 10/10 VERSION
 // ===========================================
-// Fully utilizes industry data, platform specs, and business context
+// Fully utilizes industry data, platform specs, business context, AND ACTUAL SERVICES
 
 export function generateImagePrompt(
   industry: IndustryProfile,
   businessName: string,
   platform: 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'google',
-  promptType: 'hero' | 'service' | 'testimonial' | 'promo'
+  promptType: 'hero' | 'service' | 'testimonial' | 'promo',
+  services?: string[],  // NEW: Actual services the business offers
+  tagline?: string      // NEW: Business tagline for mood integration
 ): string {
   // Get all the rich data sources
   const industryStyle = industry.visualStyle
@@ -2212,6 +2700,11 @@ export function generateImagePrompt(
   const cameraSpecs = PLATFORM_CAMERA_SPECS[platform]
   const specs = PLATFORM_SPECS[platform]
   const primaryFormat = specs.imageFormats[0]
+
+  // NEW: Get service-specific visual if services provided
+  const serviceVisual = services && services.length > 0
+    ? getPrimaryServiceVisual(services)
+    : null
 
   // Platform-specific age ranges for authenticity
   const ageRanges: Record<string, { worker: string; customer: string }> = {
@@ -2224,94 +2717,146 @@ export function generateImagePrompt(
   const ages = ageRanges[platform]
 
   // ===========================================
-  // BUILD INDUSTRY-SPECIFIC VISUAL DESCRIPTION
+  // BUILD SERVICE-SPECIFIC VISUAL DESCRIPTION
   // ===========================================
+  // If we have service-specific visuals, USE THEM instead of generic industry
   let mainSubject = ''
   let sceneDetails = ''
   let emotionalTone = ''
   let textSpace = ''
 
   if (promptType === 'hero') {
-    const heroData = scenarios.hero
-    mainSubject = `${heroData.person}, age ${ages.worker}`
-    sceneDetails = `${heroData.setting}. Props: ${heroData.props}`
-    emotionalTone = heroData.expression
+    // USE SERVICE-SPECIFIC if available
+    if (serviceVisual) {
+      mainSubject = `${industry.name} professional ${serviceVisual.hero.action}, age ${ages.worker}`
+      sceneDetails = `${serviceVisual.hero.setting}. Equipment: ${serviceVisual.hero.equipment}`
+      emotionalTone = `Expert at ${services?.[0] || 'their craft'}, confident, trustworthy`
+    } else {
+      const heroData = scenarios.hero
+      mainSubject = `${heroData.person}, age ${ages.worker}`
+      sceneDetails = `${heroData.setting}. Props: ${heroData.props}`
+      emotionalTone = heroData.expression
+    }
 
     // Platform-specific hero adjustments
     if (platform === 'tiktok') {
-      mainSubject = `Real authentic ${industry.name.toLowerCase()} worker, age ${ages.worker}, selfie-style, phone in hand, mid-conversation expression like they're about to share something with you`
-      sceneDetails = `${heroData.setting}, but captured with phone camera - ring light reflection in eyes, slightly grainy`
+      const serviceContext = serviceVisual ? serviceVisual.hero.action : `${industry.name.toLowerCase()} work`
+      mainSubject = `Real authentic technician ${serviceContext}, age ${ages.worker}, selfie-style, phone in hand, mid-conversation expression like they're about to share something with you`
+      sceneDetails = serviceVisual
+        ? `${serviceVisual.hero.setting}, but captured with phone camera - ring light reflection in eyes, slightly grainy. ${serviceVisual.hero.equipment} visible`
+        : `${scenarios.hero.setting}, but captured with phone camera - ring light reflection in eyes, slightly grainy`
     } else if (platform === 'instagram') {
-      mainSubject = `Stylish modern ${heroData.person}, age ${ages.worker}, editorial lifestyle portrait`
-      sceneDetails = `${heroData.setting} - elevated, aspirational version. Golden hour lighting, magazine-worthy composition`
+      mainSubject = serviceVisual
+        ? `Stylish modern professional ${serviceVisual.hero.action}, age ${ages.worker}, editorial lifestyle portrait`
+        : `Stylish modern ${scenarios.hero.person}, age ${ages.worker}, editorial lifestyle portrait`
+      sceneDetails = serviceVisual
+        ? `${serviceVisual.hero.setting} - elevated, aspirational version. Golden hour lighting, magazine-worthy composition. ${serviceVisual.hero.equipment}`
+        : `${scenarios.hero.setting} - elevated, aspirational version. Golden hour lighting, magazine-worthy composition`
     } else if (platform === 'youtube') {
-      mainSubject = `Approachable expert: ${heroData.person}, age ${ages.worker}, ready to teach`
+      mainSubject = serviceVisual
+        ? `Approachable expert: professional ${serviceVisual.hero.action}, age ${ages.worker}, ready to teach`
+        : `Approachable expert: ${scenarios.hero.person}, age ${ages.worker}, ready to teach`
       textSpace = 'Clear space on right third for text overlay and subscribe button'
     }
   }
 
   if (promptType === 'service') {
-    const serviceData = scenarios.service
-    mainSubject = serviceData.action
-    sceneDetails = `Details visible: ${serviceData.details}. Tools: ${serviceData.tools}. End result quality: ${serviceData.result}`
-    emotionalTone = `Craftsmanship pride, quality visible, ${industryStyle.mood}`
+    // USE SERVICE-SPECIFIC if available - THIS IS THE BIG WIN
+    if (serviceVisual) {
+      mainSubject = serviceVisual.service.action
+      sceneDetails = `Details visible: ${serviceVisual.service.details}. Tools: ${serviceVisual.service.tools}. End result quality: ${serviceVisual.service.result}`
+      emotionalTone = `Craftsmanship pride, ${serviceVisual.transformation}, ${industryStyle.mood}`
+    } else {
+      const serviceData = scenarios.service
+      mainSubject = serviceData.action
+      sceneDetails = `Details visible: ${serviceData.details}. Tools: ${serviceData.tools}. End result quality: ${serviceData.result}`
+      emotionalTone = `Craftsmanship pride, quality visible, ${industryStyle.mood}`
+    }
 
     // Platform-specific service adjustments
     if (platform === 'tiktok') {
-      mainSubject = `Oddly satisfying ${industry.name.toLowerCase()} moment: ${serviceData.action} - the kind of shot that loops perfectly`
-      sceneDetails = `Raw phone capture of ${serviceData.details}, ASMR-worthy precision, satisfying transformation moment`
+      if (serviceVisual) {
+        mainSubject = `Oddly satisfying moment: ${serviceVisual.service.action} - the kind of shot that loops perfectly`
+        sceneDetails = `Raw phone capture of ${serviceVisual.service.details}, ASMR-worthy precision, satisfying transformation moment`
+      } else {
+        mainSubject = `Oddly satisfying ${industry.name.toLowerCase()} moment: ${scenarios.service.action} - the kind of shot that loops perfectly`
+        sceneDetails = `Raw phone capture of ${scenarios.service.details}, ASMR-worthy precision, satisfying transformation moment`
+      }
       emotionalTone = 'Addictively watchable, satisfying, viral-worthy moment'
     } else if (platform === 'instagram') {
-      mainSubject = `Stunning beauty shot: ${serviceData.result} - magazine-quality finished work photography`
-      sceneDetails = `${serviceData.details}, dramatic lighting highlighting quality, aesthetic composition`
+      mainSubject = serviceVisual
+        ? `Stunning beauty shot: ${serviceVisual.service.result} - magazine-quality finished work photography`
+        : `Stunning beauty shot: ${scenarios.service.result} - magazine-quality finished work photography`
+      sceneDetails = serviceVisual
+        ? `${serviceVisual.service.details}, dramatic lighting highlighting quality, aesthetic composition`
+        : `${scenarios.service.details}, dramatic lighting highlighting quality, aesthetic composition`
       emotionalTone = 'Shareable, saveable, inspiration-worthy'
     } else if (platform === 'youtube') {
-      mainSubject = `Tutorial-style demonstration: ${serviceData.action}`
-      sceneDetails = `Clear view of ${serviceData.tools} being used, educational angle showing technique, ${serviceData.details}`
+      mainSubject = serviceVisual
+        ? `Tutorial-style demonstration: ${serviceVisual.service.action}`
+        : `Tutorial-style demonstration: ${scenarios.service.action}`
+      sceneDetails = serviceVisual
+        ? `Clear view of ${serviceVisual.service.tools} being used, educational angle showing technique, ${serviceVisual.service.details}`
+        : `Clear view of ${scenarios.service.tools} being used, educational angle showing technique, ${scenarios.service.details}`
       textSpace = 'Clean area for "HOW TO" text overlay'
     }
   }
 
   if (promptType === 'testimonial') {
     const testimonialData = scenarios.testimonial
+    // For testimonial, use service-specific proof if available
+    const proofOfService = serviceVisual ? serviceVisual.service.result : testimonialData.proof
+
     mainSubject = `${testimonialData.customer}, age ${ages.customer}`
-    sceneDetails = `Location: ${testimonialData.location}. Proof of service: ${testimonialData.proof}`
+    sceneDetails = `Location: ${testimonialData.location}. Proof of service: ${proofOfService}`
     emotionalTone = testimonialData.emotion
 
     // Platform-specific testimonial adjustments
     if (platform === 'tiktok') {
       mainSubject = `Real person age ${ages.customer} filming genuine reaction on their phone - ${testimonialData.customer} energy`
-      sceneDetails = `Phone POV, showing off ${testimonialData.proof}, authentic excitement, slightly shaky authentic feel`
+      sceneDetails = `Phone POV, showing off ${proofOfService}, authentic excitement, slightly shaky authentic feel`
       emotionalTone = `Genuine "OMG you have to see this" energy, ${testimonialData.emotion}`
     } else if (platform === 'instagram') {
       mainSubject = `Stylish happy customer, age ${ages.customer}, lifestyle portrait with results visible`
-      sceneDetails = `Beautiful setting: ${testimonialData.location}, ${testimonialData.proof} visible, elevated lifestyle moment`
+      sceneDetails = `Beautiful setting: ${testimonialData.location}, ${proofOfService} visible, elevated lifestyle moment`
       emotionalTone = `Aspirational satisfaction - "this could be my life"`
     } else if (platform === 'facebook') {
       mainSubject = `Relatable neighbor, ${testimonialData.customer}, age ${ages.customer}`
-      sceneDetails = `Natural home setting: ${testimonialData.location}, genuine moment with ${testimonialData.proof}`
+      sceneDetails = `Natural home setting: ${testimonialData.location}, genuine moment with ${proofOfService}`
       emotionalTone = `"My neighbor recommended them and was right" - ${testimonialData.emotion}`
     }
   }
 
   if (promptType === 'promo') {
     const promoData = scenarios.promo
-    mainSubject = promoData.scene
-    sceneDetails = `Urgency theme: ${promoData.urgency}. Value shown: ${promoData.value}`
+    // Use service-specific transformation for promo if available
+    if (serviceVisual) {
+      mainSubject = `Dramatic before/after visualization: ${serviceVisual.transformation}`
+      sceneDetails = `Showing the value: ${serviceVisual.service.result}. Urgency theme: ${promoData.urgency}`
+    } else {
+      mainSubject = promoData.scene
+      sceneDetails = `Urgency theme: ${promoData.urgency}. Value shown: ${promoData.value}`
+    }
     emotionalTone = 'Excitement, limited time energy, must-act-now'
     textSpace = 'CRITICAL: 40% of image must be clean/simple area for promotional text overlay'
 
     // Platform-specific promo adjustments
     if (platform === 'tiktok') {
-      mainSubject = `Attention-grabbing thumbnail moment: ${promoData.scene}`
+      mainSubject = serviceVisual
+        ? `Attention-grabbing thumbnail: ${serviceVisual.transformation}`
+        : `Attention-grabbing thumbnail moment: ${promoData.scene}`
       textSpace = 'Top or bottom 30% clean for "SALE" or deal text'
       emotionalTone = 'Curiosity-inducing, makes you want to tap'
     } else if (platform === 'youtube') {
-      mainSubject = `High-contrast YouTube thumbnail: ${promoData.scene} with dramatic lighting`
+      mainSubject = serviceVisual
+        ? `High-contrast YouTube thumbnail: ${serviceVisual.service.result} with dramatic lighting`
+        : `High-contrast YouTube thumbnail: ${promoData.scene} with dramatic lighting`
       textSpace = 'Bold clear space for offer text, readable at small size'
       emotionalTone = 'Click-worthy, value-packed thumbnail energy'
     } else if (platform === 'google') {
-      mainSubject = `Clean conversion-focused: ${promoData.scene}`
+      mainSubject = serviceVisual
+        ? `Clean conversion-focused: ${serviceVisual.service.result}`
+        : `Clean conversion-focused: ${promoData.scene}`
       textSpace = 'Prominent CTA button space, high contrast text area'
       emotionalTone = 'Professional value proposition, clear offer'
     }
@@ -2343,8 +2888,9 @@ export function generateImagePrompt(
   // LINE 4: Industry-specific visual style
   prompt += `STYLE: ${industryStyle.mood}. ${colorInstruction}. Lighting: ${industryStyle.lighting}.\n\n`
 
-  // LINE 5: Emotional tone
-  prompt += `MOOD: ${emotionalTone}.\n\n`
+  // LINE 5: Emotional tone + TAGLINE INTEGRATION
+  const taglineMood = tagline ? ` Brand essence: "${tagline}".` : ''
+  prompt += `MOOD: ${emotionalTone}.${taglineMood}\n\n`
 
   // LINE 6: Text space if needed (for promo/youtube)
   if (textSpace) {
@@ -2369,6 +2915,11 @@ export function generateImagePrompt(
   }
   if (platform === 'google') {
     prompt += ` Clean, professional, conversion-optimized, immediately understood.`
+  }
+
+  // Service context reminder for DALL-E
+  if (serviceVisual && services && services.length > 0) {
+    prompt += ` Context: This is specifically for ${services[0]} services.`
   }
 
   return prompt
@@ -3277,69 +3828,96 @@ export function getIndustryBroll(industryId: string): typeof INDUSTRY_BROLL.gene
 }
 
 // Helper function to get hooks for an industry
+// NOW ACCEPTS SERVICES for service-specific hooks
 export function generateHooksForIndustry(
   industry: IndustryProfile,
   businessName: string,
-  city: string
+  city: string,
+  services?: string[]  // NEW: Actual services for specific hooks
 ): Record<string, string[]> {
   const hooks: Record<string, string[]> = {}
   const painPoints = industry.audience.painPoints
   const desires = industry.audience.desires
 
-  // POV hooks
+  // Get service-specific pain points if available
+  const serviceVisual = services && services.length > 0 ? getPrimaryServiceVisual(services) : null
+  const primaryService = services?.[0] || industry.name.toLowerCase()
+  const servicePainPoint = serviceVisual?.painPoint || painPoints[0]?.toLowerCase() || 'a problem at home'
+  const serviceTransformation = serviceVisual?.transformation || 'amazing transformation'
+
+  // POV hooks - NOW SERVICE-SPECIFIC
   hooks.pov = [
-    `POV: You just discovered ${painPoints[0]?.toLowerCase() || 'a problem at home'}`,
-    `POV: You finally called a real ${industry.name.toLowerCase()} professional`,
-    `POV: ${businessName} just showed up at your door`,
+    `POV: You just discovered ${servicePainPoint}`,
+    `POV: You finally called ${businessName} for ${primaryService}`,
+    `POV: ${businessName} just showed up to fix your ${primaryService.toLowerCase().replace(' installation', '').replace(' repair', '')}`,
   ]
 
-  // Controversy hooks
+  // Controversy hooks - SERVICE-SPECIFIC
   hooks.controversy = [
-    `Most ${industry.name.toLowerCase()} companies won't tell you this...`,
-    `Stop overpaying for ${industry.name.toLowerCase()} services`,
-    `The truth about ${industry.name.toLowerCase()} in ${city}`,
+    `Most ${primaryService} companies won't tell you this...`,
+    `Stop overpaying for ${primaryService}`,
+    `The truth about ${primaryService} in ${city}`,
+    serviceVisual ? `Why ${servicePainPoint} happens (and how to prevent it)` : `Most people ignore this until it's too late`,
   ]
 
-  // Storytime hooks
+  // Storytime hooks - SERVICE-SPECIFIC
   hooks.storytime = [
-    `Storytime: A customer called us at 2am because ${painPoints[0]?.toLowerCase() || 'of an emergency'}`,
-    `This ${city} homeowner saved thousands because of one call...`,
-    `Let me tell you about the worst ${industry.name.toLowerCase()} job I ever saw`,
+    `Storytime: A customer called us at 2am because of ${servicePainPoint}`,
+    `This ${city} homeowner saved thousands on ${primaryService}...`,
+    `Let me tell you about the worst ${primaryService} job I ever saw`,
+    serviceVisual ? `This customer went from ${servicePainPoint} to ${serviceVisual.service.result.toLowerCase()}` : `This will change how you think about ${industry.name.toLowerCase()}`,
   ]
 
-  // Did you know hooks
+  // Did you know hooks - SERVICE-SPECIFIC
   hooks.didYouKnow = [
-    `Did you know ${painPoints[0]?.toLowerCase() || 'this common issue'} can cost you thousands?`,
-    `90% of ${city} homeowners don't know this about ${industry.name.toLowerCase()}`,
-    `${desires[0] || 'What you want'}? Here's what nobody tells you...`,
+    `Did you know ${servicePainPoint} can cost you thousands?`,
+    `90% of ${city} homeowners don't know this about ${primaryService}`,
+    `${desires[0] || 'What you want'}? Here's what nobody tells you about ${primaryService}...`,
+    serviceVisual ? `Did you know this about ${primaryService}? 🤯` : `This one thing could save you thousands`,
   ]
 
-  // Cost reveal hooks
+  // Cost reveal hooks - SERVICE-SPECIFIC
   hooks.costReveal = [
-    `Here's what ${industry.name.toLowerCase()} ACTUALLY costs in ${city} in 2026`,
-    `Real price breakdown: ${industry.name.toLowerCase()} services`,
-    `How much should you pay for ${industry.name.toLowerCase()}?`,
+    `Here's what ${primaryService} ACTUALLY costs in ${city} in 2026`,
+    `Real price breakdown: ${primaryService}`,
+    `How much should you pay for ${primaryService}?`,
+    services && services.length > 1 ? `${services[0]} vs ${services[1]} - which is worth it?` : `Is ${primaryService} worth it? Let's do the math`,
   ]
 
-  // Mistake hooks
+  // Mistake hooks - SERVICE-SPECIFIC
   hooks.mistake = [
-    `Stop making this ${industry.name.toLowerCase()} mistake`,
-    `The #1 mistake ${city} homeowners make with ${industry.name.toLowerCase()}`,
-    `If you're doing this, stop immediately`,
+    `Stop making this ${primaryService} mistake`,
+    `The #1 mistake ${city} homeowners make with ${primaryService}`,
+    serviceVisual ? `If you have ${servicePainPoint}, stop doing THIS` : `If you're doing this, stop immediately`,
   ]
 
-  // Satisfying hooks
+  // Satisfying hooks - SERVICE-SPECIFIC
   hooks.satisfying = [
-    `The most satisfying ${industry.name.toLowerCase()} video you'll see today`,
-    `Watch this transformation...`,
+    `The most satisfying ${primaryService} video you'll see today`,
+    serviceVisual ? `Watch this: ${serviceTransformation}` : `Watch this transformation...`,
     `Before and after that'll blow your mind`,
+    serviceVisual ? `From ${servicePainPoint} to THIS 😍` : `You won't believe this transformation`,
   ]
 
-  // Urgency hooks
+  // Urgency hooks - SERVICE-SPECIFIC
   hooks.urgency = [
-    `If you see this, call a ${industry.name.toLowerCase()} NOW`,
-    `These signs mean you need ${industry.name.toLowerCase()} help ASAP`,
-    `Don't wait until it's an emergency`,
+    serviceVisual ? `If you have ${servicePainPoint}, call ${businessName} NOW` : `If you see this, call a ${industry.name.toLowerCase()} NOW`,
+    `These signs mean you need ${primaryService} ASAP`,
+    `Don't wait until ${servicePainPoint} becomes an emergency`,
+  ]
+
+  // Authority hooks - SERVICE-SPECIFIC
+  hooks.authority = [
+    `As a ${primaryService} expert in ${city}, here's my advice...`,
+    `After 10+ years doing ${primaryService}, this is what I've learned`,
+    `${businessName}: The ${city} ${primaryService} experts`,
+  ]
+
+  // Social proof hooks - SERVICE-SPECIFIC
+  hooks.socialProof = [
+    `Another happy ${city} customer after ${primaryService}`,
+    `Why ${city} homeowners trust ${businessName} for ${primaryService}`,
+    `⭐⭐⭐⭐⭐ "${businessName} fixed our ${primaryService.toLowerCase().replace(' installation', '').replace(' repair', '')} same day!"`,
   ]
 
   return hooks
@@ -3397,8 +3975,20 @@ export function generateVideoScript(
   const pacing = VIDEO_PACING[platform]
   const captionStrat = CAPTION_STRATEGY[platform]
   const soundStrat = SOUND_STRATEGY[platform]
-  const broll = getIndustryBroll(industry.id)
-  const allHooks = generateHooksForIndustry(industry, businessName, city)
+  const industryBroll = getIndustryBroll(industry.id)
+
+  // NEW: Get service-specific B-roll if available
+  const serviceVisual = services.length > 0 ? getPrimaryServiceVisual(services) : null
+  const broll = serviceVisual ? {
+    problemShots: [serviceVisual.painPoint, ...serviceVisual.broll.slice(0, 1), ...industryBroll.problemShots.slice(0, 2)],
+    processShots: [serviceVisual.service.action, serviceVisual.service.details, ...industryBroll.processShots.slice(0, 2)],
+    resultShots: [serviceVisual.service.result, serviceVisual.transformation, ...industryBroll.resultShots.slice(0, 1)],
+    humanShots: industryBroll.humanShots,
+    trustShots: industryBroll.trustShots,
+  } : industryBroll
+
+  // NEW: Pass services to generateHooksForIndustry for service-specific hooks
+  const allHooks = generateHooksForIndustry(industry, businessName, city, services)
 
   // ===== PLATFORM-OPTIMIZED FORMAT SELECTION =====
   // Use the platform intelligence rankings to pick the BEST format
@@ -4913,7 +5503,9 @@ export function generateImagePromptWithStyle(
   promptType: 'hero' | 'service' | 'testimonial' | 'promo',
   ugcStyle?: UGCStyleKey,
   scrollStopTechnique?: keyof typeof SCROLL_STOP_TECHNIQUES.visual,
-  autoOptimize: boolean = true  // NEW: Auto-select best options for platform
+  autoOptimize: boolean = true,  // Auto-select best options for platform
+  services?: string[],           // NEW: Actual services for business-specific prompts
+  tagline?: string               // NEW: Business tagline for mood integration
 ): {
   prompt: string
   ugcInstructions: string | null
@@ -4927,8 +5519,8 @@ export function generateImagePromptWithStyle(
     reasoning: string
   }
 } {
-  // Get base prompt from existing function
-  const basePrompt = generateImagePrompt(industry, businessName, platform, promptType)
+  // Get base prompt from existing function - NOW WITH SERVICES AND TAGLINE
+  const basePrompt = generateImagePrompt(industry, businessName, platform, promptType, services, tagline)
 
   // Get recommended format
   const platformFormats = IMAGE_FORMAT_PRESETS[platform]
