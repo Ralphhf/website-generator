@@ -1501,6 +1501,228 @@ export const PLATFORM_PSYCHOLOGY = {
   },
 }
 
+// ===========================================
+// PLATFORM-SPECIFIC INTELLIGENCE (2026)
+// ===========================================
+// This is what separates a $500/mo DIY tool from a $15,000/mo agency
+// Each platform has a COMPLETELY different audience psychology
+
+// HOOK RANKINGS - Which hooks perform best on each platform
+// Based on 2024-2025 performance data and platform algorithm preferences
+export const PLATFORM_HOOK_RANKINGS: Record<string, {
+  ranked: string[]  // Best to worst
+  avoid: string[]   // Don't use these on this platform
+  reasoning: string
+}> = {
+  tiktok: {
+    ranked: ['pov', 'storytime', 'controversy', 'satisfying', 'curiosity', 'fear', 'socialProof', 'didYouKnow'],
+    avoid: ['authority', 'testimonial'],  // Too formal for TikTok
+    reasoning: 'TikTok rewards raw, first-person, emotionally-charged content. POV and Storytime dominate because they feel personal, not like ads. Controversy gets engagement. Authority/testimonials feel too corporate.',
+  },
+  instagram: {
+    ranked: ['satisfying', 'storytime', 'pov', 'socialProof', 'curiosity', 'testimonial', 'didYouKnow', 'authority'],
+    avoid: ['fear', 'controversy'],  // Instagram penalizes negative content
+    reasoning: 'Instagram is aspirational and aesthetic-first. Satisfying transformations crush. Storytime works in Reels. Avoid fear/controversy - Instagram algorithm actively suppresses negative content.',
+  },
+  facebook: {
+    ranked: ['testimonial', 'socialProof', 'storytime', 'fear', 'didYouKnow', 'authority', 'curiosity', 'costReveal'],
+    avoid: ['pov', 'controversy'],  // Too young/edgy for Facebook audience
+    reasoning: 'Facebook audience is older, values trust and social proof. Testimonials from real customers crush. Fear works (home security, health). POV format feels too "TikTok" and alienates 45+ audience.',
+  },
+  youtube: {
+    ranked: ['didYouKnow', 'tutorial', 'costReveal', 'authority', 'storytime', 'curiosity', 'testimonial', 'satisfying'],
+    avoid: ['pov', 'controversy'],  // YouTube values depth over trends
+    reasoning: 'YouTube audience came to LEARN. Educational hooks dominate. Cost breakdowns get massive views. Authority positioning matters. POV is too short-form for YouTube mindset.',
+  },
+  google: {
+    ranked: ['authority', 'socialProof', 'costReveal', 'fear', 'didYouKnow', 'testimonial'],
+    avoid: ['pov', 'storytime', 'controversy', 'satisfying'],  // Not applicable to search ads
+    reasoning: 'Google searchers have HIGH intent. They want credibility, proof, and clear value. No fluff. Direct benefit statements win.',
+  },
+}
+
+// UGC STYLE RECOMMENDATIONS - Which styles work best per platform
+export const PLATFORM_UGC_RANKINGS: Record<string, {
+  recommended: string[]  // Best styles for this platform
+  acceptable: string[]   // Will work but not optimal
+  avoid: string[]        // Don't use these
+  reasoning: string
+}> = {
+  tiktok: {
+    recommended: ['selfieStyle', 'phoneShot', 'screenRecordStyle'],
+    acceptable: ['behindScenes'],
+    avoid: ['customerCapture'],  // Too polished for TikTok
+    reasoning: 'TikTok users INSTANTLY scroll past anything that looks like an ad. Selfie-style and phone-shot feel native. Screen-record style mimics viral content. Professional = death on TikTok.',
+  },
+  instagram: {
+    recommended: ['behindScenes', 'phoneShot', 'customerCapture'],
+    acceptable: ['selfieStyle'],
+    avoid: ['screenRecordStyle'],  // Feels low-effort on IG
+    reasoning: 'Instagram tolerates slightly more polish but still rewards authenticity. Behind-scenes works great for Reels. Customer-capture (proud homeowner showing result) performs well.',
+  },
+  facebook: {
+    recommended: ['customerCapture', 'behindScenes'],
+    acceptable: ['phoneShot'],
+    avoid: ['selfieStyle', 'screenRecordStyle'],  // Too young for FB audience
+    reasoning: 'Facebook audience wants to see REAL customers and REAL results. Customer-capture (homeowner showing new bathroom) builds trust. Selfie-style feels too young.',
+  },
+  youtube: {
+    recommended: ['behindScenes'],
+    acceptable: ['phoneShot'],
+    avoid: ['selfieStyle', 'screenRecordStyle', 'customerCapture'],  // YouTube expects production value
+    reasoning: 'YouTube viewers expect higher production value. Behind-scenes works for authenticity. For ads, cleaner production is better. For Shorts, more casual is OK.',
+  },
+  google: {
+    recommended: [],  // Professional studio shots preferred
+    acceptable: ['customerCapture'],  // Real results work
+    avoid: ['selfieStyle', 'phoneShot', 'screenRecordStyle', 'behindScenes'],
+    reasoning: 'Google Display/Search users expect professional imagery. UGC can actually hurt trust on Google. Stick to clean, professional shots.',
+  },
+}
+
+// VIDEO FORMAT RANKINGS - Which formats perform best per platform
+export const PLATFORM_VIDEO_FORMAT_RANKINGS: Record<string, {
+  top3: string[]      // These CRUSH on this platform
+  good: string[]      // Will perform well
+  avoid: string[]     // Don't use these
+  reasoning: string
+}> = {
+  tiktok: {
+    top3: ['povStyle', 'storytime', 'satisfyingTransform'],
+    good: ['customerReaction', 'behindScenes', 'tutorial'],
+    avoid: ['vsComparison', 'costBreakdown', 'dayInLife'],  // Too long/corporate
+    reasoning: 'TikTok is entertainment-first. POV is KING. Storytime hooks them in. Satisfying transformations get shared. Avoid anything that feels like a "business video".',
+  },
+  instagram: {
+    top3: ['satisfyingTransform', 'storytime', 'customerReaction'],
+    good: ['behindScenes', 'povStyle', 'tutorial'],
+    avoid: ['costBreakdown', 'vsComparison'],  // Too salesy for IG feed
+    reasoning: 'Instagram Reels reward visually satisfying content. Transformations perform incredibly. Storytime works. Customer reactions feel authentic.',
+  },
+  facebook: {
+    top3: ['customerReaction', 'storytime', 'behindScenes'],
+    good: ['vsComparison', 'tutorial', 'costBreakdown'],
+    avoid: ['povStyle'],  // Too TikTok for Facebook audience
+    reasoning: 'Facebook audience wants trust and relatability. Customer reactions = social proof. Storytime holds attention. Behind-scenes shows you are real.',
+  },
+  youtube: {
+    top3: ['tutorial', 'costBreakdown', 'dayInLife'],
+    good: ['behindScenes', 'vsComparison', 'mythBuster'],
+    avoid: ['povStyle', 'storytime'],  // Too short-form for YouTube
+    reasoning: 'YouTube viewers came to LEARN. Tutorials dominate. Cost breakdowns get huge search traffic. Day-in-life works for brand building. Short-form TikTok styles underperform.',
+  },
+  google: {
+    top3: ['tutorial', 'vsComparison', 'customerReaction'],
+    good: ['behindScenes'],
+    avoid: ['povStyle', 'storytime', 'satisfyingTransform'],  // Not suitable for Google Ads
+    reasoning: 'Google video ads need to communicate value FAST. Comparison and customer testimonials work. Skip the entertainment - this is high-intent traffic.',
+  },
+}
+
+// SCROLL-STOP TECHNIQUE RANKINGS - Which techniques work best per platform
+export const PLATFORM_SCROLLSTOP_RANKINGS: Record<string, {
+  top3: string[]
+  effective: string[]
+  lessEffective: string[]
+  reasoning: string
+}> = {
+  tiktok: {
+    top3: ['humanEyes', 'textInImage', 'patternBreak'],
+    effective: ['motionFreeze', 'unexpectedAngle', 'contrastShock'],
+    lessEffective: ['beforeAfterSplit', 'colorPop'],  // Too polished
+    reasoning: 'TikTok: Direct eye contact is POWERFUL. Text hooks work because they watch muted. Pattern breaks trigger curiosity. Before/after splits feel like ads.',
+  },
+  instagram: {
+    top3: ['beforeAfterSplit', 'colorPop', 'humanEyes'],
+    effective: ['contrastShock', 'motionFreeze', 'textInImage'],
+    lessEffective: ['patternBreak', 'unexpectedAngle'],  // Can look unpolished
+    reasoning: 'Instagram is visual-first. Before/after transformations are GOLD. Color pops stand out in the feed. Maintain aesthetic quality.',
+  },
+  facebook: {
+    top3: ['humanEyes', 'beforeAfterSplit', 'contrastShock'],
+    effective: ['textInImage', 'colorPop'],
+    lessEffective: ['patternBreak', 'unexpectedAngle', 'motionFreeze'],  // Too edgy
+    reasoning: 'Facebook: Real human faces build trust. Before/after proves results. High contrast stands out in busy feeds. Avoid "edgy" visual techniques.',
+  },
+  youtube: {
+    top3: ['humanEyes', 'textInImage', 'contrastShock'],
+    effective: ['beforeAfterSplit', 'colorPop'],
+    lessEffective: ['unexpectedAngle', 'patternBreak', 'motionFreeze'],
+    reasoning: 'YouTube thumbnails: Expressive face + readable text + high contrast = clicks. This formula is proven across millions of videos.',
+  },
+  google: {
+    top3: ['contrastShock', 'beforeAfterSplit', 'textInImage'],
+    effective: ['humanEyes', 'colorPop'],
+    lessEffective: ['patternBreak', 'unexpectedAngle', 'motionFreeze'],
+    reasoning: 'Google Display: Clean, high contrast, clear message. Before/after shows value. Text must be readable at small sizes.',
+  },
+}
+
+// Helper function to get platform-optimized hook
+export function getBestHookForPlatform(
+  platform: 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'google',
+  availableHooks: Record<string, string[]>
+): { hookType: string; hook: string; ranking: number } {
+  const rankings = PLATFORM_HOOK_RANKINGS[platform]
+
+  // Find the first available hook from the ranked list
+  for (let i = 0; i < rankings.ranked.length; i++) {
+    const hookType = rankings.ranked[i]
+    if (availableHooks[hookType] && availableHooks[hookType].length > 0) {
+      return {
+        hookType,
+        hook: availableHooks[hookType][0],
+        ranking: i + 1,  // 1 = best
+      }
+    }
+  }
+
+  // Fallback to first available
+  const firstAvailable = Object.entries(availableHooks).find(([_, hooks]) => hooks.length > 0)
+  return {
+    hookType: firstAvailable?.[0] || 'storytime',
+    hook: firstAvailable?.[1]?.[0] || 'Let me tell you a story...',
+    ranking: 99,
+  }
+}
+
+// Helper function to get platform-optimized video format
+export function getBestVideoFormatForPlatform(
+  platform: 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'google'
+): { format: string; ranking: 'top3' | 'good' | 'other' } {
+  const rankings = PLATFORM_VIDEO_FORMAT_RANKINGS[platform]
+  return {
+    format: rankings.top3[0],
+    ranking: 'top3',
+  }
+}
+
+// Helper function to get platform-optimized UGC style
+export function getBestUGCStyleForPlatform(
+  platform: 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'google'
+): { style: string | null; ranking: 'recommended' | 'acceptable' | 'avoid' | 'studio' } {
+  const rankings = PLATFORM_UGC_RANKINGS[platform]
+
+  if (rankings.recommended.length > 0) {
+    return { style: rankings.recommended[0], ranking: 'recommended' }
+  } else if (rankings.acceptable.length > 0) {
+    return { style: rankings.acceptable[0], ranking: 'acceptable' }
+  } else {
+    return { style: null, ranking: 'studio' }  // Professional studio shots preferred
+  }
+}
+
+// Helper function to get platform-optimized scroll-stop technique
+export function getBestScrollStopForPlatform(
+  platform: 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'google'
+): { technique: string; ranking: 'top3' | 'effective' | 'other' } {
+  const rankings = PLATFORM_SCROLLSTOP_RANKINGS[platform]
+  return {
+    technique: rankings.top3[0],
+    ranking: 'top3',
+  }
+}
+
 // Ad copy templates
 export interface AdCopyTemplate {
   platform: string
@@ -3178,52 +3400,58 @@ export function generateVideoScript(
   const broll = getIndustryBroll(industry.id)
   const allHooks = generateHooksForIndustry(industry, businessName, city)
 
-  // Select best format based on platform and duration
+  // ===== PLATFORM-OPTIMIZED FORMAT SELECTION =====
+  // Use the platform intelligence rankings to pick the BEST format
   let format: keyof typeof VIDEO_FORMATS_2026 = formatOverride || 'storytime'
   if (!formatOverride) {
-    if (platform === 'tiktok' && duration === '15s') {
-      format = 'satisfyingTransform'
-    } else if (platform === 'tiktok') {
-      format = 'povStyle'
-    } else if (platform === 'instagram') {
-      format = 'storytime'
-    } else if (platform === 'youtube' && duration === '15s') {
-      format = 'satisfyingTransform'
-    } else if (platform === 'youtube') {
-      format = 'tutorial'
-    } else if (platform === 'facebook') {
-      format = 'customerReaction'
+    const platformFormatRanking = PLATFORM_VIDEO_FORMAT_RANKINGS[platform]
+    // Get the top-ranked format for this platform
+    const topFormat = platformFormatRanking.top3[0] as keyof typeof VIDEO_FORMATS_2026
+    format = topFormat
+
+    // For short-form (15s), prefer certain formats
+    if (duration === '15s') {
+      // Short-form needs FAST impact
+      if (platform === 'tiktok' || platform === 'instagram') {
+        format = 'satisfyingTransform'  // Visual impact, minimal explanation needed
+      } else if (platform === 'youtube') {
+        format = 'satisfyingTransform'  // Shorts format
+      }
     }
   }
 
   const formatDetails = VIDEO_FORMATS_2026[format]
   const ctas = industry.copyFrameworks.ctas
 
-  // Select hook based on format and platform
-  let hookType = 'storytime'
-  let hook = ''
+  // ===== PLATFORM-OPTIMIZED HOOK SELECTION =====
+  // Use getBestHookForPlatform to select the highest-performing hook type
+  const platformHook = getBestHookForPlatform(platform, allHooks)
+  let hookType = platformHook.hookType
+  let hook = platformHook.hook
 
-  if (format === 'povStyle') {
-    hookType = 'pov'
-    hook = allHooks.pov[0]
-  } else if (format === 'satisfyingTransform') {
-    hookType = 'satisfying'
-    hook = allHooks.satisfying[0]
-  } else if (format === 'mythBuster') {
-    hookType = 'controversy'
-    hook = allHooks.controversy[0]
-  } else if (format === 'costBreakdown') {
-    hookType = 'costReveal'
-    hook = allHooks.costReveal[0]
-  } else if (format === 'customerReaction') {
-    hookType = 'satisfying'
-    hook = `Watch their reaction when they see the result...`
-  } else if (format === 'tutorial') {
-    hookType = 'didYouKnow'
-    hook = allHooks.didYouKnow[0]
-  } else {
-    hookType = 'storytime'
-    hook = allHooks.storytime[0]
+  // If a specific format was chosen, we may need to match the hook to the format
+  // But ONLY if the user explicitly chose a format (formatOverride)
+  if (formatOverride) {
+    // Match hook to format for consistency
+    if (format === 'povStyle' && allHooks.pov?.[0]) {
+      hookType = 'pov'
+      hook = allHooks.pov[0]
+    } else if (format === 'satisfyingTransform' && allHooks.satisfying?.[0]) {
+      hookType = 'satisfying'
+      hook = allHooks.satisfying[0]
+    } else if (format === 'mythBuster' && allHooks.controversy?.[0]) {
+      hookType = 'controversy'
+      hook = allHooks.controversy[0]
+    } else if (format === 'costBreakdown' && allHooks.costReveal?.[0]) {
+      hookType = 'costReveal'
+      hook = allHooks.costReveal[0]
+    } else if (format === 'customerReaction') {
+      hookType = 'testimonial'
+      hook = `Watch their reaction when they see the result...`
+    } else if (format === 'tutorial' && allHooks.didYouKnow?.[0]) {
+      hookType = 'didYouKnow'
+      hook = allHooks.didYouKnow[0]
+    }
   }
 
   const cta = ctas[businessName.length % ctas.length]
@@ -4684,7 +4912,8 @@ export function generateImagePromptWithStyle(
   platform: 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'google',
   promptType: 'hero' | 'service' | 'testimonial' | 'promo',
   ugcStyle?: UGCStyleKey,
-  scrollStopTechnique?: keyof typeof SCROLL_STOP_TECHNIQUES.visual
+  scrollStopTechnique?: keyof typeof SCROLL_STOP_TECHNIQUES.visual,
+  autoOptimize: boolean = true  // NEW: Auto-select best options for platform
 ): {
   prompt: string
   ugcInstructions: string | null
@@ -4692,6 +4921,11 @@ export function generateImagePromptWithStyle(
   diversityNote: string
   aiDisclosure: string
   format: { width: number; height: number; ratio: string }
+  autoSelected: {
+    ugcStyle: string | null
+    scrollStopTechnique: string | null
+    reasoning: string
+  }
 } {
   // Get base prompt from existing function
   const basePrompt = generateImagePrompt(industry, businessName, platform, promptType)
@@ -4704,9 +4938,33 @@ export function generateImagePromptWithStyle(
   let ugcInstructions: string | null = null
   let scrollStopNote: string | null = null
 
+  // Auto-selected values for transparency
+  let autoSelectedUGC: string | null = null
+  let autoSelectedScrollStop: string | null = null
+  let autoSelectReasoning = ''
+
+  // PLATFORM PSYCHOLOGY INTEGRATION
+  // Apply platform-specific visual style guidance
+  const platformPsych = PLATFORM_PSYCHOLOGY[platform]
+  if (platformPsych?.visualStyle) {
+    const vs = platformPsych.visualStyle
+    finalPrompt += `\n\nPLATFORM VISUAL STYLE (${platform.toUpperCase()}): ${vs.aesthetic}. Colors: ${vs.colors}. Lighting: ${vs.lighting}. Subjects: ${vs.subjects}. Mood: ${vs.mood}. AVOID: ${vs.avoid}.`
+  }
+
+  // AUTO-OPTIMIZE: Select best UGC style for platform if none provided
+  let effectiveUGCStyle = ugcStyle
+  if (!ugcStyle && autoOptimize) {
+    const bestUGC = getBestUGCStyleForPlatform(platform)
+    if (bestUGC.style) {
+      effectiveUGCStyle = bestUGC.style as UGCStyleKey
+      autoSelectedUGC = bestUGC.style
+      autoSelectReasoning += `UGC: ${bestUGC.style} (${bestUGC.ranking} for ${platform}). `
+    }
+  }
+
   // Add UGC style modifications
-  if (ugcStyle && UGC_STYLES[ugcStyle]) {
-    const style = UGC_STYLES[ugcStyle]
+  if (effectiveUGCStyle && UGC_STYLES[effectiveUGCStyle]) {
+    const style = UGC_STYLES[effectiveUGCStyle]
     ugcInstructions = `UGC STYLE: ${style.name}\n- Camera: ${style.cameraInstructions}\n- Lighting: ${style.lighting}\n- Composition: ${style.composition}`
 
     // Modify the prompt for UGC
@@ -4719,9 +4977,18 @@ export function generateImagePromptWithStyle(
     finalPrompt += `\nAUTHENTICITY: This should look like ${style.description}. Avoid: overly polished, studio-perfect shots. Include: natural imperfections, real-world lighting.`
   }
 
+  // AUTO-OPTIMIZE: Select best scroll-stop technique for platform if none provided
+  let effectiveScrollStop = scrollStopTechnique
+  if (!scrollStopTechnique && autoOptimize) {
+    const bestScrollStop = getBestScrollStopForPlatform(platform)
+    effectiveScrollStop = bestScrollStop.technique as keyof typeof SCROLL_STOP_TECHNIQUES.visual
+    autoSelectedScrollStop = bestScrollStop.technique
+    autoSelectReasoning += `Scroll-stop: ${bestScrollStop.technique} (${bestScrollStop.ranking} for ${platform}).`
+  }
+
   // Add scroll-stop technique
-  if (scrollStopTechnique && SCROLL_STOP_TECHNIQUES.visual[scrollStopTechnique]) {
-    const technique = SCROLL_STOP_TECHNIQUES.visual[scrollStopTechnique]
+  if (effectiveScrollStop && SCROLL_STOP_TECHNIQUES.visual[effectiveScrollStop]) {
+    const technique = SCROLL_STOP_TECHNIQUES.visual[effectiveScrollStop]
     scrollStopNote = `SCROLL-STOP: ${technique.name} - ${technique.implementation}`
     finalPrompt += `\n\nSCROLL-STOP TECHNIQUE: ${technique.implementation}.`
   }
@@ -4749,6 +5016,11 @@ export function generateImagePromptWithStyle(
       width: recommendedFormat.width,
       height: recommendedFormat.height,
       ratio: recommendedFormat.ratio,
+    },
+    autoSelected: {
+      ugcStyle: autoSelectedUGC,
+      scrollStopTechnique: autoSelectedScrollStop,
+      reasoning: autoSelectReasoning || 'Manual selection used',
     },
   }
 }

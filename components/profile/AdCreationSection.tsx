@@ -54,6 +54,14 @@ import {
   exportToCsv,
   generateBulkConfig,
   calculateBulkGenerationCount,
+  // Platform-specific rankings (2026)
+  PLATFORM_UGC_RANKINGS,
+  PLATFORM_VIDEO_FORMAT_RANKINGS,
+  PLATFORM_SCROLLSTOP_RANKINGS,
+  PLATFORM_HOOK_RANKINGS,
+  getBestUGCStyleForPlatform,
+  getBestVideoFormatForPlatform,
+  getBestScrollStopForPlatform,
   type IndustryProfile,
   type VideoScript2026,
   type UGCStyleKey,
@@ -176,6 +184,59 @@ export function AdCreationSection({
       loadExistingImages()
     }
   }, [profileId, isExpanded])
+
+  // AUTO-SELECT: Platform-optimized defaults when platform changes
+  useEffect(() => {
+    // Auto-select best UGC style for platform
+    const bestUGC = getBestUGCStyleForPlatform(selectedPlatform)
+    if (bestUGC.style && bestUGC.ranking === 'recommended') {
+      setSelectedUgcStyle(bestUGC.style as UGCStyleKey)
+    } else {
+      setSelectedUgcStyle(null) // Studio for platforms that prefer professional shots
+    }
+
+    // Auto-select best scroll-stop technique for platform
+    const bestScrollStop = getBestScrollStopForPlatform(selectedPlatform)
+    if (bestScrollStop.ranking === 'top3') {
+      setSelectedScrollStop(bestScrollStop.technique as keyof typeof SCROLL_STOP_TECHNIQUES.visual)
+    }
+
+    // Auto-select best video format for platform
+    const bestVideoFormat = getBestVideoFormatForPlatform(selectedPlatform)
+    if (bestVideoFormat.ranking === 'top3') {
+      setSelectedVideoFormat(bestVideoFormat.format as keyof typeof VIDEO_FORMATS_2026)
+    }
+  }, [selectedPlatform])
+
+  // Helper: Get UGC style ranking for current platform
+  const getUGCRanking = (style: UGCStyleKey): 'recommended' | 'acceptable' | 'avoid' | null => {
+    const rankings = PLATFORM_UGC_RANKINGS[selectedPlatform]
+    if (!rankings) return null
+    if (rankings.recommended.includes(style)) return 'recommended'
+    if (rankings.acceptable.includes(style)) return 'acceptable'
+    if (rankings.avoid.includes(style)) return 'avoid'
+    return null
+  }
+
+  // Helper: Get scroll-stop technique ranking for current platform
+  const getScrollStopRanking = (technique: string): 'top3' | 'effective' | 'less' | null => {
+    const rankings = PLATFORM_SCROLLSTOP_RANKINGS[selectedPlatform]
+    if (!rankings) return null
+    if (rankings.top3.includes(technique)) return 'top3'
+    if (rankings.effective.includes(technique)) return 'effective'
+    if (rankings.lessEffective.includes(technique)) return 'less'
+    return null
+  }
+
+  // Helper: Get video format ranking for current platform
+  const getVideoFormatRanking = (format: string): 'top3' | 'good' | 'avoid' | null => {
+    const rankings = PLATFORM_VIDEO_FORMAT_RANKINGS[selectedPlatform]
+    if (!rankings) return null
+    if (rankings.top3.includes(format)) return 'top3'
+    if (rankings.good.includes(format)) return 'good'
+    if (rankings.avoid.includes(format)) return 'avoid'
+    return null
+  }
 
   const loadExistingImages = async () => {
     try {
@@ -798,40 +859,72 @@ export function AdCreationSection({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <span className="flex items-center gap-2">
                     <Smartphone className="w-4 h-4" />
-                    UGC Style (Optional)
+                    UGC Style (Auto-optimized for {selectedPlatform})
                   </span>
                 </label>
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setSelectedUgcStyle(null)}
-                    className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                    className={`px-3 py-1.5 rounded-lg text-sm transition-all relative ${
                       !selectedUgcStyle
                         ? 'bg-gray-800 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                    } ${selectedPlatform === 'google' ? 'ring-2 ring-green-500' : ''}`}
                   >
                     Studio
+                    {selectedPlatform === 'google' && (
+                      <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                        Best
+                      </span>
+                    )}
                   </button>
-                  {(Object.keys(UGC_STYLES) as UGCStyleKey[]).map((style) => (
-                    <button
-                      key={style}
-                      onClick={() => setSelectedUgcStyle(style)}
-                      className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
-                        selectedUgcStyle === style
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                      title={UGC_STYLES[style].description}
-                    >
-                      {UGC_STYLES[style].name}
-                    </button>
-                  ))}
+                  {(Object.keys(UGC_STYLES) as UGCStyleKey[]).map((style) => {
+                    const ranking = getUGCRanking(style)
+                    return (
+                      <button
+                        key={style}
+                        onClick={() => setSelectedUgcStyle(style)}
+                        className={`px-3 py-1.5 rounded-lg text-sm transition-all relative ${
+                          selectedUgcStyle === style
+                            ? 'bg-orange-500 text-white'
+                            : ranking === 'avoid'
+                              ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+                              : ranking === 'recommended'
+                                ? 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                        title={`${UGC_STYLES[style].description}${ranking === 'recommended' ? ' (Recommended for ' + selectedPlatform + ')' : ranking === 'avoid' ? ' (Not recommended for ' + selectedPlatform + ')' : ''}`}
+                      >
+                        {UGC_STYLES[style].name}
+                        {ranking === 'recommended' && selectedUgcStyle !== style && (
+                          <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                            Best
+                          </span>
+                        )}
+                        {ranking === 'avoid' && selectedUgcStyle !== style && (
+                          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                            Avoid
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
                 {selectedUgcStyle && (
                   <p className="text-xs text-gray-500 mt-1">
                     {UGC_STYLES[selectedUgcStyle].description}
+                    {getUGCRanking(selectedUgcStyle) === 'recommended' && (
+                      <span className="text-green-600 ml-1 font-medium">- Optimal for {selectedPlatform}</span>
+                    )}
+                    {getUGCRanking(selectedUgcStyle) === 'avoid' && (
+                      <span className="text-red-600 ml-1 font-medium">- Consider different style for {selectedPlatform}</span>
+                    )}
                   </p>
                 )}
+                {/* Platform reasoning */}
+                <p className="text-xs text-blue-600 mt-1 italic">
+                  {PLATFORM_UGC_RANKINGS[selectedPlatform]?.reasoning}
+                </p>
               </div>
 
               {/* Scroll-Stop Technique */}
@@ -839,7 +932,7 @@ export function AdCreationSection({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <span className="flex items-center gap-2">
                     <Eye className="w-4 h-4" />
-                    Scroll-Stop Technique (Optional)
+                    Scroll-Stop Technique (Auto-optimized for {selectedPlatform})
                   </span>
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -853,21 +946,37 @@ export function AdCreationSection({
                   >
                     None
                   </button>
-                  {(Object.keys(SCROLL_STOP_TECHNIQUES.visual) as (keyof typeof SCROLL_STOP_TECHNIQUES.visual)[]).map((technique) => (
-                    <button
-                      key={technique}
-                      onClick={() => setSelectedScrollStop(technique)}
-                      className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
-                        selectedScrollStop === technique
-                          ? 'bg-purple-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                      title={SCROLL_STOP_TECHNIQUES.visual[technique].implementation}
-                    >
-                      {SCROLL_STOP_TECHNIQUES.visual[technique].name}
-                    </button>
-                  ))}
+                  {(Object.keys(SCROLL_STOP_TECHNIQUES.visual) as (keyof typeof SCROLL_STOP_TECHNIQUES.visual)[]).map((technique) => {
+                    const ranking = getScrollStopRanking(technique)
+                    return (
+                      <button
+                        key={technique}
+                        onClick={() => setSelectedScrollStop(technique)}
+                        className={`px-3 py-1.5 rounded-lg text-sm transition-all relative ${
+                          selectedScrollStop === technique
+                            ? 'bg-purple-500 text-white'
+                            : ranking === 'top3'
+                              ? 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                              : ranking === 'less'
+                                ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border border-yellow-200'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                        title={`${SCROLL_STOP_TECHNIQUES.visual[technique].implementation}${ranking === 'top3' ? ' (Top performer for ' + selectedPlatform + ')' : ranking === 'less' ? ' (Less effective on ' + selectedPlatform + ')' : ''}`}
+                      >
+                        {SCROLL_STOP_TECHNIQUES.visual[technique].name}
+                        {ranking === 'top3' && selectedScrollStop !== technique && (
+                          <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                            Top
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
+                {/* Platform reasoning */}
+                <p className="text-xs text-blue-600 mt-1 italic">
+                  {PLATFORM_SCROLLSTOP_RANKINGS[selectedPlatform]?.reasoning}
+                </p>
               </div>
 
               {/* Image Format Selector */}
@@ -1025,7 +1134,7 @@ export function AdCreationSection({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <span className="flex items-center gap-2">
                     <Film className="w-4 h-4" />
-                    Video Format
+                    Video Format (Auto-optimized for {selectedPlatform})
                   </span>
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -1039,20 +1148,42 @@ export function AdCreationSection({
                   >
                     Auto (Best for Platform)
                   </button>
-                  {(Object.keys(VIDEO_FORMATS_2026) as (keyof typeof VIDEO_FORMATS_2026)[]).map((format) => (
-                    <button
-                      key={format}
-                      onClick={() => setSelectedVideoFormat(format)}
-                      className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
-                        selectedVideoFormat === format
-                          ? 'bg-purple-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {VIDEO_FORMATS_2026[format].name}
-                    </button>
-                  ))}
+                  {(Object.keys(VIDEO_FORMATS_2026) as (keyof typeof VIDEO_FORMATS_2026)[]).map((format) => {
+                    const ranking = getVideoFormatRanking(format)
+                    return (
+                      <button
+                        key={format}
+                        onClick={() => setSelectedVideoFormat(format)}
+                        className={`px-3 py-1.5 rounded-lg text-sm transition-all relative ${
+                          selectedVideoFormat === format
+                            ? 'bg-purple-500 text-white'
+                            : ranking === 'top3'
+                              ? 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                              : ranking === 'avoid'
+                                ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                        title={`${VIDEO_FORMATS_2026[format].name} - Best for: ${VIDEO_FORMATS_2026[format].bestFor.join(', ')}${ranking === 'top3' ? ' (Top performer for ' + selectedPlatform + ')' : ranking === 'avoid' ? ' (Avoid on ' + selectedPlatform + ')' : ''}`}
+                      >
+                        {VIDEO_FORMATS_2026[format].name}
+                        {ranking === 'top3' && selectedVideoFormat !== format && (
+                          <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                            Best
+                          </span>
+                        )}
+                        {ranking === 'avoid' && selectedVideoFormat !== format && (
+                          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                            Avoid
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
+                {/* Platform reasoning */}
+                <p className="text-xs text-blue-600 mt-1 italic">
+                  {PLATFORM_VIDEO_FORMAT_RANKINGS[selectedPlatform]?.reasoning}
+                </p>
               </div>
 
               {/* Video Script */}
