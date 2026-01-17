@@ -998,7 +998,15 @@ export function generateAdCopy(
   }
 }
 
-// DALL-E prompt generator - Platform-Specific
+// ===========================================
+// DALL-E PROMPT GENERATOR - PLATFORM + TYPE SPECIFIC
+// ===========================================
+// Each image type serves a DISTINCT purpose:
+// - HERO: Brand identity, the face of the business, WHO they are
+// - SERVICE: The work itself, craftsmanship, process, WHAT they do
+// - TESTIMONIAL: Customer success, social proof, relatable results
+// - PROMO: Offer-ready, urgency, seasonal, call-to-action focused
+
 export function generateImagePrompt(
   industry: IndustryProfile,
   businessName: string,
@@ -1012,191 +1020,290 @@ export function generateImagePrompt(
   const primaryFormat = specs.imageFormats[0]
   const platformStrategy = industry.platformStrategy[platform === 'google' ? 'facebook' : platform]
 
-  // Platform-specific subject based on what works for that audience
+  // ===========================================
+  // IMAGE TYPE DEFINITIONS - What each type IS
+  // ===========================================
+  const imageTypePurpose = {
+    hero: {
+      purpose: 'BRAND IDENTITY - The face of the business',
+      focus: 'WHO they are, not what they do',
+      feeling: 'Trust, competence, "I want to work with these people"',
+      useCase: 'Profile pictures, headers, about us pages, brand awareness ads',
+    },
+    service: {
+      purpose: 'CRAFTSMANSHIP SHOWCASE - The work itself',
+      focus: 'WHAT they do and HOW WELL they do it',
+      feeling: 'Expertise, quality, attention to detail, "They know their craft"',
+      useCase: 'Service pages, portfolio, consideration-stage ads, proof of quality',
+    },
+    testimonial: {
+      purpose: 'SOCIAL PROOF - Customer success stories',
+      focus: 'The CUSTOMER and their satisfaction',
+      feeling: 'Relatability, trust, "That could be me"',
+      useCase: 'Reviews section, trust-building ads, retargeting campaigns',
+    },
+    promo: {
+      purpose: 'PROMOTIONAL - Drive immediate action',
+      focus: 'URGENCY and OFFER with clear CTA space',
+      feeling: 'Excitement, limited time, "I need to act now"',
+      useCase: 'Sales, discounts, seasonal offers, conversion campaigns',
+    },
+  }
+
+  const typePurpose = imageTypePurpose[promptType]
+
+  // ===========================================
+  // PLATFORM + TYPE SPECIFIC SUBJECTS
+  // ===========================================
+
+  // Helper to get age-appropriate subjects based on platform
+  const getAgeRange = () => {
+    switch (platform) {
+      case 'facebook': return { worker: '40-55', customer: '45-65' }
+      case 'instagram': return { worker: '28-40', customer: '25-38' }
+      case 'tiktok': return { worker: '22-32', customer: '20-30' }
+      case 'youtube': return { worker: '35-50', customer: '30-50' }
+      case 'google': return { worker: '35-50', customer: '35-55' }
+    }
+  }
+  const ages = getAgeRange()
+
   let subject = ''
-  switch (platform) {
-    case 'facebook':
-      // Older audience: trust, professionalism, real people
-      switch (promptType) {
-        case 'hero':
-          subject = `Professional ${industry.name.toLowerCase()} service in action, trustworthy appearance, real professional (not a model) age 35-55 serving a customer, clean organized environment`
-          break
-        case 'service':
-          subject = `Clear before/after or demonstration of ${industryStyle.subjects[0]}, showing quality workmanship, trust-building imagery`
-          break
-        case 'testimonial':
-          subject = `Genuine happy customer age 40-60 in their home, authentic smile, relatable homeowner appearance, natural setting`
-          break
-        case 'promo':
-          subject = `Professional service scene with clear space for promotional text, trustworthy business imagery, ${industryStyle.subjects[0]}`
-          break
-      }
-      break
+  let composition = ''
+  let mood = ''
+  let mustInclude = ''
+  let criticalNote = ''
 
-    case 'instagram':
-      // Younger audience: aesthetic, aspirational, lifestyle
-      switch (promptType) {
-        case 'hero':
-          subject = `Aesthetically beautiful ${industry.name.toLowerCase()} scene, Instagram-worthy composition, aspirational lifestyle feel, magazine-quality shot`
-          break
-        case 'service':
-          subject = `Stunning transformation or beautiful result, aesthetic composition, influencer-style photography of ${industryStyle.subjects[0]}`
-          break
-        case 'testimonial':
-          subject = `Stylish young professional age 25-40, lifestyle setting, aspirational but relatable, beautiful natural lighting`
-          break
-        case 'promo':
-          subject = `Visually striking scene with clean space for text overlay, aesthetic and desirable, ${industryStyle.subjects[0]} in beautiful setting`
-          break
-      }
-      break
-
-    case 'tiktok':
-      // Gen Z: raw, authentic, NOT polished
-      switch (promptType) {
-        case 'hero':
-          subject = `Behind-the-scenes authentic moment of ${industry.name.toLowerCase()} work, raw and real feel, like a phone screenshot from a video, NOT professionally staged`
-          break
-        case 'service':
-          subject = `Satisfying work-in-progress shot, oddly satisfying visual, raw authentic capture of ${industryStyle.subjects[0]}, unpolished genuine moment`
-          break
-        case 'testimonial':
-          subject = `Real person age 20-35 casual selfie-style, authentic unfiltered look, relatable young person, NOT professional photography`
-          break
-        case 'promo':
-          subject = `Casual phone-camera style shot, authentic and raw, thumbnail for video content, ${industryStyle.subjects[0]} in candid moment`
-          break
-      }
-      break
-
-    case 'youtube':
-      // Educational audience: professional but approachable
-      switch (promptType) {
-        case 'hero':
-          subject = `Expert ${industry.name.toLowerCase()} professional ready to educate, approachable expert vibe, good lighting like a YouTube video thumbnail`
-          break
-        case 'service':
-          subject = `Clear demonstration setup of ${industryStyle.subjects[0]}, tutorial-ready scene, educational visual`
-          break
-        case 'testimonial':
-          subject = `Genuine customer sharing experience, interview-style setting, trustworthy and relatable person age 30-55`
-          break
-        case 'promo':
-          subject = `YouTube thumbnail style - bold, clear subject, high contrast, ${industryStyle.subjects[0]} with engaging composition`
-          break
-      }
-      break
-
-    case 'google':
-      // High-intent searchers: clear, professional, trust signals
-      switch (promptType) {
-        case 'hero':
-          subject = `Clean professional ${industry.name.toLowerCase()} business image, clear service representation, trust-building professional appearance`
-          break
-        case 'service':
-          subject = `Crystal clear product/service shot of ${industryStyle.subjects[0]}, professional quality, no distractions`
-          break
-        case 'testimonial':
-          subject = `Professional customer portrait, trustworthy appearance, clean background, confidence-inspiring`
-          break
-        case 'promo':
-          subject = `Professional business imagery with clear CTA space, ${industryStyle.subjects[0]}, conversion-focused composition`
-          break
-      }
-      break
+  // ===========================================
+  // HERO - Brand Identity Images
+  // ===========================================
+  if (promptType === 'hero') {
+    switch (platform) {
+      case 'facebook':
+        subject = `Confident ${industry.name.toLowerCase()} business owner or lead technician, age ${ages.worker}, standing proudly in clean uniform or professional attire. Warm genuine smile, direct eye contact with camera. Behind them: organized workspace or branded vehicle (blurred). This person IS the brand - trustworthy, experienced, the neighbor you'd recommend.`
+        composition = 'Subject centered or rule-of-thirds, upper body portrait style, clean background that suggests professionalism'
+        mood = 'Trustworthy, established, competent, approachable - like meeting a recommended professional'
+        mustInclude = 'Clean professional appearance, genuine confident expression, subtle business context in background'
+        criticalNote = 'This is a PORTRAIT of the business owner/team lead - NOT a photo of work being done. The person IS the brand.'
+        break
+      case 'instagram':
+        subject = `Stylish ${industry.name.toLowerCase()} professional, age ${ages.worker}, in an aspirational setting. Modern aesthetic, fashionable work attire that looks both professional and Instagram-worthy. Confident pose, lifestyle photography feel. The setting feels elevated - like this person runs a premium, modern business.`
+        composition = 'Editorial/lifestyle portrait style, beautiful lighting, aspirational setting, magazine-cover energy'
+        mood = 'Aspirational, modern, elevated, "I want my service provider to look this good"'
+        mustInclude = 'Stylish appearance, beautiful composition, lifestyle feeling, premium brand energy'
+        criticalNote = 'Think influencer meets professional. This should make people WANT to follow and hire this business.'
+        break
+      case 'tiktok':
+        subject = `Real ${industry.name.toLowerCase()} worker, age ${ages.worker}, in a candid authentic moment - maybe mid-laugh, or looking at camera like they are about to tell you something. Phone-camera selfie style. Real person, not a model. Slightly imperfect but genuine and likeable.`
+        composition = 'Selfie-style or candid shot, slightly off-center, natural phone lighting, raw authentic feel'
+        mood = 'Authentic, relatable, "this person is real and I trust them", NOT polished or corporate'
+        mustInclude = 'Genuine expression, real person energy, casual but competent appearance'
+        criticalNote = 'MUST look like a real person took this with their phone. If it looks professionally shot, it will fail on TikTok.'
+        break
+      case 'youtube':
+        subject = `Expert ${industry.name.toLowerCase()} professional, age ${ages.worker}, in a well-lit setting ready to share knowledge. Approachable expert vibe - like someone about to teach you something valuable. Good lighting, professional but not corporate.`
+        composition = 'YouTube thumbnail style - clear subject, good contrast, room for text overlay on side'
+        mood = 'Expert but approachable, trustworthy educator, "I can learn from this person"'
+        mustInclude = 'Professional appearance, good lighting, approachable expression, expert positioning'
+        criticalNote = 'This should look like a professional YouTube creator who happens to be an expert in ${industry.name.toLowerCase()}.'
+        break
+      case 'google':
+        subject = `Professional ${industry.name.toLowerCase()} business representative, age ${ages.worker}, clean professional headshot or upper body shot. Trustworthy, competent appearance. Clean solid background or professional setting. The face of a business you would trust.`
+        composition = 'Clean professional portrait, high contrast, solid or minimal background, corporate but not cold'
+        mood = 'Trustworthy, professional, competent, established business'
+        mustInclude = 'Professional appearance, clean background, confidence-inspiring expression'
+        criticalNote = 'High-intent searchers are comparing options. This needs to look like the professional choice.'
+        break
+    }
   }
 
-  // Platform-specific style modifiers
-  const platformStyleGuide = {
-    facebook: `
-PLATFORM CONTEXT (FACEBOOK - Ages ${platformPsych.audienceAge}):
-- Audience: ${platformPsych.audienceDescription}
-- They expect: ${platformPsych.contentExpectation}
-- Visual aesthetic: ${platformVisual.aesthetic}
+  // ===========================================
+  // SERVICE - Craftsmanship/Process Images
+  // ===========================================
+  if (promptType === 'service') {
+    const craftSubject = industryStyle.subjects[0]
 
-STYLE REQUIREMENTS:
-- Lighting: ${platformVisual.lighting}
-- Mood: ${platformVisual.mood}
-- Colors: ${platformVisual.colors}
-- Subject style: ${platformVisual.subjects}`,
-
-    instagram: `
-PLATFORM CONTEXT (INSTAGRAM - Ages ${platformPsych.audienceAge}):
-- Audience: ${platformPsych.audienceDescription}
-- They expect: ${platformPsych.contentExpectation}
-- Visual aesthetic: ${platformVisual.aesthetic}
-
-STYLE REQUIREMENTS:
-- Lighting: ${platformVisual.lighting}
-- Mood: ${platformVisual.mood}
-- Colors: ${platformVisual.colors}
-- Subject style: ${platformVisual.subjects}
-- MUST be Instagram-worthy - think influencer content quality`,
-
-    tiktok: `
-PLATFORM CONTEXT (TIKTOK - Ages ${platformPsych.audienceAge}):
-- Audience: ${platformPsych.audienceDescription}
-- They expect: ${platformPsych.contentExpectation}
-- Visual aesthetic: ${platformVisual.aesthetic}
-
-CRITICAL STYLE REQUIREMENTS:
-- Must look AUTHENTIC and RAW - NOT professionally produced
-- Lighting: ${platformVisual.lighting}
-- Mood: ${platformVisual.mood}
-- If it looks like a professional ad, it will FAIL on TikTok
-- Should look like a frame from a phone video`,
-
-    youtube: `
-PLATFORM CONTEXT (YOUTUBE - Ages ${platformPsych.audienceAge}):
-- Audience: ${platformPsych.audienceDescription}
-- They expect: ${platformPsych.contentExpectation}
-- Visual aesthetic: ${platformVisual.aesthetic}
-
-STYLE REQUIREMENTS:
-- Lighting: ${platformVisual.lighting}
-- Mood: ${platformVisual.mood}
-- Colors: ${platformVisual.colors}
-- Professional quality expected but approachable
-- Think: Thumbnail that gets clicks, not stock photo`,
-
-    google: `
-PLATFORM CONTEXT (GOOGLE ADS - Ages ${platformPsych.audienceAge}):
-- Audience: ${platformPsych.audienceDescription}
-- They expect: ${platformPsych.contentExpectation}
-- Visual aesthetic: ${platformVisual.aesthetic}
-
-STYLE REQUIREMENTS:
-- Lighting: ${platformVisual.lighting}
-- Mood: ${platformVisual.mood}
-- Colors: ${platformVisual.colors}
-- High contrast, clear value proposition visible
-- Trust signals and professionalism paramount`,
+    switch (platform) {
+      case 'facebook':
+        subject = `Detailed shot of ${industry.name.toLowerCase()} work in progress: skilled hands performing the craft, quality materials visible, professional tools being used correctly. Alternatively: dramatic before/after split showing transformation. The CRAFTSMANSHIP is the star - showing WHY this business is worth hiring.`
+        composition = 'Close-up on the work itself, or split-screen before/after, details visible'
+        mood = 'Quality craftsmanship, attention to detail, pride in work, "these people know what they are doing"'
+        mustInclude = 'Visible quality, professional tools/materials, craftsmanship details, proof of skill'
+        criticalNote = 'This is about the WORK, not the person. Show the craft, the quality, the transformation.'
+        break
+      case 'instagram':
+        subject = `Stunning ${industry.name.toLowerCase()} transformation or beautiful finished result. Aesthetic photography of ${craftSubject}. The kind of before/after or result shot that makes people save and share. Magazine-quality detail shots showing the beauty of quality work.`
+        composition = 'Aesthetic composition, beautiful lighting on the work, satisfying before/after or detail shot'
+        mood = 'Satisfying, beautiful, shareable, "save this for inspiration"'
+        mustInclude = 'Beautiful result, aesthetic composition, transformation or detail that wows'
+        criticalNote = 'This needs to be visually stunning enough that people screenshot and share it.'
+        break
+      case 'tiktok':
+        subject = `Oddly satisfying ${industry.name.toLowerCase()} moment: could be cleaning reveal, perfect technique, satisfying transformation, or ASMR-worthy work moment. The kind of clip that makes people watch on loop. Raw, unpolished capture of ${craftSubject} that is visually addictive.`
+        composition = 'Frame from a video, action shot, satisfying moment captured, raw phone-camera feel'
+        mood = 'Oddly satisfying, addictive, "I watched this 5 times", shareable'
+        mustInclude = 'Satisfying visual moment, transformation or process that hooks viewers'
+        criticalNote = 'Think: what moment from the work would go viral on r/oddlysatisfying? Capture THAT moment.'
+        break
+      case 'youtube':
+        subject = `Educational demonstration of ${industry.name.toLowerCase()} technique: clear setup showing the process, good angles for learning, visible steps. Like a frame from a tutorial video showing HOW the work is done properly.`
+        composition = 'Clear demonstration setup, tutorial-ready framing, visible process steps'
+        mood = 'Educational, clear, "I can learn from this", expert technique on display'
+        mustInclude = 'Clear process visibility, professional technique, educational value'
+        criticalNote = 'This should make someone think "I want to watch a video about how they do this".'
+        break
+      case 'google':
+        subject = `Crystal clear ${industry.name.toLowerCase()} service photo: professional quality shot of ${craftSubject}, no distractions, clean demonstration of what the service delivers. Immediately communicates what the business does and that they do it well.`
+        composition = 'Clean, clear, professional service representation, no visual clutter'
+        mood = 'Professional, clear, trustworthy, "this is exactly what I need"'
+        mustInclude = 'Clear service representation, professional quality, immediate understanding'
+        criticalNote = 'High-intent searchers need to instantly understand what service they will get.'
+        break
+    }
   }
 
-  const industryColors = industryStyle.colors
+  // ===========================================
+  // TESTIMONIAL - Customer Success Images
+  // ===========================================
+  if (promptType === 'testimonial') {
+    switch (platform) {
+      case 'facebook':
+        subject = `Genuinely happy customer, age ${ages.customer}, in their home/space after receiving ${industry.name.toLowerCase()} service. Real person (not a model), authentic grateful smile, natural home environment. Standing near the completed work if relevant. The look of someone who would genuinely recommend this business to their neighbors.`
+        composition = 'Customer is the focus, natural home/business setting, completed work visible if relevant'
+        mood = 'Genuine satisfaction, relief, gratitude, "I made the right choice"'
+        mustInclude = 'Real-looking person, authentic happy expression, relatable setting, believable scenario'
+        criticalNote = 'Must look like a REAL customer, not a stock photo model. Authenticity is everything.'
+        break
+      case 'instagram':
+        subject = `Stylish satisfied customer, age ${ages.customer}, in a beautiful setting with visible ${industry.name.toLowerCase()} results. Lifestyle photography feel - the customer looks good, the result looks good, everything is aesthetic. Could be posing near the finished work or in a lifestyle moment.`
+        composition = 'Lifestyle photography, beautiful setting, customer looks aspirational but relatable'
+        mood = 'Aspirational satisfaction, lifestyle upgrade, "hiring them improved my life/space"'
+        mustInclude = 'Attractive but relatable customer, beautiful result visible, lifestyle-elevated feeling'
+        criticalNote = 'The customer should look like someone the Instagram audience wants to BE.'
+        break
+      case 'tiktok':
+        subject = `Real person, age ${ages.customer}, genuine reaction to ${industry.name.toLowerCase()} results - could be surprise, delight, showing off to camera. Selfie or friend-filming style, authentic unfiltered reaction, the kind of moment someone would actually post on TikTok.`
+        composition = 'Selfie style or candid reaction, phone-camera quality, authentic moment'
+        mood = 'Genuine reaction, authentic delight, "OMG you have to see this", shareable moment'
+        mustInclude = 'Real reaction, authentic person, unpolished genuine moment'
+        criticalNote = 'Should look like a real TikTok someone posted showing off their results. NOT produced.'
+        break
+      case 'youtube':
+        subject = `Trustworthy customer, age ${ages.customer}, interview-style setting, sharing their experience. Well-lit, good audio implied, like a testimonial video thumbnail. Genuine expression, believable person sharing real feedback.`
+        composition = 'Interview thumbnail style, clear face, good lighting, trust-building setup'
+        mood = 'Trustworthy testimonial, genuine feedback, "this person is being honest"'
+        mustInclude = 'Interview setup feel, trustworthy appearance, genuine expression'
+        criticalNote = 'Should look like a thumbnail for a testimonial video worth watching.'
+        break
+      case 'google':
+        subject = `Professional-looking satisfied customer, age ${ages.customer}, clean portrait style, confident and happy expression. Represents the ideal customer who chose this business and is satisfied. Trust-building appearance.`
+        composition = 'Clean customer portrait, professional background, confident satisfied expression'
+        mood = 'Satisfied customer, confident choice, "I chose wisely"'
+        mustInclude = 'Professional appearance, satisfied expression, trustworthy customer image'
+        criticalNote = 'Should reinforce that professionals/smart people choose this business.'
+        break
+    }
+  }
+
+  // ===========================================
+  // PROMO - Promotional/Offer Images
+  // ===========================================
+  if (promptType === 'promo') {
+    switch (platform) {
+      case 'facebook':
+        subject = `Eye-catching ${industry.name.toLowerCase()} promotional scene with LARGE CLEAR SPACE for text overlay (at least 40% of image). Seasonal or urgent feeling - could show busy service scene, limited availability implied, or premium service moment. Background action with clear text space.`
+        composition = 'LEFT or RIGHT 40% of image is clean/simple for text overlay, action on opposite side'
+        mood = 'Urgency, value, limited time, "dont miss this opportunity"'
+        mustInclude = 'CLEAR TEXT SPACE (critical), promotional energy, urgency or value implied'
+        criticalNote = 'The #1 requirement is CLEAR SPACE FOR PROMOTIONAL TEXT. Without this, the image is useless for promos.'
+        break
+      case 'instagram':
+        subject = `Visually striking ${industry.name.toLowerCase()} scene designed for promotional overlay. Bold, attention-grabbing visual with clean space for offer text. Could be dramatic result, premium service moment, or aesthetic scene with clear text area.`
+        composition = 'Strong visual impact with 35-40% clean space for text, Instagram-optimized layout'
+        mood = 'Excitement, premium offer, exclusive deal, "this is special"'
+        mustInclude = 'CLEAN TEXT SPACE, visually striking imagery, promotional energy'
+        criticalNote = 'Must stop the scroll AND have space for offer text. Both are required.'
+        break
+      case 'tiktok':
+        subject = `Thumbnail-ready ${industry.name.toLowerCase()} scene for promotional content - could be before a reveal, exciting moment, or attention-grabbing scene. Raw, authentic feel but composed to work as video thumbnail with text overlay space.`
+        composition = 'Video thumbnail style, clear top or bottom for text, attention-grabbing subject'
+        mood = 'Curiosity, "you need to see this deal", authentic promotional energy'
+        mustInclude = 'Thumbnail-ready composition, text overlay space, attention-grabbing subject'
+        criticalNote = 'Should work as a video thumbnail that makes people want to tap. Space for "SALE" or offer text.'
+        break
+      case 'youtube':
+        subject = `High-contrast ${industry.name.toLowerCase()} thumbnail for promotional video - bold, clear, with obvious space for offer text. Could show excited reaction, amazing deal visual, or dramatic before/after with promo energy.`
+        composition = 'YouTube thumbnail optimized - high contrast, bold subject, clear text overlay area'
+        mood = 'Click-worthy, value-packed, "I need to watch this deal video"'
+        mustInclude = 'High contrast, bold composition, CLEAR TEXT SPACE, click-worthy energy'
+        criticalNote = 'Must work as a YouTube thumbnail that screams "DEAL" or "OFFER" at a glance.'
+        break
+      case 'google':
+        subject = `Clean, professional ${industry.name.toLowerCase()} promotional image with high-contrast design. Clear visual with prominent space for CTA button and offer text. Conversion-optimized composition - immediately communicates value.`
+        composition = 'Conversion-optimized layout, clear CTA space, high contrast, clean design'
+        mood = 'Professional value, clear offer, "click here for this deal"'
+        mustInclude = 'High contrast, CTA button space, clean professional design, clear text area'
+        criticalNote = 'Designed for conversion. Must have clear space for CTA button and offer text.'
+        break
+    }
+  }
+
+  // ===========================================
+  // BUILD THE COMPLETE PROMPT
+  // ===========================================
   const avoidList = [...industryStyle.avoid, platformVisual.avoid].join(', ')
 
-  return `Create a ${platform.toUpperCase()} advertisement image for "${businessName}" - a ${industry.name}.
-${platformStyleGuide[platform]}
+  return `CREATE A ${promptType.toUpperCase()} IMAGE FOR ${platform.toUpperCase()}
 
+====================================
+IMAGE TYPE: ${promptType.toUpperCase()}
+====================================
+Purpose: ${typePurpose.purpose}
+Focus: ${typePurpose.focus}
+Desired feeling: ${typePurpose.feeling}
+Use case: ${typePurpose.useCase}
+
+====================================
+PLATFORM: ${platform.toUpperCase()}
+====================================
+Audience: ${platformPsych.audienceAge} - ${platformPsych.audienceDescription}
+They expect: ${platformPsych.contentExpectation}
+Platform aesthetic: ${platformVisual.aesthetic}
+Platform mood: ${platformVisual.mood}
+Lighting style: ${platformVisual.lighting}
+
+====================================
+BUSINESS CONTEXT
+====================================
+Business: "${businessName}"
+Industry: ${industry.name}
+Industry vibe: ${industryStyle.mood}
+Color palette: ${industryStyle.colors}
+
+====================================
+SPECIFIC REQUIREMENTS
+====================================
 SUBJECT: ${subject}
 
-INDUSTRY-SPECIFIC STYLING:
-- Business vibe: ${industryStyle.mood}
-- Color palette: ${industryColors}
-- Focus: ${platformStrategy.focus}
+COMPOSITION: ${composition}
 
-COMPOSITION:
-- Aspect ratio: ${primaryFormat.ratio} (${primaryFormat.width}x${primaryFormat.height}px)
-- Rule of thirds composition
-- Leave space for text overlay on one side
+MOOD TO CONVEY: ${mood}
 
-QUALITY REQUIREMENTS:
-- Ultra high quality, sharp focus
-- Authentic and genuine feeling
-- NOT generic stock photo style
+MUST INCLUDE: ${mustInclude}
 
-ABSOLUTELY AVOID: ${avoidList}, generic stock photo feel, overly posed, artificial looking, low quality, blurry, any text or watermarks in the image`
+CRITICAL NOTE: ${criticalNote}
+
+====================================
+TECHNICAL SPECIFICATIONS
+====================================
+Aspect ratio: ${primaryFormat.ratio} (${primaryFormat.width}x${primaryFormat.height}px)
+Quality: Ultra high quality, sharp focus, professional grade
+Style: ${platform === 'tiktok' ? 'Raw, authentic, phone-camera feel - NOT polished' : 'High quality but authentic feeling - NOT generic stock photo'}
+
+====================================
+ABSOLUTELY AVOID
+====================================
+${avoidList}, generic stock photo feel, overly posed, artificial looking, cheesy, low quality, blurry, any text or watermarks in the image, anything that looks fake or staged${platform === 'tiktok' ? ', anything that looks professionally produced or like an ad' : ''}`
 }
 
 // Video script generator
