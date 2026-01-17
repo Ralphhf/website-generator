@@ -21,13 +21,42 @@ import {
   Zap,
   FileText,
   ExternalLink,
+  Crosshair,
+  DollarSign,
+  MapPin,
+  Calendar,
+  TrendingUp,
+  AlertTriangle,
+  Film,
+  Mic,
+  Layers,
+  Package,
+  Sun,
+  Camera,
+  Eye,
+  Smartphone,
+  Palette,
 } from 'lucide-react'
 import {
   findIndustryProfile,
   generateImagePrompt,
+  generateImagePromptWithStyle,
   generateVideoScript,
+  generateVoiceoverScript,
   PLATFORM_SPECS,
+  VIDEO_FORMATS_2026,
+  UGC_STYLES,
+  SCROLL_STOP_TECHNIQUES,
+  IMAGE_FORMAT_PRESETS,
+  AI_DISCLOSURE,
+  getSeasonalContent,
+  VOICEOVER_STYLES,
+  exportToCsv,
+  generateBulkConfig,
+  calculateBulkGenerationCount,
   type IndustryProfile,
+  type VideoScript2026,
+  type UGCStyleKey,
 } from '@/lib/marketing-library'
 
 interface BusinessInfo {
@@ -57,11 +86,22 @@ interface AdCopyVariation {
   hashtags: string[]
 }
 
+interface TargetingSection {
+  label: string
+  items: string[]
+}
+
+interface FormattedTargeting {
+  title: string
+  sections: TargetingSection[]
+}
+
 interface GeneratedAdCopy {
   variations: AdCopyVariation[]
   targetAudience: string
   bestTimeToPost: string
   proTip: string
+  formattedTargeting?: FormattedTargeting
 }
 
 interface AdCreationSectionProps {
@@ -89,6 +129,9 @@ export function AdCreationSection({
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([])
   const [imagePromptType, setImagePromptType] = useState<'hero' | 'service' | 'testimonial' | 'promo'>('hero')
+  const [selectedUgcStyle, setSelectedUgcStyle] = useState<UGCStyleKey | null>(null)
+  const [selectedScrollStop, setSelectedScrollStop] = useState<keyof typeof SCROLL_STOP_TECHNIQUES.visual | null>(null)
+  const [selectedImageFormat, setSelectedImageFormat] = useState<string | null>(null)
 
   // Copy generation state
   const [isGeneratingCopy, setIsGeneratingCopy] = useState(false)
@@ -97,9 +140,21 @@ export function AdCreationSection({
 
   // Video script state
   const [videoDuration, setVideoDuration] = useState<'15s' | '30s' | '60s'>('15s')
+  const [selectedVideoFormat, setSelectedVideoFormat] = useState<keyof typeof VIDEO_FORMATS_2026 | null>(null)
+  const [showAllHooks, setShowAllHooks] = useState(false)
+  const [showBroll, setShowBroll] = useState(false)
+  const [showVoiceover, setShowVoiceover] = useState(false)
+  const [selectedVoiceStyle, setSelectedVoiceStyle] = useState<keyof typeof VOICEOVER_STYLES>('conversational')
 
   // Industry profile
   const [industryProfile, setIndustryProfile] = useState<IndustryProfile | null>(null)
+
+  // Seasonal content
+  const [seasonalContent, setSeasonalContent] = useState<ReturnType<typeof getSeasonalContent> | null>(null)
+
+  // Bulk generation state
+  const [bulkScope, setBulkScope] = useState<'minimal' | 'standard' | 'comprehensive'>('standard')
+  const [showBulkPanel, setShowBulkPanel] = useState(false)
 
   // Load industry profile
   useEffect(() => {
@@ -109,6 +164,10 @@ export function AdCreationSection({
       businessInfo.services
     )
     setIndustryProfile(profile)
+
+    // Get seasonal content
+    const seasonal = getSeasonalContent(profile.id)
+    setSeasonalContent(seasonal)
   }, [businessInfo])
 
   // Load existing images
@@ -135,26 +194,47 @@ export function AdCreationSection({
 
     setIsGeneratingImage(true)
     try {
-      const prompt = generateImagePrompt(
-        industryProfile,
-        businessInfo.name,
-        selectedPlatform,
-        imagePromptType
-      )
+      // Use enhanced prompt with UGC and scroll-stop if selected
+      const promptData = selectedUgcStyle || selectedScrollStop
+        ? generateImagePromptWithStyle(
+            industryProfile,
+            businessInfo.name,
+            selectedPlatform,
+            imagePromptType,
+            selectedUgcStyle || undefined,
+            selectedScrollStop || undefined
+          )
+        : {
+            prompt: generateImagePrompt(
+              industryProfile,
+              businessInfo.name,
+              selectedPlatform,
+              imagePromptType
+            ),
+            format: IMAGE_FORMAT_PRESETS[selectedPlatform].formats[0],
+          }
 
-      // Determine size based on platform
+      // Determine size based on selected format or platform default
       let size: '1024x1024' | '1792x1024' | '1024x1792' = '1024x1024'
-      if (selectedPlatform === 'instagram' || selectedPlatform === 'tiktok') {
-        size = '1024x1792' // Portrait for Stories/Reels
-      } else if (selectedPlatform === 'youtube') {
-        size = '1792x1024' // Landscape for YouTube
+      const format = selectedImageFormat
+        ? IMAGE_FORMAT_PRESETS[selectedPlatform].formats.find(f => f.name === selectedImageFormat)
+        : IMAGE_FORMAT_PRESETS[selectedPlatform].formats.find(
+            f => f.name === IMAGE_FORMAT_PRESETS[selectedPlatform].recommended
+          )
+
+      if (format) {
+        if (format.ratio === '9:16' || format.ratio === '4:5') {
+          size = '1024x1792'
+        } else if (format.ratio === '16:9' || format.ratio === '1.91:1') {
+          size = '1792x1024'
+        }
       }
 
       const response = await fetch('/api/generate-ad-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt,
+          prompt: promptData.prompt,
           profileId,
           platform: selectedPlatform,
           size,
@@ -168,7 +248,7 @@ export function AdCreationSection({
       if (data.success) {
         setGeneratedImages(prev => [{
           image: data.image,
-          prompt,
+          prompt: promptData.prompt,
           revisedPrompt: data.revisedPrompt,
           platform: selectedPlatform,
           storagePath: data.storagePath,
@@ -206,7 +286,13 @@ export function AdCreationSection({
       const data = await response.json()
 
       if (data.success) {
-        setGeneratedCopy(data)
+        setGeneratedCopy({
+          variations: data.variations,
+          targetAudience: data.targetAudience,
+          bestTimeToPost: data.bestTimeToPost,
+          proTip: data.proTip,
+          formattedTargeting: data.formattedTargeting,
+        })
       } else {
         alert(data.error || 'Failed to generate copy')
       }
@@ -261,6 +347,33 @@ export function AdCreationSection({
     }
   }
 
+  const handleExportAll = () => {
+    if (!generatedCopy || !industryProfile) return
+
+    const ads = generatedCopy.variations.map((v, i) => ({
+      platform: selectedPlatform,
+      adName: `${businessInfo.name} - ${selectedPlatform} - Variation ${i + 1}`,
+      headline: v.headline,
+      primaryText: v.body,
+      description: v.hook,
+      callToAction: v.cta,
+      targeting: generatedCopy.targetAudience,
+      placement: 'Feed',
+      format: 'Single Image',
+    }))
+
+    const csv = exportToCsv(ads)
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${businessInfo.name.toLowerCase().replace(/\s+/g, '-')}-ads-export.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+  }
+
   const platformColors: Record<Platform, string> = {
     facebook: 'bg-blue-500',
     instagram: 'bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500',
@@ -276,14 +389,36 @@ export function AdCreationSection({
   }
 
   // Generate video script
-  const videoScript = industryProfile ? generateVideoScript(
+  const videoScript: VideoScript2026 | null = industryProfile ? generateVideoScript(
     industryProfile,
     businessInfo.name,
     businessInfo.services,
     businessInfo.city,
     selectedPlatform === 'google' ? 'youtube' : selectedPlatform,
-    videoDuration
+    videoDuration,
+    selectedVideoFormat || undefined
   ) : null
+
+  // Generate voiceover if video script exists
+  const voiceoverData = videoScript
+    ? generateVoiceoverScript(videoScript, selectedVoiceStyle)
+    : null
+
+  // Bulk generation config
+  const bulkConfig = generateBulkConfig(bulkScope)
+  const bulkCounts = calculateBulkGenerationCount(bulkConfig)
+
+  // Get AI disclosure for current platform
+  const getAIDisclosure = () => {
+    if (selectedPlatform === 'tiktok') {
+      return { requirement: AI_DISCLOSURE.tiktok.requirement, disclosureText: AI_DISCLOSURE.tiktok.disclosureText, how: AI_DISCLOSURE.tiktok.how }
+    } else if (['facebook', 'instagram'].includes(selectedPlatform)) {
+      return { requirement: AI_DISCLOSURE.meta.requirement, disclosureText: AI_DISCLOSURE.meta.disclosureText, how: AI_DISCLOSURE.meta.how }
+    } else {
+      return { requirement: AI_DISCLOSURE.google.requirement, disclosureText: AI_DISCLOSURE.google.disclosureText, how: AI_DISCLOSURE.google.how }
+    }
+  }
+  const currentDisclosure = getAIDisclosure()
 
   return (
     <div className={`border rounded-xl overflow-hidden transition-all ${isComplete ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'}`}>
@@ -317,16 +452,54 @@ export function AdCreationSection({
       {/* Expanded Content */}
       {isExpanded && (
         <div className="border-t border-gray-200 p-4 space-y-6">
-          {/* Industry Detection */}
+          {/* Industry Detection + Seasonal Alert */}
           {industryProfile && (
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <Sparkles className="w-5 h-5 text-indigo-600 mt-0.5" />
-                <div>
-                  <p className="font-medium text-indigo-900">Industry Detected: {industryProfile.name}</p>
-                  <p className="text-sm text-indigo-700 mt-1">
-                    Prompts and copy are optimized for {industryProfile.name.toLowerCase()} marketing best practices.
-                  </p>
+            <div className="space-y-3">
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-5 h-5 text-indigo-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-indigo-900">Industry Detected: {industryProfile.name}</p>
+                    <p className="text-sm text-indigo-700 mt-1">
+                      Prompts and copy are optimized for {industryProfile.name.toLowerCase()} marketing best practices.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Seasonal Alert */}
+              {seasonalContent?.isHighSeason && seasonalContent.activeSeason && (
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-4 border border-amber-200">
+                  <div className="flex items-start gap-3">
+                    <Sun className="w-5 h-5 text-amber-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-amber-900">
+                        Seasonal Opportunity: {seasonalContent.activeSeason.name}
+                      </p>
+                      <p className="text-sm text-amber-700 mt-1">
+                        {seasonalContent.urgencyMessage}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {seasonalContent.hooks.slice(0, 2).map((hook, i) => (
+                          <span key={i} className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                            "{hook}"
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* AI Disclosure Warning */}
+              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg p-3 border border-yellow-200">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <span className="font-medium text-yellow-800">AI Disclosure Required: </span>
+                    <span className="text-yellow-700">{currentDisclosure.disclosureText}</span>
+                    <p className="text-xs text-yellow-600 mt-1">{currentDisclosure.how}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -446,6 +619,17 @@ export function AdCreationSection({
                     </div>
                   </div>
 
+                  {/* Export Button */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleExportAll}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium"
+                    >
+                      <Download className="w-4 h-4" />
+                      Export All to CSV
+                    </button>
+                  </div>
+
                   {/* Variations */}
                   <div className="space-y-4">
                     {generatedCopy.variations.map((variation, index) => (
@@ -492,6 +676,86 @@ export function AdCreationSection({
                     ))}
                   </div>
 
+                  {/* Targeting Recommendations */}
+                  {generatedCopy.formattedTargeting && (
+                    <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-5 border border-indigo-100">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Crosshair className="w-5 h-5 text-indigo-600" />
+                        <h4 className="font-semibold text-indigo-900 text-lg">
+                          {generatedCopy.formattedTargeting.title}
+                        </h4>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {generatedCopy.formattedTargeting.sections.map((section, sIdx) => {
+                          let SectionIcon = Target
+                          if (section.label.includes('Demographic')) SectionIcon = Users
+                          if (section.label.includes('Interest') || section.label.includes('Keyword')) SectionIcon = TrendingUp
+                          if (section.label.includes('Budget')) SectionIcon = DollarSign
+                          if (section.label.includes('Timing')) SectionIcon = Calendar
+                          if (section.label.includes('Location')) SectionIcon = MapPin
+                          if (section.label.includes('Exclude')) SectionIcon = Trash2
+
+                          return (
+                            <div
+                              key={sIdx}
+                              className={`bg-white rounded-lg p-3 ${
+                                section.label.includes('Budget') || section.label.includes('Timing')
+                                  ? 'md:col-span-2'
+                                  : ''
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <SectionIcon className="w-4 h-4 text-indigo-500" />
+                                <span className="font-medium text-sm text-indigo-800">{section.label}</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {section.items.map((item, iIdx) => (
+                                  <span
+                                    key={iIdx}
+                                    className={`inline-block px-2 py-1 text-xs rounded-md ${
+                                      section.label.includes('Exclude') || section.label.includes('Negative')
+                                        ? 'bg-red-100 text-red-700'
+                                        : section.label.includes('Budget')
+                                        ? 'bg-green-100 text-green-700'
+                                        : 'bg-indigo-100 text-indigo-700'
+                                    }`}
+                                  >
+                                    {item}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          const targetingText = generatedCopy.formattedTargeting!.sections
+                            .map(s => `${s.label}:\n${s.items.map(i => `  • ${i}`).join('\n')}`)
+                            .join('\n\n')
+                          navigator.clipboard.writeText(targetingText)
+                          setCopiedIndex(-2)
+                          setTimeout(() => setCopiedIndex(null), 2000)
+                        }}
+                        className="mt-4 flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+                      >
+                        {copiedIndex === -2 ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            Targeting Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4" />
+                            Copy All Targeting Settings
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+
                   {/* Regenerate */}
                   <button
                     onClick={handleGenerateCopy}
@@ -529,12 +793,125 @@ export function AdCreationSection({
                 </div>
               </div>
 
+              {/* UGC Style Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <span className="flex items-center gap-2">
+                    <Smartphone className="w-4 h-4" />
+                    UGC Style (Optional)
+                  </span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setSelectedUgcStyle(null)}
+                    className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                      !selectedUgcStyle
+                        ? 'bg-gray-800 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Studio
+                  </button>
+                  {(Object.keys(UGC_STYLES) as UGCStyleKey[]).map((style) => (
+                    <button
+                      key={style}
+                      onClick={() => setSelectedUgcStyle(style)}
+                      className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                        selectedUgcStyle === style
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                      title={UGC_STYLES[style].description}
+                    >
+                      {UGC_STYLES[style].name}
+                    </button>
+                  ))}
+                </div>
+                {selectedUgcStyle && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {UGC_STYLES[selectedUgcStyle].description}
+                  </p>
+                )}
+              </div>
+
+              {/* Scroll-Stop Technique */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <span className="flex items-center gap-2">
+                    <Eye className="w-4 h-4" />
+                    Scroll-Stop Technique (Optional)
+                  </span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setSelectedScrollStop(null)}
+                    className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                      !selectedScrollStop
+                        ? 'bg-gray-800 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    None
+                  </button>
+                  {(Object.keys(SCROLL_STOP_TECHNIQUES.visual) as (keyof typeof SCROLL_STOP_TECHNIQUES.visual)[]).map((technique) => (
+                    <button
+                      key={technique}
+                      onClick={() => setSelectedScrollStop(technique)}
+                      className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                        selectedScrollStop === technique
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                      title={SCROLL_STOP_TECHNIQUES.visual[technique].implementation}
+                    >
+                      {SCROLL_STOP_TECHNIQUES.visual[technique].name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Image Format Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <span className="flex items-center gap-2">
+                    <Layers className="w-4 h-4" />
+                    Image Format
+                  </span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {IMAGE_FORMAT_PRESETS[selectedPlatform].formats.map((format) => (
+                    <button
+                      key={format.name}
+                      onClick={() => setSelectedImageFormat(format.name)}
+                      className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                        selectedImageFormat === format.name ||
+                        (!selectedImageFormat && format.name === IMAGE_FORMAT_PRESETS[selectedPlatform].recommended)
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {format.name} ({format.ratio})
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Prompt Preview */}
               {industryProfile && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <label className="text-xs font-medium text-gray-500 uppercase mb-2 block">AI Prompt Preview</label>
-                  <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                    {generateImagePrompt(industryProfile, businessInfo.name, selectedPlatform, imagePromptType)}
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap line-clamp-6">
+                    {selectedUgcStyle || selectedScrollStop
+                      ? generateImagePromptWithStyle(
+                          industryProfile,
+                          businessInfo.name,
+                          selectedPlatform,
+                          imagePromptType,
+                          selectedUgcStyle || undefined,
+                          selectedScrollStop || undefined
+                        ).prompt.substring(0, 500) + '...'
+                      : generateImagePrompt(industryProfile, businessInfo.name, selectedPlatform, imagePromptType).substring(0, 500) + '...'
+                    }
                   </p>
                 </div>
               )}
@@ -643,6 +1020,41 @@ export function AdCreationSection({
                 </div>
               </div>
 
+              {/* Video Format Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <span className="flex items-center gap-2">
+                    <Film className="w-4 h-4" />
+                    Video Format
+                  </span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setSelectedVideoFormat(null)}
+                    className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                      !selectedVideoFormat
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Auto (Best for Platform)
+                  </button>
+                  {(Object.keys(VIDEO_FORMATS_2026) as (keyof typeof VIDEO_FORMATS_2026)[]).map((format) => (
+                    <button
+                      key={format}
+                      onClick={() => setSelectedVideoFormat(format)}
+                      className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                        selectedVideoFormat === format
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {VIDEO_FORMATS_2026[format].name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Video Script */}
               {videoScript && (
                 <div className="space-y-4">
@@ -653,7 +1065,7 @@ export function AdCreationSection({
                       </h4>
                       <button
                         onClick={() => handleCopyToClipboard(
-                          `HOOK: ${videoScript.hook}\n\nSCENES:\n${videoScript.scenes.join('\n')}\n\nVOICEOVER:\n${videoScript.voiceover}\n\nCTA: ${videoScript.cta}`,
+                          `HOOK: ${videoScript.hook}\n\nSCENES:\n${videoScript.scenes.map((s, i) => `${i + 1}. [${s.time}] ${s.action}\n   Visual: ${s.visual}\n   Text: ${s.textOverlay}`).join('\n\n')}\n\nVOICEOVER:\n${videoScript.voiceover}\n\nCTA: ${videoScript.cta}`,
                           -1
                         )}
                         className="flex items-center gap-1 px-3 py-1 bg-white border rounded-md text-sm hover:bg-gray-50"
@@ -664,23 +1076,44 @@ export function AdCreationSection({
                     </div>
 
                     <div className="space-y-4">
+                      {/* Hook */}
                       <div>
-                        <label className="text-xs font-medium text-purple-600 uppercase">Opening Hook</label>
+                        <label className="text-xs font-medium text-purple-600 uppercase">Opening Hook ({videoScript.hookType})</label>
                         <p className="text-purple-900 font-medium text-lg">{videoScript.hook}</p>
                       </div>
 
+                      {/* Scene Breakdown - Enhanced */}
                       <div>
                         <label className="text-xs font-medium text-purple-600 uppercase">Scene Breakdown</label>
-                        <div className="space-y-2 mt-1">
+                        <div className="space-y-3 mt-2">
                           {videoScript.scenes.map((scene, i) => (
-                            <div key={i} className="flex gap-2 text-sm">
-                              <span className="text-purple-400 font-mono">{String(i + 1).padStart(2, '0')}</span>
-                              <span className="text-gray-700">{scene}</span>
+                            <div key={i} className="bg-white rounded-lg p-3 border border-purple-100">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-purple-500 font-mono text-sm font-bold">{scene.time}</span>
+                                <span className="font-medium text-gray-900">{scene.action}</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                  <span className="text-gray-500">Visual:</span>
+                                  <span className="text-gray-700 ml-1">{scene.visual}</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Text Overlay:</span>
+                                  <span className="text-purple-700 ml-1 font-medium">{scene.textOverlay}</span>
+                                </div>
+                              </div>
+                              {scene.patternInterrupt && scene.patternInterrupt !== 'None - let hook land' && (
+                                <div className="mt-1 text-xs text-orange-600">
+                                  <Zap className="w-3 h-3 inline mr-1" />
+                                  {scene.patternInterrupt}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
                       </div>
 
+                      {/* Voiceover */}
                       <div>
                         <label className="text-xs font-medium text-purple-600 uppercase">Voiceover Script</label>
                         <p className="text-gray-800 bg-white p-3 rounded-lg mt-1 italic">
@@ -688,9 +1121,181 @@ export function AdCreationSection({
                         </p>
                       </div>
 
+                      {/* CTA */}
                       <div>
                         <label className="text-xs font-medium text-purple-600 uppercase">Call to Action</label>
                         <p className="text-orange-600 font-semibold">{videoScript.cta}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* All Hooks Panel */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <button
+                      onClick={() => setShowAllHooks(!showAllHooks)}
+                      className="flex items-center justify-between w-full"
+                    >
+                      <span className="font-medium text-gray-700 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        All Generated Hooks ({Object.keys(videoScript.hooks).length} types)
+                      </span>
+                      {showAllHooks ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+
+                    {showAllHooks && (
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {Object.entries(videoScript.hooks).map(([type, hooks]) => (
+                          <div key={type} className="bg-white rounded-lg p-3">
+                            <span className="text-xs font-medium text-purple-600 uppercase">{type}</span>
+                            <div className="space-y-1 mt-1">
+                              {(hooks as string[]).slice(0, 2).map((hook, i) => (
+                                <p key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                                  <span className="text-purple-400">•</span>
+                                  {hook}
+                                  <button
+                                    onClick={() => handleCopyToClipboard(hook, i * 100 + Object.keys(videoScript.hooks).indexOf(type))}
+                                    className="text-gray-400 hover:text-gray-600"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </button>
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* B-Roll Panel */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <button
+                      onClick={() => setShowBroll(!showBroll)}
+                      className="flex items-center justify-between w-full"
+                    >
+                      <span className="font-medium text-gray-700 flex items-center gap-2">
+                        <Camera className="w-4 h-4" />
+                        B-Roll Shot List
+                      </span>
+                      {showBroll ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+
+                    {showBroll && (
+                      <div className="mt-4 space-y-3">
+                        {videoScript.scenes.map((scene, i) => (
+                          scene.broll && scene.broll.length > 0 && (
+                            <div key={i} className="bg-white rounded-lg p-3">
+                              <span className="text-xs font-medium text-gray-500">{scene.time}</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {scene.broll.map((shot, j) => (
+                                  <span key={j} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                    {shot}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Voiceover Panel */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <button
+                      onClick={() => setShowVoiceover(!showVoiceover)}
+                      className="flex items-center justify-between w-full"
+                    >
+                      <span className="font-medium text-gray-700 flex items-center gap-2">
+                        <Mic className="w-4 h-4" />
+                        AI Voiceover Guidance
+                      </span>
+                      {showVoiceover ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+
+                    {showVoiceover && voiceoverData && (
+                      <div className="mt-4 space-y-4">
+                        {/* Voice Style Selector */}
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 uppercase mb-2 block">Voice Style</label>
+                          <div className="flex flex-wrap gap-2">
+                            {(Object.keys(VOICEOVER_STYLES) as (keyof typeof VOICEOVER_STYLES)[]).map((style) => (
+                              <button
+                                key={style}
+                                onClick={() => setSelectedVoiceStyle(style)}
+                                className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                                  selectedVoiceStyle === style
+                                    ? 'bg-green-500 text-white'
+                                    : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                                }`}
+                              >
+                                {VOICEOVER_STYLES[style].name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Voiceover Details */}
+                        <div className="bg-white rounded-lg p-4 space-y-3">
+                          <div className="grid grid-cols-3 gap-3 text-sm">
+                            <div>
+                              <span className="text-gray-500">Word Count:</span>
+                              <span className="ml-2 font-medium">{voiceoverData.wordCount}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Duration:</span>
+                              <span className="ml-2 font-medium">{voiceoverData.estimatedDuration}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Recommended Voice:</span>
+                              <span className="ml-2 font-medium">{voiceoverData.aiVoiceSettings.voiceName}</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <span className="text-xs font-medium text-gray-500 uppercase">Speaking Notes</span>
+                            <ul className="mt-1 space-y-1">
+                              {voiceoverData.speakingNotes.map((note, i) => (
+                                <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                                  <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                  {note}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                            <strong>AI Voice Settings:</strong> {voiceoverData.aiVoiceSettings.service} -
+                            Speed: {voiceoverData.aiVoiceSettings.speed}x,
+                            Stability: {voiceoverData.aiVoiceSettings.stability},
+                            Clarity: {voiceoverData.aiVoiceSettings.clarity}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pacing & Caption Strategy */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        Pacing Rules
+                      </h4>
+                      <div className="space-y-2 text-sm text-blue-700">
+                        <p><strong>Hook Window:</strong> {videoScript.pacing.hookWindow}</p>
+                        <p><strong>Cut Frequency:</strong> {videoScript.pacing.cutFrequency}</p>
+                        <p><strong>Text On Screen:</strong> {videoScript.pacing.textOnScreen}</p>
+                      </div>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-4">
+                      <h4 className="font-medium text-green-900 mb-2 flex items-center gap-2">
+                        <Palette className="w-4 h-4" />
+                        Caption Strategy
+                      </h4>
+                      <div className="space-y-2 text-sm text-green-700">
+                        <p><strong>Position:</strong> {videoScript.captionStrategy.position}</p>
+                        <p><strong>Style:</strong> {videoScript.captionStrategy.style}</p>
                       </div>
                     </div>
                   </div>
@@ -732,6 +1337,81 @@ export function AdCreationSection({
               )}
             </div>
           )}
+
+          {/* BULK GENERATION PANEL */}
+          <div className="border-t pt-4 mt-4">
+            <button
+              onClick={() => setShowBulkPanel(!showBulkPanel)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <span className="font-medium text-gray-700 flex items-center gap-2">
+                <Package className="w-4 h-4" />
+                Bulk Generation
+              </span>
+              {showBulkPanel ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+
+            {showBulkPanel && (
+              <div className="mt-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Generation Scope</label>
+                  <div className="flex gap-2">
+                    {(['minimal', 'standard', 'comprehensive'] as const).map((scope) => (
+                      <button
+                        key={scope}
+                        onClick={() => setBulkScope(scope)}
+                        className={`px-4 py-2 rounded-lg capitalize transition-all ${
+                          bulkScope === scope
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {scope}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-indigo-50 rounded-lg p-4">
+                  <h4 className="font-medium text-indigo-900 mb-3">Generation Summary</h4>
+                  <div className="grid grid-cols-4 gap-4 text-sm">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-indigo-600">{bulkCounts.images}</p>
+                      <p className="text-indigo-700">Images</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-indigo-600">{bulkCounts.videos}</p>
+                      <p className="text-indigo-700">Video Scripts</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-indigo-600">{bulkCounts.copyVariations}</p>
+                      <p className="text-indigo-700">Copy Variations</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-green-600">{bulkCounts.estimatedCost}</p>
+                      <p className="text-green-700">Est. Cost</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-xs text-indigo-600">
+                    <strong>Platforms:</strong> {bulkConfig.platforms.join(', ')} |
+                    <strong> Formats:</strong> {bulkConfig.videoFormats.slice(0, 3).join(', ')}{bulkConfig.videoFormats.length > 3 ? '...' : ''} |
+                    <strong> Styles:</strong> {bulkConfig.ugcStyles.join(', ')}
+                  </div>
+                </div>
+
+                <button
+                  disabled
+                  className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-lg opacity-50 cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <Package className="w-5 h-5" />
+                  Generate All ({bulkCounts.total} items) - Coming Soon
+                </button>
+                <p className="text-xs text-gray-500 text-center">
+                  Bulk generation will create all variations across selected platforms automatically
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

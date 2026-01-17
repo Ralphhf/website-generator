@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { PLATFORM_PSYCHOLOGY, findIndustryProfile } from '@/lib/marketing-library'
+import { PLATFORM_PSYCHOLOGY, findIndustryProfile, generateTargetingRecommendations, formatTargetingForDisplay } from '@/lib/marketing-library'
 
 interface GenerateCopyRequest {
   businessName: string
@@ -225,12 +225,24 @@ IMPORTANT:
       return NextResponse.json({ error: 'Failed to parse ad copy response' }, { status: 500 })
     }
 
+    // Generate targeting recommendations
+    const targetingRecommendation = generateTargetingRecommendations(
+      industryProfile,
+      platform,
+      city,
+      businessType
+    )
+    const formattedTargeting = formatTargetingForDisplay(targetingRecommendation, platform)
+
     return NextResponse.json({
       success: true,
       platform,
       platformAudience: `${platformPsych.audienceAge} - ${platformPsych.audienceDescription}`,
       adType,
       ...adCopy,
+      // Include targeting recommendations
+      targeting: targetingRecommendation,
+      formattedTargeting,
     })
 
   } catch (error) {
