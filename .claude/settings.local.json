@@ -28,7 +28,11 @@
       "Bash(git branch:*)",
       "Bash(git push:*)",
       "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\ralph\\\\website-generator-watcher\\\\create-shortcut.ps1\")",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(grep:*)",
+      "Bash(git diff:*)",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

@@ -12,6 +12,7 @@ import { GoogleBusinessStep } from '@/components/generator/GoogleBusinessStep'
 import { SocialMediaStep } from '@/components/generator/SocialMediaStep'
 import { UpdateProfilesStep } from '@/components/generator/UpdateProfilesStep'
 import { AllDoneStep } from '@/components/generator/AllDoneStep'
+import { AdCreationSection } from '@/components/profile/AdCreationSection'
 
 type ProfileStep = 'overview' | 'logo-generator' | 'google-business' | 'social-media' | 'update-profiles' | 'all-done'
 
@@ -3556,8 +3557,23 @@ Make the app production-ready, polished, and professional. The business owner sh
               </CardContent>
             </Card>
 
-            {/* Ad Creation */}
-            <Card variant="outlined" className={`border-2 ${isSectionComplete('ad-creation') ? 'border-green-300 bg-green-50/30' : 'border-orange-200 bg-orange-50/50'}`}>
+            {/* Ad Creation Studio - New Component */}
+            <AdCreationSection
+              profileId={profile?.id || ''}
+              businessInfo={{
+                name: profile?.name || '',
+                businessType: profile?.business_type || profile?.data?.businessType || '',
+                services: profile?.data?.services || [],
+                city: profile?.city || profile?.data?.city || '',
+                state: profile?.state || profile?.data?.state || '',
+                tagline: profile?.tagline || profile?.data?.tagline || '',
+              }}
+              isComplete={isSectionComplete('ad-creation')}
+              onToggleComplete={() => toggleSectionComplete('ad-creation')}
+            />
+
+            {/* Old Ad Creation - hidden */}
+            {false && <Card variant="outlined" className={`border-2 ${isSectionComplete('ad-creation') ? 'border-green-300 bg-green-50/30' : 'border-orange-200 bg-orange-50/50'}`}>
               <CardContent className="py-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -4326,7 +4342,7 @@ GOAL: Shares, saves, and "watch it again" loops.`
                   )
                 })()}
               </CardContent>
-            </Card>
+            </Card>}
 
             {/* Meeting Recording */}
             <Card variant="outlined" className={`border-2 ${isSectionComplete('meeting-recording') ? 'border-green-300 bg-green-50/30' : 'border-rose-200 bg-rose-50/50'}`}>
