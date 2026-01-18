@@ -192,6 +192,16 @@ export function AdCreationSection({
   }>>([])
   const [selectedSceneForVideo, setSelectedSceneForVideo] = useState<number | null>(null)
 
+  // AI Voiceover generation state
+  const [isGeneratingVoiceover, setIsGeneratingVoiceover] = useState(false)
+  const [generatedVoiceover, setGeneratedVoiceover] = useState<{
+    audio: string
+    voiceUsed: string
+    characterCount: number
+    storagePath?: string
+  } | null>(null)
+  const [selectedVoiceOption, setSelectedVoiceOption] = useState<'professional_male' | 'professional_female' | 'energetic_male' | 'friendly_female' | 'conversational_male'>('professional_male')
+
   // Industry profile
   const [industryProfile, setIndustryProfile] = useState<IndustryProfile | null>(null)
 
@@ -437,6 +447,48 @@ export function AdCreationSection({
     } finally {
       setIsGeneratingVideo(false)
       setSelectedSceneForVideo(null)
+    }
+  }
+
+  // Generate AI voiceover from script
+  const handleGenerateVoiceover = async () => {
+    const voiceoverText = dynamicVideoScript?.voiceover || videoScript?.voiceover
+    if (!voiceoverText) {
+      alert('No voiceover script available')
+      return
+    }
+
+    setIsGeneratingVoiceover(true)
+
+    try {
+      const response = await fetch('/api/generate-voiceover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: voiceoverText,
+          profileId,
+          platform: selectedPlatform,
+          voiceStyle: selectedVoiceOption,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setGeneratedVoiceover({
+          audio: data.audio,
+          voiceUsed: data.voiceUsed,
+          characterCount: data.characterCount,
+          storagePath: data.storagePath,
+        })
+      } else {
+        alert(data.error || 'Failed to generate voiceover')
+      }
+    } catch (error) {
+      console.error('Generate voiceover error:', error)
+      alert('Failed to generate voiceover')
+    } finally {
+      setIsGeneratingVoiceover(false)
     }
   }
 
@@ -1595,12 +1647,62 @@ export function AdCreationSection({
                                   controls
                                   className="w-full aspect-[9/16] object-cover bg-black"
                                 />
-                                <div className="p-2 text-xs text-gray-500">
-                                  {vid.duration}s • {vid.mode}
+                                <div className="p-2">
+                                  <p className="text-xs text-gray-500">{vid.duration}s • {vid.mode}</p>
+                                  <a
+                                    href={vid.video}
+                                    download={`video-${vid.platform}-${i}.mp4`}
+                                    className="text-xs text-purple-600 hover:underline flex items-center gap-1 mt-1"
+                                  >
+                                    <Download className="w-3 h-3" />
+                                    Download Video
+                                  </a>
                                 </div>
                               </div>
                             ))}
                           </div>
+
+                          {/* Combine Video + Voiceover Instructions */}
+                          {generatedVoiceover && (
+                            <div className="mt-4 bg-gradient-to-r from-purple-50 to-green-50 rounded-lg p-4 border border-purple-200">
+                              <h4 className="font-medium text-purple-900 flex items-center gap-2 mb-2">
+                                <Layers className="w-4 h-4" />
+                                Combine Video + Voiceover
+                              </h4>
+                              <p className="text-sm text-gray-600 mb-3">
+                                Download both files and combine them in a free video editor:
+                              </p>
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                <a
+                                  href={generatedVideos[0]?.video}
+                                  download="video.mp4"
+                                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-sm hover:bg-purple-200 flex items-center gap-1"
+                                >
+                                  <Download className="w-3 h-3" />
+                                  Video (.mp4)
+                                </a>
+                                <a
+                                  href={generatedVoiceover.audio}
+                                  download="voiceover.mp3"
+                                  className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 flex items-center gap-1"
+                                >
+                                  <Download className="w-3 h-3" />
+                                  Voiceover (.mp3)
+                                </a>
+                              </div>
+                              <div className="flex gap-3 text-xs">
+                                <a href="https://www.capcut.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
+                                  <ExternalLink className="w-3 h-3" /> CapCut (Free)
+                                </a>
+                                <a href="https://www.descript.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
+                                  <ExternalLink className="w-3 h-3" /> Descript (Free)
+                                </a>
+                                <a href="https://www.canva.com/video-editor" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
+                                  <ExternalLink className="w-3 h-3" /> Canva (Free)
+                                </a>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -1731,69 +1833,131 @@ export function AdCreationSection({
                     >
                       <span className="font-medium text-gray-700 flex items-center gap-2">
                         <Mic className="w-4 h-4" />
-                        AI Voiceover Guidance
+                        AI Voiceover Generation
                       </span>
                       {showVoiceover ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </button>
 
-                    {showVoiceover && voiceoverData && (
+                    {showVoiceover && (
                       <div className="mt-4 space-y-4">
-                        {/* Voice Style Selector */}
+                        {/* ElevenLabs Voice Selector */}
                         <div>
-                          <label className="text-xs font-medium text-gray-500 uppercase mb-2 block">Voice Style</label>
+                          <label className="text-xs font-medium text-gray-500 uppercase mb-2 block">Select Voice (ElevenLabs)</label>
                           <div className="flex flex-wrap gap-2">
-                            {(Object.keys(VOICEOVER_STYLES) as (keyof typeof VOICEOVER_STYLES)[]).map((style) => (
+                            {[
+                              { key: 'professional_male', label: 'Professional Male' },
+                              { key: 'professional_female', label: 'Professional Female' },
+                              { key: 'energetic_male', label: 'Energetic Male' },
+                              { key: 'friendly_female', label: 'Friendly Female' },
+                              { key: 'conversational_male', label: 'Conversational Male' },
+                            ].map((voice) => (
                               <button
-                                key={style}
-                                onClick={() => setSelectedVoiceStyle(style)}
+                                key={voice.key}
+                                onClick={() => setSelectedVoiceOption(voice.key as typeof selectedVoiceOption)}
                                 className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
-                                  selectedVoiceStyle === style
+                                  selectedVoiceOption === voice.key
                                     ? 'bg-green-500 text-white'
                                     : 'bg-white text-gray-700 hover:bg-gray-100 border'
                                 }`}
                               >
-                                {VOICEOVER_STYLES[style].name}
+                                {voice.label}
                               </button>
                             ))}
                           </div>
                         </div>
 
-                        {/* Voiceover Details */}
-                        <div className="bg-white rounded-lg p-4 space-y-3">
-                          <div className="grid grid-cols-3 gap-3 text-sm">
-                            <div>
-                              <span className="text-gray-500">Word Count:</span>
-                              <span className="ml-2 font-medium">{voiceoverData.wordCount}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Duration:</span>
-                              <span className="ml-2 font-medium">{voiceoverData.estimatedDuration}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Recommended Voice:</span>
-                              <span className="ml-2 font-medium">{voiceoverData.aiVoiceSettings.voiceName}</span>
-                            </div>
-                          </div>
-
-                          <div>
-                            <span className="text-xs font-medium text-gray-500 uppercase">Speaking Notes</span>
-                            <ul className="mt-1 space-y-1">
-                              {voiceoverData.speakingNotes.map((note, i) => (
-                                <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                                  <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                                  {note}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-
-                          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                            <strong>AI Voice Settings:</strong> {voiceoverData.aiVoiceSettings.service} -
-                            Speed: {voiceoverData.aiVoiceSettings.speed}x,
-                            Stability: {voiceoverData.aiVoiceSettings.stability},
-                            Clarity: {voiceoverData.aiVoiceSettings.clarity}
-                          </div>
+                        {/* Generate Voiceover Button */}
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={handleGenerateVoiceover}
+                            disabled={isGeneratingVoiceover || (!dynamicVideoScript?.voiceover && !videoScript?.voiceover)}
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium rounded-lg hover:shadow-md transition-all disabled:opacity-50"
+                          >
+                            {isGeneratingVoiceover ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Generating Voiceover...
+                              </>
+                            ) : (
+                              <>
+                                <Mic className="w-4 h-4" />
+                                Generate Voiceover (~$0.10)
+                              </>
+                            )}
+                          </button>
+                          <span className="text-xs text-gray-500">
+                            {(dynamicVideoScript?.voiceover || videoScript?.voiceover || '').length} characters
+                          </span>
                         </div>
+
+                        {/* Generated Voiceover Audio Player */}
+                        {generatedVoiceover && (
+                          <div className="bg-white rounded-lg p-4 border border-green-200">
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-sm font-medium text-green-700">
+                                Generated with {generatedVoiceover.voiceUsed}
+                              </span>
+                              <a
+                                href={generatedVoiceover.audio}
+                                download={`voiceover-${selectedPlatform}.mp3`}
+                                className="text-xs text-green-600 hover:underline flex items-center gap-1"
+                              >
+                                <Download className="w-3 h-3" />
+                                Download MP3
+                              </a>
+                            </div>
+                            <audio
+                              controls
+                              src={generatedVoiceover.audio}
+                              className="w-full"
+                            />
+                            <p className="text-xs text-gray-500 mt-2">
+                              {generatedVoiceover.characterCount} characters processed
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Voiceover Script Preview */}
+                        {(dynamicVideoScript?.voiceover || videoScript?.voiceover) && (
+                          <div className="bg-white rounded-lg p-3 border">
+                            <label className="text-xs font-medium text-gray-500 uppercase mb-1 block">Voiceover Script</label>
+                            <p className="text-sm text-gray-700 italic">
+                              &ldquo;{dynamicVideoScript?.voiceover || videoScript?.voiceover}&rdquo;
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Voiceover Details from static data */}
+                        {voiceoverData && (
+                          <div className="bg-white rounded-lg p-4 space-y-3">
+                            <div className="grid grid-cols-3 gap-3 text-sm">
+                              <div>
+                                <span className="text-gray-500">Word Count:</span>
+                                <span className="ml-2 font-medium">{voiceoverData.wordCount}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Duration:</span>
+                                <span className="ml-2 font-medium">{voiceoverData.estimatedDuration}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Recommended Voice:</span>
+                                <span className="ml-2 font-medium">{voiceoverData.aiVoiceSettings.voiceName}</span>
+                              </div>
+                            </div>
+
+                            <div>
+                              <span className="text-xs font-medium text-gray-500 uppercase">Speaking Notes</span>
+                              <ul className="mt-1 space-y-1">
+                                {voiceoverData.speakingNotes.map((note, i) => (
+                                  <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                    {note}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
