@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const result = await fal.subscribe('fal-ai/ideogram/v3', {
       input: {
         prompt: prompt,
-        image_size: mapSizeToIdeogram(size),
+        image_size: mapSizeToIdeogram(size) as 'square_hd' | 'square' | 'portrait_4_3' | 'portrait_16_9' | 'landscape_4_3' | 'landscape_16_9',
         rendering_speed: mapQualityToSpeed(quality),
         style: 'REALISTIC', // Best for ad photography
         num_images: 1,
