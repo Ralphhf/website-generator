@@ -49,10 +49,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine which Kling model to use
+    // v2.6 Pro for image-to-video, v2.5 Turbo Pro for text-to-video (v2.6 text-to-video doesn't exist)
     const isImageToVideo = !!startImageUrl
     const modelId = isImageToVideo
       ? 'fal-ai/kling-video/v2.6/pro/image-to-video'
-      : 'fal-ai/kling-video/v2.6/pro/text-to-video'
+      : 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video'
 
     // Build input based on mode
     const input: Record<string, unknown> = {
@@ -60,15 +61,17 @@ export async function POST(request: NextRequest) {
       duration,
       aspect_ratio: aspectRatio,
       negative_prompt: 'blur, distort, low quality, watermark, text overlay, logo',
-      generate_audio: generateAudio,
     }
 
     if (isImageToVideo) {
+      // v2.6 Pro image-to-video supports audio generation
       input.start_image_url = startImageUrl
+      input.generate_audio = generateAudio
       if (endImageUrl) {
         input.end_image_url = endImageUrl
       }
     }
+    // Note: v2.5 Turbo text-to-video doesn't have generate_audio parameter
 
     // Call Kling via fal.ai
     const result = await fal.subscribe(modelId, {
@@ -119,7 +122,7 @@ export async function POST(request: NextRequest) {
         stored: false,
         warning: 'Video generated but failed to save to storage',
         duration,
-        model: 'kling-v2.6-pro',
+        model: isImageToVideo ? 'kling-v2.6-pro' : 'kling-v2.5-turbo-pro',
         mode: isImageToVideo ? 'image-to-video' : 'text-to-video',
       })
     }
@@ -140,8 +143,8 @@ export async function POST(request: NextRequest) {
         storage_path: fileName,
         duration: duration,
         aspect_ratio: aspectRatio,
-        has_audio: generateAudio,
-        model: 'kling-v2.6-pro',
+        has_audio: isImageToVideo ? generateAudio : false, // Only v2.6 image-to-video has audio
+        model: isImageToVideo ? 'kling-v2.6-pro' : 'kling-v2.5-turbo-pro',
         mode: isImageToVideo ? 'image-to-video' : 'text-to-video',
         source_image_url: startImageUrl || null,
       })
@@ -157,7 +160,7 @@ export async function POST(request: NextRequest) {
       stored: true,
       storagePath: fileName,
       duration,
-      model: 'kling-v2.6-pro',
+      model: isImageToVideo ? 'kling-v2.6-pro' : 'kling-v2.5-turbo-pro',
       mode: isImageToVideo ? 'image-to-video' : 'text-to-video',
     })
 
