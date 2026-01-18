@@ -236,10 +236,12 @@ export function AdCreationSection({
     setSeasonalContent(seasonal)
   }, [businessInfo])
 
-  // Load existing images
+  // Load existing media (images, videos, voiceovers)
   useEffect(() => {
     if (profileId && isExpanded) {
       loadExistingImages()
+      loadExistingVideos()
+      loadExistingVoiceovers()
     }
   }, [profileId, isExpanded])
 
@@ -536,6 +538,48 @@ export function AdCreationSection({
       }
     } catch (error) {
       console.error('Failed to load images:', error)
+    }
+  }
+
+  const loadExistingVideos = async () => {
+    try {
+      const response = await fetch(`/api/generate-ad-video?profileId=${profileId}`)
+      if (response.ok) {
+        const data = await response.json()
+        const videos = (data.videos || []).map((v: { id: string; video_url: string; prompt: string; platform: string; duration: string; storage_path: string; mode: string }) => ({
+          id: v.id,
+          video: v.video_url,
+          prompt: v.prompt,
+          platform: v.platform,
+          duration: v.duration,
+          storagePath: v.storage_path,
+          mode: v.mode,
+        }))
+        setGeneratedVideos(videos)
+      }
+    } catch (error) {
+      console.error('Failed to load videos:', error)
+    }
+  }
+
+  const loadExistingVoiceovers = async () => {
+    try {
+      const response = await fetch(`/api/generate-voiceover?profileId=${profileId}`)
+      if (response.ok) {
+        const data = await response.json()
+        const voiceovers = data.voiceovers || []
+        if (voiceovers.length > 0) {
+          const latest = voiceovers[0]
+          setGeneratedVoiceover({
+            audio: latest.audio_url,
+            voiceUsed: latest.voice_name,
+            characterCount: latest.character_count,
+            storagePath: latest.storage_path,
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load voiceovers:', error)
     }
   }
 
