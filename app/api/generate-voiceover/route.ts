@@ -82,8 +82,8 @@ export async function POST(request: NextRequest) {
       // Calculate required speed to fit in target duration
       // If natural is 14s and target is 10s, speed = 14/10 = 1.4x
       calculatedSpeed = estimatedNaturalDuration / targetDuration
-      // Clamp speed between 0.7 and 1.5 for quality (ElevenLabs supports 0.5-2.0)
-      calculatedSpeed = Math.max(0.7, Math.min(1.5, calculatedSpeed))
+      // Clamp speed between 0.7 and 1.2 (ElevenLabs limit)
+      calculatedSpeed = Math.max(0.7, Math.min(1.2, calculatedSpeed))
     }
 
     // Call ElevenLabs API
