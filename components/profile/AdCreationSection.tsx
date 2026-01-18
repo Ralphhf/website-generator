@@ -1670,41 +1670,52 @@ export function AdCreationSection({
                           {/* Combine Video + Voiceover Instructions */}
                           {generatedVoiceover && (
                             <div className="mt-4 bg-gradient-to-r from-purple-50 to-green-50 rounded-lg p-4 border border-purple-200">
-                              <h4 className="font-medium text-purple-900 flex items-center gap-2 mb-2">
+                              <h4 className="font-medium text-purple-900 flex items-center gap-2 mb-3">
                                 <Layers className="w-4 h-4" />
                                 Combine Video + Voiceover
                               </h4>
-                              <p className="text-sm text-gray-600 mb-3">
-                                Download both files and combine them in a free video editor:
-                              </p>
-                              <div className="flex flex-wrap gap-2 mb-3">
+
+                              {/* Download buttons */}
+                              <div className="flex flex-wrap gap-2 mb-4">
                                 <a
                                   href={generatedVideos[0]?.video}
                                   download="video.mp4"
-                                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-sm hover:bg-purple-200 flex items-center gap-1"
+                                  className="px-4 py-2 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600 flex items-center gap-2 font-medium"
                                 >
-                                  <Download className="w-3 h-3" />
-                                  Video (.mp4)
+                                  <Download className="w-4 h-4" />
+                                  1. Download Video
                                 </a>
                                 <a
                                   href={generatedVoiceover.audio}
                                   download="voiceover.mp3"
-                                  className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 flex items-center gap-1"
+                                  className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 flex items-center gap-2 font-medium"
                                 >
-                                  <Download className="w-3 h-3" />
-                                  Voiceover (.mp3)
+                                  <Download className="w-4 h-4" />
+                                  2. Download Voiceover
+                                </a>
+                                <a
+                                  href="https://www.capcut.com/editor?enter_from=logo"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 flex items-center gap-2 font-medium"
+                                >
+                                  <ExternalLink className="w-4 h-4" />
+                                  3. Open CapCut Editor
                                 </a>
                               </div>
-                              <div className="flex gap-3 text-xs">
-                                <a href="https://www.capcut.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
-                                  <ExternalLink className="w-3 h-3" /> CapCut (Free)
-                                </a>
-                                <a href="https://www.descript.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
-                                  <ExternalLink className="w-3 h-3" /> Descript (Free)
-                                </a>
-                                <a href="https://www.canva.com/video-editor" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
-                                  <ExternalLink className="w-3 h-3" /> Canva (Free)
-                                </a>
+
+                              {/* Steps */}
+                              <div className="bg-white rounded-lg p-3 text-sm">
+                                <p className="font-medium text-gray-700 mb-2">Quick Steps in CapCut (Free, ~2 min):</p>
+                                <ol className="space-y-1 text-gray-600 list-decimal list-inside">
+                                  <li>Click &quot;New Project&quot; in CapCut</li>
+                                  <li>Upload your video file (.mp4)</li>
+                                  <li>Upload your voiceover file (.mp3)</li>
+                                  <li>Drag video to timeline</li>
+                                  <li>Drag audio below video on timeline</li>
+                                  <li>Click video → mute original audio (speaker icon)</li>
+                                  <li>Export → Download your final video</li>
+                                </ol>
                               </div>
                             </div>
                           )}
