@@ -20,7 +20,9 @@ interface GenerateImageRequest {
 }
 
 // Map DALL-E sizes to Ideogram image_size
-function mapSizeToIdeogram(size: string): string {
+type IdeogramSize = 'square_hd' | 'square' | 'portrait_4_3' | 'portrait_16_9' | 'landscape_4_3' | 'landscape_16_9'
+
+function mapSizeToIdeogram(size: string): IdeogramSize {
   switch (size) {
     case '1792x1024':
       return 'landscape_16_9'
