@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
+import { fal } from '@fal-ai/client'
 
 export const maxDuration = 60 // Allow up to 60 seconds for image generation
+
+// Configure fal.ai with API key
+const falKey = process.env.FAL_KEY
+if (falKey) {
+  fal.config({ credentials: falKey })
+}
 
 interface GenerateImageRequest {
   prompt: string
@@ -12,10 +19,34 @@ interface GenerateImageRequest {
   style?: 'vivid' | 'natural'
 }
 
+// Map DALL-E sizes to Ideogram image_size
+function mapSizeToIdeogram(size: string): string {
+  switch (size) {
+    case '1792x1024':
+      return 'landscape_16_9'
+    case '1024x1792':
+      return 'portrait_16_9'
+    case '1024x1024':
+    default:
+      return 'square_hd'
+  }
+}
+
+// Map quality to Ideogram rendering_speed
+function mapQualityToSpeed(quality: string): 'TURBO' | 'BALANCED' | 'QUALITY' {
+  switch (quality) {
+    case 'standard':
+      return 'TURBO'
+    case 'hd':
+    default:
+      return 'BALANCED'
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateImageRequest = await request.json()
-    const { prompt, profileId, platform, size = '1024x1024', quality = 'hd', style = 'natural' } = body
+    const { prompt, profileId, platform, size = '1024x1024', quality = 'hd' } = body
 
     if (!prompt) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })
@@ -25,44 +56,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Profile ID is required' }, { status: 400 })
     }
 
-    const openaiKey = process.env.OPENAI_API_KEY
-    if (!openaiKey) {
-      return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 })
+    if (!falKey) {
+      return NextResponse.json({ error: 'FAL_KEY not configured. Add FAL_KEY to your .env.local file.' }, { status: 500 })
     }
 
-    // Call DALL-E 3 API
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'dall-e-3',
+    // Call Ideogram V3 via fal.ai
+    const result = await fal.subscribe('fal-ai/ideogram/v3', {
+      input: {
         prompt: prompt,
-        n: 1,
-        size: size,
-        quality: quality,
-        style: style,
-        response_format: 'b64_json',
-      }),
+        image_size: mapSizeToIdeogram(size),
+        rendering_speed: mapQualityToSpeed(quality),
+        style: 'REALISTIC', // Best for ad photography
+        num_images: 1,
+        expand_prompt: false, // We already have optimized prompts from Claude
+      },
     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      console.error('DALL-E API error:', errorData)
-      return NextResponse.json(
-        { error: errorData.error?.message || 'Failed to generate image' },
-        { status: response.status }
-      )
+    const imageUrl = result.data.images[0]?.url
+    if (!imageUrl) {
+      return NextResponse.json({ error: 'No image generated' }, { status: 500 })
     }
 
-    const data = await response.json()
-    const imageBase64 = data.data[0].b64_json
-    const revisedPrompt = data.data[0].revised_prompt
-
-    // Convert base64 to buffer for Supabase storage
-    const imageBuffer = Buffer.from(imageBase64, 'base64')
+    // Download image from fal.ai URL to upload to Supabase
+    const imageResponse = await fetch(imageUrl)
+    if (!imageResponse.ok) {
+      throw new Error('Failed to download generated image')
+    }
+    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer())
     const fileName = `${profileId}/${platform}-${Date.now()}.png`
 
     // Upload to Supabase Storage
@@ -79,7 +99,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('ad-images')
       .upload(fileName, imageBuffer, {
         contentType: 'image/png',
@@ -91,9 +111,8 @@ export async function POST(request: NextRequest) {
       // Still return the image even if storage fails
       return NextResponse.json({
         success: true,
-        image: `data:image/png;base64,${imageBase64}`,
+        image: imageUrl, // Return fal.ai URL directly
         stored: false,
-        revisedPrompt,
         warning: 'Image generated but failed to save to storage',
       })
     }
@@ -110,12 +129,12 @@ export async function POST(request: NextRequest) {
         profile_id: profileId,
         platform: platform,
         prompt: prompt,
-        revised_prompt: revisedPrompt,
+        revised_prompt: null, // Ideogram doesn't revise prompts
         image_url: publicUrl,
         storage_path: fileName,
         size: size,
         quality: quality,
-        style: style,
+        style: 'ideogram-v3', // Track which model was used
       })
 
     if (dbError) {
@@ -127,8 +146,8 @@ export async function POST(request: NextRequest) {
       success: true,
       image: publicUrl,
       stored: true,
-      revisedPrompt,
       storagePath: fileName,
+      model: 'ideogram-v3',
     })
 
   } catch (error) {

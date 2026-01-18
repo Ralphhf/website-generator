@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       ? formatPreset.formats.find(f => f.name === imageFormat)
       : formatPreset.formats.find(f => f.name === formatPreset.recommended)
 
-    // Build the expert prompt
+    // Build the expert prompt for Ideogram
     const systemPrompt = `You are a senior creative director at a top-tier social media marketing agency with 30+ years of experience, updated for 2026 trends. You specialize in creating scroll-stopping visual concepts for paid social advertising.
 
 Your expertise includes:
@@ -76,7 +76,16 @@ You understand that different platforms have different visual languages:
 - YouTube: Thumbnail-optimized, high contrast, expressive faces
 - Google: Clean, professional, benefit-focused imagery
 
-Your job is to create DALL-E image prompts that generate visuals which STOP THE SCROLL and feel native to each platform.`
+Your job is to create IDEOGRAM image prompts that generate visuals which STOP THE SCROLL and feel native to each platform.
+
+IDEOGRAM PROMPT BEST PRACTICES (CRITICAL):
+1. Be PRECISE - avoid vague adjectives like "beautiful", "nice", "interesting", "cool"
+2. Use SPECIFIC visual details - exact colors, materials, lighting conditions
+3. Include FRAMING CUES - "close-up", "full-body", "wide shot", "head and shoulders"
+4. For any TEXT in the image, put it in "quotation marks" - Ideogram excels at text rendering
+5. Specify style using known techniques: "professional photography", "editorial style", "cinematic lighting"
+6. Keep prompts STRUCTURED and DIRECT - lead with the most important elements
+7. Avoid conflicting information in the same prompt`
 
     const promptTypeDescriptions: Record<string, string> = {
       hero: 'The main brand hero shot - showcases the business owner, team, or signature service in an aspirational yet authentic way. This is the "face" of the brand.',
@@ -85,7 +94,7 @@ Your job is to create DALL-E image prompts that generate visuals which STOP THE 
       testimonial: 'Customer-focused imagery - happy customer, transformation result, before/after, social proof moment. Builds trust and desire.',
     }
 
-    const userPrompt = `Create a DALL-E image prompt for this business:
+    const userPrompt = `Create an IDEOGRAM image prompt for this business:
 
 ====================================
 BUSINESS INFORMATION
@@ -129,7 +138,7 @@ Visual elements: ${scrollStopDetails.visualElements.join(', ')}
 ====================================
 YOUR TASK
 ====================================
-Generate a detailed DALL-E prompt that:
+Generate a detailed IDEOGRAM prompt that:
 
 1. Is SPECIFICALLY tailored to "${businessType}" offering "${services.length > 0 ? services.join(', ') : 'their services'}"
    - Include industry-specific details, tools, environments, and actions
@@ -149,24 +158,30 @@ Generate a detailed DALL-E prompt that:
    - Clear focal point
    - Emotional resonance
 
-4. Is technically executable by DALL-E
-   - Specific, concrete visual descriptions
-   - No text or logos (DALL-E struggles with these)
-   - Realistic photographic style unless otherwise specified
+4. Is optimized for IDEOGRAM
+   - PRECISE visual descriptions (no vague adjectives)
+   - Include FRAMING (close-up, full-body, wide shot, etc.)
+   - Ideogram EXCELS at text - if a headline or CTA would help, include it in "quotation marks"
+   - Specify lighting: "golden hour", "soft natural light", "dramatic studio lighting"
+   - Specify camera angle: "eye-level", "low angle", "overhead shot"
 
 FORMAT YOUR RESPONSE AS JSON:
 {
-  "prompt": "The complete DALL-E prompt (200-400 words, highly detailed)",
+  "prompt": "The complete Ideogram prompt (150-300 words, precise and structured)",
   "visualConcept": "One sentence describing the core visual idea",
   "whyItWorks": "One sentence on why this will perform on ${platform}",
   "scrollStopElement": "The specific element that stops the scroll"
 }
 
+IDEOGRAM PROMPT STRUCTURE TO FOLLOW:
+[Subject] + [Action/Pose] + [Setting/Environment] + [Lighting] + [Camera angle/framing] + [Style] + [Optional: "Text in quotes"]
+
 IMPORTANT:
 - The prompt must be SPECIFIC to the services listed: ${services.length > 0 ? services.join(', ') : businessType}
-- Do NOT use generic "professional" or "technician" language
-- Show the ACTUAL work this business does
-- Include specific tools, materials, environments, and actions for this industry`
+- Do NOT use vague words like "beautiful", "nice", "professional" - be SPECIFIC
+- Show the ACTUAL work this business does with PRECISE details
+- Include specific tools, materials, environments, and actions for this industry
+- If adding text would make the ad more effective, include a short headline or CTA in "quotes"`
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',

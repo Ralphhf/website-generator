@@ -1130,7 +1130,7 @@ export function AdCreationSection({
                     {/* Full Prompt (collapsed) */}
                     <details className="group">
                       <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
-                        View full DALL-E prompt
+                        View full Ideogram prompt
                       </summary>
                       <p className="text-xs text-gray-600 whitespace-pre-wrap mt-2 p-2 bg-white rounded border max-h-40 overflow-y-auto">
                         {dynamicPrompt.prompt}
@@ -1153,12 +1153,12 @@ export function AdCreationSection({
                 {isGeneratingImage ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Generating with DALL-E 3... (30-60s)
+                    Generating with Ideogram... (15-30s)
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5" />
-                    Generate {PLATFORM_SPECS[selectedPlatform].name} Ad Image (~$0.08)
+                    Generate {PLATFORM_SPECS[selectedPlatform].name} Ad Image (~$0.06)
                   </>
                 )}
               </button>
