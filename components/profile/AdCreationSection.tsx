@@ -396,7 +396,7 @@ export function AdCreationSection({
       if (data.success) {
         setGeneratedImages(prev => [{
           image: data.image,
-          prompt: promptToUse,
+          prompt: promptToUse || '',
           revisedPrompt: data.revisedPrompt,
           platform: selectedPlatform,
           storagePath: data.storagePath,
