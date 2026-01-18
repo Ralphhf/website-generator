@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
     // Get UGC style details if selected
     const ugcDetails = ugcStyle ? UGC_STYLES[ugcStyle as keyof typeof UGC_STYLES] : null
 
-    // Get scroll-stop technique details if selected
-    const scrollStopDetails = scrollStopTechnique ? SCROLL_STOP_TECHNIQUES[scrollStopTechnique as keyof typeof SCROLL_STOP_TECHNIQUES] : null
+    // Get scroll-stop technique details if selected (techniques are nested under 'visual')
+    const scrollStopDetails = scrollStopTechnique ? SCROLL_STOP_TECHNIQUES.visual[scrollStopTechnique as keyof typeof SCROLL_STOP_TECHNIQUES.visual] : null
 
     // Image format info
     const selectedFormat = imageFormat
