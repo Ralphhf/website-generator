@@ -2571,6 +2571,617 @@ const SERVICE_VISUAL_MAPPING: Record<string, ServiceVisual> = {
     transformation: 'from destructive waterfall to controlled drainage protecting your home',
   },
 
+  // ===== JEWELRY & RETAIL =====
+  'jewelry_custom': {
+    keywords: ['custom jewelry', 'jewelry design', 'custom ring', 'bespoke jewelry', 'custom necklace', 'jewelry maker'],
+    hero: {
+      action: 'master jeweler examining gemstone with loupe',
+      equipment: 'jewelers loupe, precision tools, gemstones in velvet tray',
+      setting: 'elegant jewelry workshop with warm lighting, display cases visible',
+    },
+    service: {
+      action: 'skilled hands setting a brilliant diamond into custom gold setting',
+      details: 'precision prongs, sparkling gemstone, magnified detail work',
+      tools: 'jewelers loupe, setting tools, polishing cloth, tweezers',
+      result: 'stunning one-of-a-kind piece gleaming under display lighting',
+    },
+    broll: ['rough sketch to CAD design', 'gemstone selection', 'metalwork in progress', 'setting the stone', 'customer seeing finished piece'],
+    painPoint: 'can\'t find unique jewelry that matches their vision',
+    transformation: 'from idea sketch to breathtaking custom piece they\'ll treasure forever',
+  },
+  'jewelry_repair': {
+    keywords: ['jewelry repair', 'ring repair', 'ring resize', 'jewelry restoration', 'fix jewelry', 'broken necklace'],
+    hero: {
+      action: 'jeweler carefully examining damaged piece under magnification',
+      equipment: 'repair station with precision tools, magnifying lamp',
+      setting: 'professional jewelry repair bench',
+    },
+    service: {
+      action: 'delicate soldering work restoring broken chain link',
+      details: 'micro-flame torch, precision clamps, before/after comparison',
+      tools: 'micro torch, pliers, polishing wheel, sizing mandrel',
+      result: 'restored jewelry piece looking brand new, gleaming',
+    },
+    broll: ['broken piece close-up', 'repair process', 'polishing', 'quality inspection', 'happy customer reunion with heirloom'],
+    painPoint: 'treasured jewelry broken, sentimental piece damaged',
+    transformation: 'from heartbroken over damaged heirloom to restored family treasure',
+  },
+  'watch_service': {
+    keywords: ['watch repair', 'watch service', 'watch battery', 'watch restoration', 'timepiece', 'watchmaker'],
+    hero: {
+      action: 'watchmaker with precision tools examining luxury timepiece',
+      equipment: 'watchmaker magnifying visor, precision screwdrivers, movement holder',
+      setting: 'pristine watch repair station with organized tools',
+    },
+    service: {
+      action: 'hands carefully adjusting tiny watch movement components',
+      details: 'exposed watch mechanism, micro tools, dust-free environment',
+      tools: 'precision screwdrivers, movement holder, cleaning solution, timing machine',
+      result: 'perfectly running timepiece, smooth sweep of second hand',
+    },
+    broll: ['watch caseback removal', 'movement inspection', 'cleaning process', 'timing calibration', 'satisfied customer checking time'],
+    painPoint: 'beloved watch stopped working, family heirloom needs service',
+    transformation: 'from stopped timepiece to perfectly running precision instrument',
+  },
+
+  // ===== RESTAURANT & FOOD =====
+  'catering': {
+    keywords: ['catering', 'catering service', 'event catering', 'wedding catering', 'corporate catering', 'food catering'],
+    hero: {
+      action: 'executive chef presenting elegant catering spread',
+      equipment: 'gleaming chafing dishes, beautiful food displays, chef whites',
+      setting: 'elegant event venue with stunning food station',
+    },
+    service: {
+      action: 'chef hands plating exquisite appetizers with artistic precision',
+      details: 'colorful fresh ingredients, garnish details, steam rising from hot dishes',
+      tools: 'plating tweezers, squeeze bottles, chef knife, serving platters',
+      result: 'magazine-worthy catering display with guests admiring',
+    },
+    broll: ['kitchen prep action', 'food transport setup', 'venue arrangement', 'guests enjoying food', 'empty plates testament'],
+    painPoint: 'stressing over feeding guests at important event',
+    transformation: 'from event food anxiety to guests raving about the incredible spread',
+  },
+  'private_chef': {
+    keywords: ['private chef', 'personal chef', 'in-home chef', 'private cook', 'meal prep chef'],
+    hero: {
+      action: 'chef cooking in luxurious home kitchen for clients',
+      equipment: 'professional knife set, premium ingredients, chef coat',
+      setting: 'beautiful modern home kitchen, clients visible in background',
+    },
+    service: {
+      action: 'chef flambéing dish in client\'s kitchen, flames dancing',
+      details: 'fresh premium ingredients, restaurant technique at home',
+      tools: 'professional knives, copper pans, fresh herbs, plating ring',
+      result: 'restaurant-quality plated dish served at home dining table',
+    },
+    broll: ['grocery shopping for client', 'kitchen prep', 'cooking action shot', 'beautiful plating', 'family enjoying meal together'],
+    painPoint: 'no time to cook quality meals, want restaurant experience at home',
+    transformation: 'from takeout routine to restaurant-quality dining in your own home',
+  },
+  'bakery': {
+    keywords: ['bakery', 'baker', 'custom cakes', 'wedding cake', 'pastry', 'cupcakes', 'bread', 'baked goods'],
+    hero: {
+      action: 'baker decorating stunning multi-tier cake',
+      equipment: 'piping bags, fondant tools, decorated cakes on display',
+      setting: 'charming bakery with display cases of beautiful pastries',
+    },
+    service: {
+      action: 'hands piping intricate frosting details on custom cake',
+      details: 'smooth fondant, delicate sugar flowers, perfect layers',
+      tools: 'turntable, piping tips, offset spatula, fondant tools',
+      result: 'breathtaking custom cake ready for celebration',
+    },
+    broll: ['dough mixing', 'oven reveal', 'decorating process', 'display case beauty shots', 'customer picking up cake with joy'],
+    painPoint: 'need perfect cake for special occasion, grocery store won\'t cut it',
+    transformation: 'from worrying about the cake to stunning centerpiece everyone photographs',
+  },
+  'food_truck': {
+    keywords: ['food truck', 'mobile food', 'street food', 'food trailer'],
+    hero: {
+      action: 'chef serving excited customer from colorful food truck window',
+      equipment: 'vibrant food truck exterior, menu board, serving window',
+      setting: 'busy street or event with line of eager customers',
+    },
+    service: {
+      action: 'hands assembling signature dish in compact food truck kitchen',
+      details: 'sizzling grill, fresh toppings, efficient small-space cooking',
+      tools: 'flat top grill, squeeze bottles, serving containers, menu board',
+      result: 'delicious street food handed to happy customer through window',
+    },
+    broll: ['truck arriving at location', 'kitchen action', 'food assembly', 'happy customers eating', 'social media-worthy food shot'],
+    painPoint: 'boring lunch options, craving something unique and delicious',
+    transformation: 'from sad desk lunch to amazing street food experience',
+  },
+
+  // ===== AUTO SERVICES =====
+  'auto_repair': {
+    keywords: ['auto repair', 'car repair', 'mechanic', 'auto mechanic', 'car mechanic', 'automotive repair'],
+    hero: {
+      action: 'master mechanic diagnosing engine with advanced equipment',
+      equipment: 'diagnostic scanner, professional tools, lift in background',
+      setting: 'clean professional auto shop with car on lift',
+    },
+    service: {
+      action: 'mechanic hands working on engine compartment with precision',
+      details: 'clean engine bay, proper tools, diagnostic screen showing data',
+      tools: 'diagnostic scanner, torque wrench, socket set, work light',
+      result: 'car running perfectly, dashboard lights all clear',
+    },
+    broll: ['car pulling in', 'diagnostic hookup', 'repair work', 'test drive', 'keys handed back to relieved customer'],
+    painPoint: 'check engine light on, strange noise from car, worried about repair costs',
+    transformation: 'from breakdown anxiety to reliable car running like new',
+  },
+  'auto_detailing': {
+    keywords: ['auto detailing', 'car detailing', 'car wash', 'mobile detailing', 'paint correction', 'ceramic coating'],
+    hero: {
+      action: 'detailer polishing luxury car to mirror finish',
+      equipment: 'dual-action polisher, microfiber towels, premium products',
+      setting: 'garage with immaculate car gleaming under lights',
+    },
+    service: {
+      action: 'hands applying ceramic coating with perfect technique',
+      details: 'swirl-free paint, water beading, mirror reflection',
+      tools: 'DA polisher, foam cannon, clay bar, ceramic coating kit',
+      result: 'showroom-perfect car with paint reflecting like glass',
+    },
+    broll: ['dirty car "before"', 'foam cannon coverage', 'paint correction passes', 'interior detail', '50/50 comparison shot'],
+    painPoint: 'car looks tired and neglected, embarrassed of vehicle appearance',
+    transformation: 'from embarrassing daily driver to head-turning showroom finish',
+  },
+
+  // ===== BEAUTY & WELLNESS =====
+  'hair_salon': {
+    keywords: ['hair salon', 'hairstylist', 'hair stylist', 'haircut', 'hair color', 'balayage', 'hair'],
+    hero: {
+      action: 'stylist creating stunning hair transformation',
+      equipment: 'professional styling tools, color bowls, modern salon chair',
+      setting: 'chic modern salon with great lighting and mirrors',
+    },
+    service: {
+      action: 'hands applying balayage highlights with expert technique',
+      details: 'foil placement, color melting, perfect sectioning',
+      tools: 'color brush, foils, shears, blow dryer, flat iron',
+      result: 'gorgeous finished hairstyle, client admiring in mirror',
+    },
+    broll: ['consultation moment', 'color application', 'cutting technique', 'styling reveal', 'happy client selfie'],
+    painPoint: 'hair looks dated, bad haircut elsewhere, need a change',
+    transformation: 'from dull and lifeless to stunning head-turning hair',
+  },
+  'barber': {
+    keywords: ['barber', 'barbershop', 'mens haircut', 'fade', 'beard trim', 'mens grooming'],
+    hero: {
+      action: 'barber executing perfect fade with clippers',
+      equipment: 'professional clippers, straight razor, barber cape',
+      setting: 'classic barbershop with leather chairs and mirrors',
+    },
+    service: {
+      action: 'precise clipper work creating seamless fade',
+      details: 'clean lines, sharp edges, perfect gradient',
+      tools: 'Wahl clippers, straight razor, hot towel, pomade',
+      result: 'fresh sharp haircut, clean lines, styled perfectly',
+    },
+    broll: ['cape going on', 'clipper work', 'hot towel treatment', 'line up detail', 'customer checking all angles satisfied'],
+    painPoint: 'can\'t find a barber who gets the cut right',
+    transformation: 'from grown out mess to sharp fresh cut that boosts confidence',
+  },
+  'nail_salon': {
+    keywords: ['nail salon', 'nails', 'manicure', 'pedicure', 'nail art', 'gel nails', 'acrylics'],
+    hero: {
+      action: 'nail artist creating intricate nail design',
+      equipment: 'nail art brushes, gel polishes, LED lamp',
+      setting: 'clean modern nail salon station',
+    },
+    service: {
+      action: 'detailed brush work creating stunning nail art',
+      details: 'perfect polish application, intricate designs, glossy finish',
+      tools: 'fine art brushes, gel polish, nail file, LED lamp',
+      result: 'flawless finished nails with intricate design',
+    },
+    broll: ['nail prep', 'color selection', 'application process', 'art details', 'hands posed showing finished nails'],
+    painPoint: 'nails look unkempt, want beautiful nails for event',
+    transformation: 'from chipped and neglected to stunning Instagram-worthy nails',
+  },
+  'spa_massage': {
+    keywords: ['spa', 'massage', 'massage therapy', 'facial', 'wellness', 'relaxation', 'day spa'],
+    hero: {
+      action: 'massage therapist preparing tranquil treatment room',
+      equipment: 'massage table with clean linens, candles, oils',
+      setting: 'serene spa environment with soft lighting and plants',
+    },
+    service: {
+      action: 'therapist hands performing relaxing massage technique',
+      details: 'warm oil, smooth stones, peaceful atmosphere',
+      tools: 'massage oils, hot stones, aromatherapy diffuser, warm towels',
+      result: 'deeply relaxed client in complete tranquility',
+    },
+    broll: ['spa welcome area', 'treatment room ambiance', 'massage in progress', 'facial application', 'relaxed client post-treatment'],
+    painPoint: 'stressed, tense, desperately needs relaxation',
+    transformation: 'from stressed and tense to completely relaxed and renewed',
+  },
+  'personal_training': {
+    keywords: ['personal trainer', 'personal training', 'fitness trainer', 'fitness coach', 'gym trainer', 'workout'],
+    hero: {
+      action: 'trainer motivating client during intense workout',
+      equipment: 'dumbbells, kettlebells, resistance bands',
+      setting: 'modern gym or private training studio',
+    },
+    service: {
+      action: 'trainer guiding client through perfect squat form',
+      details: 'proper form demonstration, encouraging expression, focused client',
+      tools: 'weights, resistance bands, exercise mat, timer',
+      result: 'client completing workout with triumphant expression, sweaty and accomplished',
+    },
+    broll: ['client arrival', 'warm-up routine', 'training intensity', 'form correction', 'post-workout high-five'],
+    painPoint: 'can\'t stick to workout routine, not seeing results, don\'t know what to do at gym',
+    transformation: 'from gym-intimidated to confident and getting real results',
+  },
+
+  // ===== SIDE HUSTLES & FREELANCERS =====
+  'dj': {
+    keywords: ['dj', 'disc jockey', 'wedding dj', 'event dj', 'party dj', 'mobile dj'],
+    hero: {
+      action: 'DJ commanding the decks at packed event',
+      equipment: 'professional DJ controller, laptop, headphones around neck',
+      setting: 'event venue with dance floor, lighting effects',
+    },
+    service: {
+      action: 'hands on mixer adjusting levels, crowd visible dancing',
+      details: 'LED controller lights, waveforms on screen, crowd energy',
+      tools: 'DJ controller, mixer, professional speakers, lighting rig',
+      result: 'packed dance floor, hands in air, everyone having the time of their life',
+    },
+    broll: ['equipment setup', 'sound check', 'first dance moment', 'crowd going wild', 'bride/host thanking DJ'],
+    painPoint: 'worried music will kill the party vibe, bad DJ horror stories',
+    transformation: 'from empty dance floor fear to non-stop party everyone talks about',
+  },
+  'photographer': {
+    keywords: ['photographer', 'photography', 'wedding photographer', 'portrait photographer', 'photo shoot', 'photos'],
+    hero: {
+      action: 'photographer capturing perfect moment with professional camera',
+      equipment: 'DSLR or mirrorless camera, professional lens, camera strap',
+      setting: 'on location at beautiful shoot setting',
+    },
+    service: {
+      action: 'photographer directing subject for perfect composition',
+      details: 'natural lighting, decisive moment capture, professional technique',
+      tools: 'professional camera body, portrait lens, reflector, light meter',
+      result: 'stunning photograph displayed on camera back screen',
+    },
+    broll: ['gear preparation', 'scouting location', 'directing subjects', 'capturing the shot', 'client viewing images with excitement'],
+    painPoint: 'phone photos don\'t do justice, important moments deserve professional quality',
+    transformation: 'from blurry phone pics to stunning professional images they\'ll treasure',
+  },
+  'videographer': {
+    keywords: ['videographer', 'video production', 'wedding videographer', 'video', 'filmmaker', 'cinematographer'],
+    hero: {
+      action: 'videographer operating gimbal capturing cinematic footage',
+      equipment: 'cinema camera on gimbal, wireless monitor, professional audio',
+      setting: 'dynamic shoot location with crew visible',
+    },
+    service: {
+      action: 'smooth gimbal movement capturing subject in cinematic style',
+      details: 'shallow depth of field, professional movement, perfect focus',
+      tools: 'gimbal stabilizer, cinema camera, wireless follow focus, drone',
+      result: 'cinematic frame on monitor looking like a movie',
+    },
+    broll: ['gear setup', 'drone takeoff', 'gimbal shot in motion', 'director reviewing footage', 'emotional client watching final film'],
+    painPoint: 'important event deserves more than shaky phone video',
+    transformation: 'from amateur footage to cinematic film they\'ll watch for years',
+  },
+  'artist_painter': {
+    keywords: ['artist', 'painter', 'custom art', 'commission', 'portrait artist', 'muralist', 'fine art'],
+    hero: {
+      action: 'artist working on stunning piece in studio',
+      equipment: 'easel with canvas, paint palette, brushes',
+      setting: 'creative art studio with works in progress visible',
+    },
+    service: {
+      action: 'artist hand adding detail brushstroke to commissioned piece',
+      details: 'vibrant colors, careful technique, emerging masterpiece',
+      tools: 'quality brushes, oil or acrylic paints, palette knife, easel',
+      result: 'finished commissioned artwork, stunning and personal',
+    },
+    broll: ['blank canvas start', 'underpainting', 'detail work', 'artist stepping back to review', 'client seeing finished piece'],
+    painPoint: 'want unique art, not mass-produced prints',
+    transformation: 'from empty wall to stunning original artwork with personal meaning',
+  },
+  'graphic_designer': {
+    keywords: ['graphic designer', 'logo design', 'branding', 'graphic design', 'brand design', 'designer'],
+    hero: {
+      action: 'designer working on branding project on large monitor',
+      equipment: 'iMac or design workstation, drawing tablet, dual monitors',
+      setting: 'creative office or studio with inspiration boards',
+    },
+    service: {
+      action: 'designer refining logo on screen with precision',
+      details: 'vector artwork, color palette, typography selection',
+      tools: 'Adobe Creative Suite, drawing tablet, color swatches, brand guidelines',
+      result: 'polished brand identity displayed across mockups',
+    },
+    broll: ['sketching concepts', 'digital refinement', 'color exploration', 'mockup creation', 'client brand launch'],
+    painPoint: 'DIY logo looks amateur, brand doesn\'t stand out',
+    transformation: 'from forgettable amateur branding to professional identity that commands respect',
+  },
+  'music_lessons': {
+    keywords: ['music lessons', 'music teacher', 'guitar lessons', 'piano lessons', 'vocal coach', 'singing lessons'],
+    hero: {
+      action: 'instructor teaching student on instrument',
+      equipment: 'quality instrument, music stand, teaching materials',
+      setting: 'professional music studio or lesson room',
+    },
+    service: {
+      action: 'teacher guiding student\'s hand position on instrument',
+      details: 'patient instruction, breakthrough moment, sheet music visible',
+      tools: 'instrument, metronome, music stand, learning books',
+      result: 'student playing successfully, proud accomplishment expression',
+    },
+    broll: ['student arriving nervous', 'technique demonstration', 'practice together', 'breakthrough moment', 'student performing confidently'],
+    painPoint: 'always wanted to play, YouTube tutorials aren\'t working',
+    transformation: 'from dreaming about playing to actually performing music',
+  },
+  'tutor': {
+    keywords: ['tutor', 'tutoring', 'math tutor', 'test prep', 'sat prep', 'academic tutor'],
+    hero: {
+      action: 'tutor explaining concept to student having aha moment',
+      equipment: 'textbooks, laptop, whiteboard, study materials',
+      setting: 'clean study environment, library or home office',
+    },
+    service: {
+      action: 'tutor drawing diagram that makes concept click for student',
+      details: 'clear explanation, student engagement, problem solved',
+      tools: 'whiteboard, textbooks, practice problems, laptop',
+      result: 'student confidently solving problem independently',
+    },
+    broll: ['diagnostic assessment', 'concept explanation', 'practice problems', 'test preparation', 'student celebrating grade improvement'],
+    painPoint: 'struggling in class, grades slipping, test anxiety',
+    transformation: 'from failing and frustrated to confident and succeeding',
+  },
+  'life_coach': {
+    keywords: ['life coach', 'business coach', 'coaching', 'mentor', 'executive coach', 'career coach'],
+    hero: {
+      action: 'coach in engaged conversation with client',
+      equipment: 'notebook, professional setting, warm demeanor',
+      setting: 'comfortable office or upscale coffee meeting space',
+    },
+    service: {
+      action: 'coach and client in breakthrough conversation moment',
+      details: 'active listening, powerful questions, visible insight',
+      tools: 'coaching frameworks, goal worksheets, notebook, timer',
+      result: 'client with clarity and determination, action plan in hand',
+    },
+    broll: ['initial consultation', 'deep conversation', 'whiteboarding goals', 'action planning', 'client achieving milestone'],
+    painPoint: 'feeling stuck, unclear direction, not reaching potential',
+    transformation: 'from stuck and confused to clear vision and taking action',
+  },
+  'content_creator': {
+    keywords: ['content creator', 'influencer', 'social media manager', 'youtube', 'tiktok creator', 'creator'],
+    hero: {
+      action: 'creator filming content with professional setup',
+      equipment: 'ring light, camera on tripod, microphone, backdrop',
+      setting: 'aesthetic content creation studio or lifestyle setting',
+    },
+    service: {
+      action: 'creator presenting to camera with engaging energy',
+      details: 'perfect lighting, professional audio, branded background',
+      tools: 'camera, ring light, lavalier mic, editing software',
+      result: 'polished video content ready to post, analytics showing growth',
+    },
+    broll: ['studio setup', 'filming in action', 'editing process', 'posting content', 'engagement notifications'],
+    painPoint: 'business needs social presence, don\'t know how to create content',
+    transformation: 'from invisible online to engaged following and real business results',
+  },
+
+  // ===== HOME & LIFESTYLE SERVICES =====
+  'cleaning_service': {
+    keywords: ['cleaning', 'house cleaning', 'maid service', 'cleaning service', 'home cleaning', 'deep cleaning'],
+    hero: {
+      action: 'professional cleaner in uniform with supplies',
+      equipment: 'professional cleaning caddy, eco-friendly products',
+      setting: 'sparkling clean home interior',
+    },
+    service: {
+      action: 'thorough cleaning of surfaces with attention to detail',
+      details: 'streak-free surfaces, organized products, systematic approach',
+      tools: 'microfiber cloths, eco-friendly cleaners, vacuum, mop',
+      result: 'immaculate home, surfaces gleaming, everything in place',
+    },
+    broll: ['arrival with supplies', 'kitchen deep clean', 'bathroom transformation', 'final walkthrough', 'homeowner enjoying clean space'],
+    painPoint: 'no time to clean, home embarrassingly messy, company coming',
+    transformation: 'from cluttered chaos to spotless sanctuary',
+  },
+  'landscaping': {
+    keywords: ['landscaping', 'lawn care', 'landscape design', 'gardening', 'yard work', 'lawn service'],
+    hero: {
+      action: 'landscaper surveying beautiful completed yard',
+      equipment: 'professional mower, trimmer, work gloves',
+      setting: 'stunning manicured lawn and garden',
+    },
+    service: {
+      action: 'creating perfect edge along walkway with precision trimmer',
+      details: 'crisp lines, healthy grass, defined borders',
+      tools: 'commercial mower, string trimmer, edger, blower',
+      result: 'magazine-worthy yard with perfect stripes and edges',
+    },
+    broll: ['overgrown "before"', 'mowing in progress', 'edging detail', 'planting flowers', 'drone shot of finished property'],
+    painPoint: 'embarrassing yard, no time for lawn care, HOA complaints',
+    transformation: 'from neighborhood eyesore to best yard on the block',
+  },
+  'pool_service': {
+    keywords: ['pool service', 'pool cleaning', 'pool maintenance', 'pool repair', 'swimming pool'],
+    hero: {
+      action: 'pool tech testing crystal clear water',
+      equipment: 'test kit, pool pole, chemical kit',
+      setting: 'sparkling blue swimming pool',
+    },
+    service: {
+      action: 'testing and balancing pool chemistry to perfection',
+      details: 'crystal clear water, test vials, chemical adjustments',
+      tools: 'test kit, pool vacuum, skimmer, chemical balance kit',
+      result: 'pristine pool water, inviting and safe for swimming',
+    },
+    broll: ['green pool "before"', 'debris removal', 'chemical testing', 'equipment check', 'family enjoying crystal clear pool'],
+    painPoint: 'green murky pool, don\'t understand chemistry, unusable pool',
+    transformation: 'from swamp to crystal clear resort-style pool',
+  },
+  'pest_control': {
+    keywords: ['pest control', 'exterminator', 'bug control', 'termite', 'rodent control', 'pest'],
+    hero: {
+      action: 'technician inspecting home perimeter professionally',
+      equipment: 'treatment sprayer, inspection tools, uniform',
+      setting: 'residential home exterior',
+    },
+    service: {
+      action: 'applying targeted treatment to problem area',
+      details: 'precise application, safety equipment, thorough coverage',
+      tools: 'professional sprayer, inspection flashlight, treatment products',
+      result: 'pest-free home, family relieved, prevention barrier in place',
+    },
+    broll: ['inspection process', 'identifying entry points', 'treatment application', 'sealing gaps', 'pest-free follow-up'],
+    painPoint: 'bugs in the house, rodent signs, can\'t sleep knowing pests are there',
+    transformation: 'from cringing at every bug to peaceful pest-free home',
+  },
+  'moving_service': {
+    keywords: ['moving', 'movers', 'moving service', 'relocation', 'moving company'],
+    hero: {
+      action: 'professional mover carefully handling furniture',
+      equipment: 'moving blankets, dolly, professional truck',
+      setting: 'moving truck at residential location',
+    },
+    service: {
+      action: 'carefully wrapping and protecting furniture for transport',
+      details: 'moving blankets, proper lifting technique, organized loading',
+      tools: 'furniture dollies, moving blankets, straps, moving truck',
+      result: 'everything safely delivered and placed in new home',
+    },
+    broll: ['packing process', 'furniture wrapping', 'truck loading', 'driving to new home', 'family in new home with everything in place'],
+    painPoint: 'moving is overwhelming, afraid of damage, no one to help',
+    transformation: 'from moving nightmare to stress-free fresh start in new home',
+  },
+
+  // ===== PROFESSIONAL SERVICES =====
+  'lawyer': {
+    keywords: ['lawyer', 'attorney', 'legal services', 'law firm', 'legal', 'counsel'],
+    hero: {
+      action: 'attorney in confident professional pose',
+      equipment: 'law books, legal documents, professional attire',
+      setting: 'prestigious law office with credentials visible',
+    },
+    service: {
+      action: 'attorney reviewing documents with focused expertise',
+      details: 'legal documents, careful analysis, professional environment',
+      tools: 'legal briefs, laptop, reference books, notary stamp',
+      result: 'successful case resolution, relieved client handshake',
+    },
+    broll: ['office establishing shot', 'client consultation', 'document review', 'courtroom (if applicable)', 'successful outcome celebration'],
+    painPoint: 'legal trouble, don\'t understand rights, need professional help',
+    transformation: 'from legal stress and confusion to protected and properly represented',
+  },
+  'accountant': {
+    keywords: ['accountant', 'cpa', 'tax preparer', 'bookkeeper', 'accounting', 'tax', 'bookkeeping'],
+    hero: {
+      action: 'accountant reviewing financial reports with client',
+      equipment: 'dual monitors with spreadsheets, calculator, organized desk',
+      setting: 'professional accounting office',
+    },
+    service: {
+      action: 'analyzing financial data on screen, finding savings',
+      details: 'spreadsheets, tax forms, organized financial documents',
+      tools: 'accounting software, calculator, tax guides, dual monitors',
+      result: 'client seeing tax savings or clean financial reports',
+    },
+    broll: ['document organization', 'data entry', 'analysis work', 'client meeting', 'handing over completed returns'],
+    painPoint: 'tax confusion, fear of IRS, messy books, missing deductions',
+    transformation: 'from tax anxiety to maximized returns and financial clarity',
+  },
+  'real_estate': {
+    keywords: ['real estate', 'realtor', 'real estate agent', 'home sales', 'property', 'real estate broker'],
+    hero: {
+      action: 'agent handing keys to happy new homeowners',
+      equipment: 'professional folder, keys, "SOLD" sign',
+      setting: 'beautiful home exterior with sold sign',
+    },
+    service: {
+      action: 'showing stunning property to interested buyers',
+      details: 'beautiful home features, engaged buyers, professional presentation',
+      tools: 'listing materials, lockbox, professional camera, staging items',
+      result: 'happy buyers with keys in front of their new home',
+    },
+    broll: ['listing preparation', 'professional photos', 'showing the home', 'offer negotiation', 'closing day celebration'],
+    painPoint: 'house not selling, don\'t know home value, overwhelmed by process',
+    transformation: 'from stuck on market to sold and moved into dream home',
+  },
+  'insurance': {
+    keywords: ['insurance', 'insurance agent', 'insurance broker', 'coverage', 'policy'],
+    hero: {
+      action: 'agent explaining policy options to protected family',
+      equipment: 'policy documents, laptop, professional materials',
+      setting: 'welcoming office or client\'s home',
+    },
+    service: {
+      action: 'reviewing coverage options with client on screen',
+      details: 'policy comparison, coverage explanation, personalized approach',
+      tools: 'policy documents, comparison charts, quote software',
+      result: 'family with proper coverage, peace of mind, policy in hand',
+    },
+    broll: ['initial consultation', 'needs assessment', 'coverage explanation', 'policy signing', 'protected family moment'],
+    painPoint: 'underinsured, overpaying, don\'t understand coverage, worried about what-ifs',
+    transformation: 'from insurance confusion to properly protected and confident',
+  },
+
+  // ===== MEDICAL & HEALTH =====
+  'dental': {
+    keywords: ['dentist', 'dental', 'teeth', 'dental care', 'dental clinic', 'orthodontist'],
+    hero: {
+      action: 'friendly dentist with warm smile in modern office',
+      equipment: 'dental chair, modern equipment, white coat',
+      setting: 'bright modern dental office',
+    },
+    service: {
+      action: 'gentle examination with patient at ease',
+      details: 'modern equipment, comfortable patient, professional care',
+      tools: 'dental mirror, modern chair, digital x-ray, cleaning tools',
+      result: 'patient with perfect smile, confident and happy',
+    },
+    broll: ['welcoming reception', 'comfortable chair experience', 'gentle examination', 'treatment explanation', 'confident smile result'],
+    painPoint: 'dental anxiety, embarrassed by teeth, putting off needed work',
+    transformation: 'from dental fear and embarrassment to confident healthy smile',
+  },
+  'chiropractor': {
+    keywords: ['chiropractor', 'chiropractic', 'back pain', 'spine', 'adjustment'],
+    hero: {
+      action: 'chiropractor consulting with patient about spine health',
+      equipment: 'adjustment table, spine model, professional attire',
+      setting: 'clean modern chiropractic office',
+    },
+    service: {
+      action: 'performing precise spinal adjustment',
+      details: 'proper technique, patient comfort, professional environment',
+      tools: 'adjustment table, spine model, posture analysis tools',
+      result: 'patient standing tall, pain-free, improved posture',
+    },
+    broll: ['posture assessment', 'x-ray review', 'adjustment technique', 'exercise instruction', 'patient moving freely'],
+    painPoint: 'chronic back pain, poor posture, headaches, limited mobility',
+    transformation: 'from constant pain to moving freely and feeling great',
+  },
+  'veterinary': {
+    keywords: ['veterinarian', 'vet', 'animal hospital', 'pet care', 'veterinary', 'animal clinic'],
+    hero: {
+      action: 'veterinarian lovingly examining happy pet',
+      equipment: 'stethoscope, exam table, lab coat',
+      setting: 'welcoming veterinary exam room',
+    },
+    service: {
+      action: 'gentle examination of beloved pet with owner present',
+      details: 'calm animal, professional care, loving approach',
+      tools: 'stethoscope, otoscope, examination table, treats',
+      result: 'healthy happy pet with relieved grateful owner',
+    },
+    broll: ['pet arrival greeting', 'weigh-in', 'gentle examination', 'treatment if needed', 'happy healthy pet leaving'],
+    painPoint: 'worried about pet\'s health, pet not acting right, need trustworthy vet',
+    transformation: 'from pet parent worry to peace of mind knowing furry family member is healthy',
+  },
+
   // ===== GENERAL/FALLBACK =====
   'general_service': {
     keywords: ['service', 'repair', 'installation', 'maintenance', 'fix'],
