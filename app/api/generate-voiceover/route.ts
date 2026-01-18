@@ -34,7 +34,7 @@ interface GenerateVoiceoverRequest {
   profileId: string
   platform: string
   voiceStyle?: VoiceStyle
-  speed?: number // 0.5 to 2.0
+  targetDuration?: number // Target duration in seconds (from video)
 }
 
 export async function POST(request: NextRequest) {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       profileId,
       platform,
       voiceStyle = 'professional_male',
-      speed = 1.0,
+      targetDuration,
     } = body
 
     if (!text) {
@@ -65,13 +65,26 @@ export async function POST(request: NextRequest) {
     const voice = VOICE_OPTIONS[voiceStyle] || VOICE_OPTIONS.professional_male
 
     // Platform-specific voice settings
-    const platformSettings: Record<string, { stability: number; speed: number }> = {
-      tiktok: { stability: 0.5, speed: 1.1 }, // Slightly faster, more dynamic
-      instagram: { stability: 0.6, speed: 1.0 }, // Balanced
-      facebook: { stability: 0.7, speed: 0.95 }, // Slightly slower, more stable
-      youtube: { stability: 0.65, speed: 1.0 }, // Clear and steady
+    const platformSettings: Record<string, { stability: number; baseSpeed: number }> = {
+      tiktok: { stability: 0.5, baseSpeed: 1.1 }, // Slightly faster, more dynamic
+      instagram: { stability: 0.6, baseSpeed: 1.0 }, // Balanced
+      facebook: { stability: 0.7, baseSpeed: 0.95 }, // Slightly slower, more stable
+      youtube: { stability: 0.65, baseSpeed: 1.0 }, // Clear and steady
     }
     const settings = platformSettings[platform] || platformSettings.facebook
+
+    // Calculate speed to match target duration
+    // Average speaking rate is ~15 characters per second at 1.0x speed
+    const estimatedNaturalDuration = text.length / 15
+    let calculatedSpeed = settings.baseSpeed
+
+    if (targetDuration && targetDuration > 0) {
+      // Calculate required speed to fit in target duration
+      // If natural is 14s and target is 10s, speed = 14/10 = 1.4x
+      calculatedSpeed = estimatedNaturalDuration / targetDuration
+      // Clamp speed between 0.7 and 1.5 for quality (ElevenLabs supports 0.5-2.0)
+      calculatedSpeed = Math.max(0.7, Math.min(1.5, calculatedSpeed))
+    }
 
     // Call ElevenLabs API
     const response = await fetch(
@@ -90,7 +103,7 @@ export async function POST(request: NextRequest) {
             stability: settings.stability,
             similarity_boost: 0.75,
             style: 0.5,
-            speed: speed || settings.speed,
+            speed: calculatedSpeed,
             use_speaker_boost: true,
           },
         }),

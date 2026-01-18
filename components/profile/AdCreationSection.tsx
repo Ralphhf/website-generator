@@ -450,13 +450,17 @@ export function AdCreationSection({
     }
   }
 
-  // Generate AI voiceover from script
+  // Generate AI voiceover from script - matched to video duration
   const handleGenerateVoiceover = async () => {
     const voiceoverText = dynamicVideoScript?.voiceover || videoScript?.voiceover
     if (!voiceoverText) {
       alert('No voiceover script available')
       return
     }
+
+    // Get video duration if available (voiceover speed will be adjusted to match)
+    const latestVideo = generatedVideos[0]
+    const videoDuration = latestVideo ? parseInt(latestVideo.duration) : undefined
 
     setIsGeneratingVoiceover(true)
 
@@ -469,6 +473,7 @@ export function AdCreationSection({
           profileId,
           platform: selectedPlatform,
           voiceStyle: selectedVoiceOption,
+          targetDuration: videoDuration, // Auto-adjust speed to match video
         }),
       })
 
@@ -1867,27 +1872,35 @@ export function AdCreationSection({
                         </div>
 
                         {/* Generate Voiceover Button */}
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={handleGenerateVoiceover}
-                            disabled={isGeneratingVoiceover || (!dynamicVideoScript?.voiceover && !videoScript?.voiceover)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium rounded-lg hover:shadow-md transition-all disabled:opacity-50"
-                          >
-                            {isGeneratingVoiceover ? (
-                              <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Generating Voiceover...
-                              </>
-                            ) : (
-                              <>
-                                <Mic className="w-4 h-4" />
-                                Generate Voiceover (~$0.10)
-                              </>
-                            )}
-                          </button>
-                          <span className="text-xs text-gray-500">
-                            {(dynamicVideoScript?.voiceover || videoScript?.voiceover || '').length} characters
-                          </span>
+                        <div className="space-y-2">
+                          {generatedVideos.length === 0 ? (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                              <strong>Generate a video first</strong> - voiceover speed will auto-adjust to match video length
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={handleGenerateVoiceover}
+                                disabled={isGeneratingVoiceover || (!dynamicVideoScript?.voiceover && !videoScript?.voiceover)}
+                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium rounded-lg hover:shadow-md transition-all disabled:opacity-50"
+                              >
+                                {isGeneratingVoiceover ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Generating Voiceover...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Mic className="w-4 h-4" />
+                                    Generate Voiceover (~$0.10)
+                                  </>
+                                )}
+                              </button>
+                              <span className="text-xs text-gray-500">
+                                {(dynamicVideoScript?.voiceover || videoScript?.voiceover || '').length} chars • matches {generatedVideos[0]?.duration}s video
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Generated Voiceover Audio Player */}
