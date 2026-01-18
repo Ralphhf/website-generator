@@ -6,6 +6,8 @@ import {
   generateServices,
   generateTestimonials,
   generatePortfolioSections,
+  generatePricing,
+  generateFAQs,
 } from '@/lib/ai-content'
 
 export async function POST(request: NextRequest) {
@@ -64,6 +66,22 @@ export async function POST(request: NextRequest) {
 
       case 'portfolio-sections':
         result = await generatePortfolioSections(params.businessType)
+        break
+
+      case 'pricing':
+        result = await generatePricing(
+          params.businessName,
+          params.businessType,
+          params.services || []
+        )
+        break
+
+      case 'faqs':
+        result = await generateFAQs(
+          params.businessName,
+          params.businessType,
+          params.services || []
+        )
         break
 
       default:

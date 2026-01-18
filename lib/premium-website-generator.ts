@@ -27,6 +27,37 @@ function sanitizeBusinessInfo(info: BusinessInfo): BusinessInfo {
     state: escapeJs(info.state || ''),
     businessType: escapeJs((info.businessType || '').replace(/_/g, ' ')),
     services: info.services?.map(s => escapeJs(s)),
+    pricing: info.pricing?.map(p => ({
+      ...p,
+      name: escapeJs(p.name),
+      price: escapeJs(p.price),
+      description: p.description ? escapeJs(p.description) : undefined,
+      features: p.features.map(f => escapeJs(f)),
+    })),
+    faqs: info.faqs?.map(f => ({
+      ...f,
+      question: escapeJs(f.question),
+      answer: escapeJs(f.answer),
+    })),
+  }
+}
+
+// Get CTA button text based on primaryCTA type
+function getCTAText(primaryCTA?: string): { primary: string; secondary: string } {
+  switch (primaryCTA) {
+    case 'call':
+      return { primary: 'Call Now', secondary: 'View Services' }
+    case 'book':
+      return { primary: 'Book Appointment', secondary: 'Our Services' }
+    case 'quote':
+      return { primary: 'Get Free Quote', secondary: 'View Services' }
+    case 'visit':
+      return { primary: 'Visit Us', secondary: 'Get Directions' }
+    case 'shop':
+      return { primary: 'Shop Now', secondary: 'Browse Products' }
+    case 'contact':
+    default:
+      return { primary: 'Contact Us', secondary: 'View Services' }
   }
 }
 
@@ -63,6 +94,15 @@ export function generatePremiumWebsite(businessInfo: BusinessInfo): Record<strin
   files['components/sections/testimonials.tsx'] = generateTestimonialsComponent(safeInfo)
   files['components/sections/cta.tsx'] = generateCTAComponent(safeInfo)
   files['components/sections/about-preview.tsx'] = generateAboutPreviewComponent(safeInfo)
+
+  // Optional sections based on data
+  if (safeInfo.pricing && safeInfo.pricing.length > 0) {
+    files['components/sections/pricing.tsx'] = generatePricingComponent(safeInfo)
+  }
+  if (safeInfo.faqs && safeInfo.faqs.length > 0) {
+    files['components/sections/faq.tsx'] = generateFAQComponent(safeInfo)
+  }
+
   files['components/animations/scroll-reveal.tsx'] = generateScrollReveal()
   files['components/animations/animated-text.tsx'] = generateAnimatedText()
 
@@ -1252,20 +1292,35 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 function generateHomePage(businessInfo: BusinessInfo): string {
-  return `import { Hero } from '@/components/sections/hero'
-import { Services } from '@/components/sections/services'
-import { AboutPreview } from '@/components/sections/about-preview'
-import { Testimonials } from '@/components/sections/testimonials'
-import { CTA } from '@/components/sections/cta'
+  const hasPricing = businessInfo.pricing && businessInfo.pricing.length > 0
+  const hasFaqs = businessInfo.faqs && businessInfo.faqs.length > 0
+
+  const imports = [
+    `import { Hero } from '@/components/sections/hero'`,
+    `import { Services } from '@/components/sections/services'`,
+    `import { AboutPreview } from '@/components/sections/about-preview'`,
+    `import { Testimonials } from '@/components/sections/testimonials'`,
+    hasPricing ? `import { Pricing } from '@/components/sections/pricing'` : '',
+    hasFaqs ? `import { FAQ } from '@/components/sections/faq'` : '',
+    `import { CTA } from '@/components/sections/cta'`,
+  ].filter(Boolean).join('\n')
+
+  const components = [
+    `      <Hero />`,
+    `      <Services />`,
+    `      <AboutPreview />`,
+    hasPricing ? `      <Pricing />` : '',
+    `      <Testimonials />`,
+    hasFaqs ? `      <FAQ />` : '',
+    `      <CTA />`,
+  ].filter(Boolean).join('\n')
+
+  return `${imports}
 
 export default function HomePage() {
   return (
     <>
-      <Hero />
-      <Services />
-      <AboutPreview />
-      <Testimonials />
-      <CTA />
+${components}
     </>
   )
 }`
@@ -1667,4 +1722,175 @@ function generateRobotsTxt(slug: string): string {
 Allow: /
 
 Sitemap: https://${slug}.vercel.app/sitemap.xml`
+}
+
+function generatePricingComponent(businessInfo: BusinessInfo): string {
+  const pricing = businessInfo.pricing || []
+
+  return `'use client'
+
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+import { Check, Star } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { ScrollReveal } from '@/components/animations/scroll-reveal'
+
+const pricingPlans = [
+  ${pricing.map(p => `{
+    name: '${p.name}',
+    price: '${p.price}',
+    description: '${p.description || ''}',
+    features: [${p.features.map(f => `'${f}'`).join(', ')}],
+    isPopular: ${p.isPopular || false},
+  }`).join(',\n  ')}
+]
+
+export function Pricing() {
+  return (
+    <section className="section-padding bg-gray-50">
+      <div className="container-custom">
+        <ScrollReveal>
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">
+              Pricing
+            </span>
+            <h2 className="heading-2 text-gray-900 mt-4 mb-6">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-lg text-gray-600">
+              Choose the plan that best fits your needs. All plans include our quality guarantee.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-${Math.min(pricing.length, 3)} gap-8 max-w-5xl mx-auto">
+          {pricingPlans.map((plan, index) => (
+            <ScrollReveal key={plan.name} delay={index * 0.1}>
+              <motion.div
+                whileHover={{ y: -8 }}
+                className={\`relative bg-white rounded-2xl p-8 shadow-lg \${
+                  plan.isPopular
+                    ? 'ring-2 ring-primary-500 shadow-primary-100'
+                    : 'hover:shadow-xl'
+                } transition-all duration-300\`}
+              >
+                {plan.isPopular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="inline-flex items-center gap-1 bg-primary-500 text-white text-sm font-semibold px-4 py-1 rounded-full">
+                      <Star className="w-4 h-4 fill-current" />
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                  <div className="text-4xl font-bold text-gray-900 mb-2">{plan.price}</div>
+                  {plan.description && (
+                    <p className="text-gray-500 text-sm">{plan.description}</p>
+                  )}
+                </div>
+
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Button
+                  className={\`w-full \${plan.isPopular ? '' : 'bg-gray-900 hover:bg-gray-800'}\`}
+                  asChild
+                >
+                  <Link href="/contact">Get Started</Link>
+                </Button>
+              </motion.div>
+            </ScrollReveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}`
+}
+
+function generateFAQComponent(businessInfo: BusinessInfo): string {
+  const faqs = businessInfo.faqs || []
+
+  return `'use client'
+
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ChevronDown } from 'lucide-react'
+import { ScrollReveal } from '@/components/animations/scroll-reveal'
+
+const faqs = [
+  ${faqs.map(f => `{
+    question: '${f.question}',
+    answer: '${f.answer}',
+  }`).join(',\n  ')}
+]
+
+export function FAQ() {
+  const [openIndex, setOpenIndex] = useState<number | null>(0)
+
+  return (
+    <section className="section-padding bg-white">
+      <div className="container-custom">
+        <ScrollReveal>
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">
+              FAQ
+            </span>
+            <h2 className="heading-2 text-gray-900 mt-4 mb-6">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg text-gray-600">
+              Find answers to common questions about our services.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <div className="max-w-3xl mx-auto space-y-4">
+          {faqs.map((faq, index) => (
+            <ScrollReveal key={index} delay={index * 0.05}>
+              <div
+                className="bg-gray-50 rounded-xl overflow-hidden"
+              >
+                <button
+                  onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                  className="w-full px-6 py-5 flex items-center justify-between text-left"
+                >
+                  <span className="font-semibold text-gray-900 pr-4">{faq.question}</span>
+                  <motion.div
+                    animate={{ rotate: openIndex === index ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                  </motion.div>
+                </button>
+                <AnimatePresence>
+                  {openIndex === index && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="px-6 pb-5 text-gray-600">
+                        {faq.answer}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </ScrollReveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}`
 }

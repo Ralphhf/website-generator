@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Sparkles } from 'lucide-react'
 import Link from 'next/link'
-import { BusinessProfile, BusinessInfo, FormStep, Testimonial, PortfolioSection } from '@/lib/types'
+import { BusinessProfile, BusinessInfo, FormStep, Testimonial, PortfolioSection, PricingPackage, FAQ } from '@/lib/types'
 import { SearchStep } from '@/components/generator/SearchStep'
 import { SelectBusinessStep } from '@/components/generator/SelectBusinessStep'
 import { BasicInfoStep } from '@/components/generator/BasicInfoStep'
@@ -13,6 +13,8 @@ import { HeroImageStep } from '@/components/generator/HeroImageStep'
 import { ContactInfoStep } from '@/components/generator/ContactInfoStep'
 import { TestimonialsStep } from '@/components/generator/TestimonialsStep'
 import { PortfolioStep } from '@/components/generator/PortfolioStep'
+import { PricingStep } from '@/components/generator/PricingStep'
+import { FAQsStep } from '@/components/generator/FAQsStep'
 import { PreviewStep, WebsiteStyle } from '@/components/generator/PreviewStep'
 import { GeneratingStep } from '@/components/generator/GeneratingStep'
 import { CompleteStep } from '@/components/generator/CompleteStep'
@@ -62,12 +64,17 @@ const initialBusinessInfo: BusinessInfo = {
   instagramUrl: '',
   linkedinUrl: '',
   yelpUrl: '',
+  tiktokUrl: '',
+  youtubeUrl: '',
   businessType: '',
   services: [],
   serviceAreas: [],
   openingHours: {},
   testimonials: [],
   portfolioSections: [],
+  pricing: [],
+  faqs: [],
+  primaryCTA: undefined,
 }
 
 const steps: { key: FormStep; label: string }[] = [
@@ -78,6 +85,8 @@ const steps: { key: FormStep; label: string }[] = [
   { key: 'contact-info', label: 'Contact' },
   { key: 'testimonials', label: 'Testimonials' },
   { key: 'portfolio', label: 'Portfolio' },
+  { key: 'pricing', label: 'Pricing' },
+  { key: 'faqs', label: 'FAQs' },
   { key: 'preview', label: 'Preview' },
 ]
 
@@ -143,6 +152,16 @@ function GeneratorContent() {
 
   const handlePortfolioSubmit = (portfolioSections: PortfolioSection[]) => {
     setBusinessInfo(prev => ({ ...prev, portfolioSections }))
+    setCurrentStep('pricing')
+  }
+
+  const handlePricingSubmit = (pricing: PricingPackage[]) => {
+    setBusinessInfo(prev => ({ ...prev, pricing }))
+    setCurrentStep('faqs')
+  }
+
+  const handleFAQsSubmit = (faqs: FAQ[]) => {
+    setBusinessInfo(prev => ({ ...prev, faqs }))
     setCurrentStep('preview')
   }
 
@@ -236,6 +255,8 @@ function GeneratorContent() {
       'contact-info',
       'testimonials',
       'portfolio',
+      'pricing',
+      'faqs',
       'preview',
     ]
     const postWebsiteSteps: FormStep[] = [
@@ -399,6 +420,28 @@ function GeneratorContent() {
                 portfolioSections={businessInfo.portfolioSections}
                 businessType={businessInfo.businessType}
                 onSubmit={handlePortfolioSubmit}
+                onBack={handleBack}
+              />
+            )}
+
+            {currentStep === 'pricing' && (
+              <PricingStep
+                pricing={businessInfo.pricing || []}
+                businessName={businessInfo.name}
+                businessType={businessInfo.businessType}
+                services={businessInfo.services}
+                onSubmit={handlePricingSubmit}
+                onBack={handleBack}
+              />
+            )}
+
+            {currentStep === 'faqs' && (
+              <FAQsStep
+                faqs={businessInfo.faqs || []}
+                businessName={businessInfo.name}
+                businessType={businessInfo.businessType}
+                services={businessInfo.services}
+                onSubmit={handleFAQsSubmit}
                 onBack={handleBack}
               />
             )}

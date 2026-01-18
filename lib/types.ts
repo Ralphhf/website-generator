@@ -51,6 +51,8 @@ export interface BusinessInfo {
   instagramUrl?: string;
   linkedinUrl?: string;
   yelpUrl?: string;
+  tiktokUrl?: string;
+  youtubeUrl?: string;
 
   // Business Details
   businessType: string;
@@ -71,7 +73,36 @@ export interface BusinessInfo {
 
   // Portfolio/Work Sections
   portfolioSections: PortfolioSection[];
+
+  // Pricing (Optional)
+  pricing?: PricingPackage[];
+
+  // FAQs (Optional)
+  faqs?: FAQ[];
+
+  // Primary Call-to-Action
+  primaryCTA?: PrimaryCTAType;
 }
+
+// Pricing Package Types
+export interface PricingPackage {
+  id: string;
+  name: string;
+  price: string; // e.g., "$99", "$99/mo", "From $500", "Custom"
+  description?: string;
+  features: string[];
+  isPopular?: boolean;
+}
+
+// FAQ Types
+export interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+// Primary CTA Types
+export type PrimaryCTAType = 'call' | 'book' | 'quote' | 'visit' | 'shop' | 'contact';
 
 export interface Testimonial {
   id: string;
@@ -229,6 +260,8 @@ export type FormStep =
   | 'contact-info'
   | 'testimonials'
   | 'portfolio'
+  | 'pricing'
+  | 'faqs'
   | 'preview'
   | 'generating'
   | 'complete'

@@ -2,9 +2,18 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, FileText, Calendar, Tag, Sparkles, Loader2 } from 'lucide-react'
+import { ArrowLeft, Building2, FileText, Calendar, Tag, Sparkles, Loader2, MousePointer } from 'lucide-react'
 import { Button, Input, Textarea, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
-import { BusinessInfo } from '@/lib/types'
+import { BusinessInfo, PrimaryCTAType } from '@/lib/types'
+
+const CTA_OPTIONS: { value: PrimaryCTAType; label: string; description: string }[] = [
+  { value: 'call', label: 'Call Now', description: 'Best for service businesses (plumbers, lawyers, etc.)' },
+  { value: 'book', label: 'Book Appointment', description: 'Best for salons, clinics, consultants' },
+  { value: 'quote', label: 'Get a Quote', description: 'Best for contractors, agencies, custom services' },
+  { value: 'visit', label: 'Visit Us', description: 'Best for restaurants, retail stores' },
+  { value: 'shop', label: 'Shop Now', description: 'Best for e-commerce, product-based businesses' },
+  { value: 'contact', label: 'Contact Us', description: 'General purpose, works for most businesses' },
+]
 
 interface BasicInfoStepProps {
   businessInfo: BusinessInfo
@@ -18,6 +27,7 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
   const [description, setDescription] = useState(businessInfo.description || '')
   const [yearsInBusiness, setYearsInBusiness] = useState(businessInfo.yearsInBusiness?.toString() || '')
   const [services, setServices] = useState(businessInfo.services?.join(', ') || '')
+  const [primaryCTA, setPrimaryCTA] = useState<PrimaryCTAType | ''>(businessInfo.primaryCTA || '')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // AI generation states
@@ -44,6 +54,7 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
         description,
         yearsInBusiness: parseInt(yearsInBusiness) || 0,
         services: services.split(',').map(s => s.trim()).filter(Boolean),
+        primaryCTA: primaryCTA || undefined,
       })
     }
   }
@@ -279,6 +290,34 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
             <p className="mt-1 text-xs text-gray-500">
               Separate multiple services with commas
             </p>
+          </div>
+
+          {/* Primary CTA */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <MousePointer className="w-4 h-4" />
+              Primary Call-to-Action (Optional)
+            </label>
+            <p className="text-xs text-gray-500 mb-3">
+              What action should visitors take? This affects button text across your website.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {CTA_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setPrimaryCTA(option.value)}
+                  className={`p-3 rounded-lg border text-left transition-all ${
+                    primaryCTA === option.value
+                      ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="font-medium text-sm">{option.label}</div>
+                  <div className="text-xs text-gray-500">{option.description}</div>
+                </button>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>

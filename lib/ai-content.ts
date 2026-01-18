@@ -1,5 +1,5 @@
 // AI Content Generation using Claude API
-import { BusinessInfo, Testimonial } from './types'
+import { BusinessInfo, Testimonial, PricingPackage, FAQ } from './types'
 
 const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY || ''
 
@@ -202,6 +202,88 @@ Return ONLY the JSON array, no other text.`
     }
   } catch (e) {
     console.error('Failed to parse portfolio sections:', e)
+  }
+
+  return []
+}
+
+export async function generatePricing(
+  businessName: string,
+  businessType: string,
+  services: string[]
+): Promise<Omit<PricingPackage, 'id'>[]> {
+  const prompt = `Generate 3 pricing packages/tiers for "${businessName}", a ${businessType} business.
+
+${services.length > 0 ? `Services they offer: ${services.join(', ')}.` : ''}
+
+Create realistic pricing tiers that would be appropriate for this type of business. Consider:
+- Local market rates
+- Typical pricing structures for ${businessType} businesses
+- Common package names (Basic/Standard/Premium, Bronze/Silver/Gold, etc.)
+
+Return as a JSON array with this format:
+[
+  {
+    "name": "Package Name",
+    "price": "$XX" or "$XX/mo" or "From $XX" or "Custom",
+    "description": "Brief description of who this package is for",
+    "features": ["Feature 1", "Feature 2", "Feature 3", "Feature 4"],
+    "isPopular": false
+  }
+]
+
+Mark the middle tier as "isPopular": true.
+Return ONLY the JSON array, no other text.`
+
+  const result = await callClaude([{ role: 'user', content: prompt }], 800)
+
+  try {
+    const jsonMatch = result.match(/\[[\s\S]*\]/)
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0])
+    }
+  } catch (e) {
+    console.error('Failed to parse pricing:', e)
+  }
+
+  return []
+}
+
+export async function generateFAQs(
+  businessName: string,
+  businessType: string,
+  services: string[]
+): Promise<Omit<FAQ, 'id'>[]> {
+  const prompt = `Generate 5-6 frequently asked questions (FAQs) for "${businessName}", a ${businessType} business.
+
+${services.length > 0 ? `Services they offer: ${services.join(', ')}.` : ''}
+
+Create questions that potential customers typically ask about this type of business. Include questions about:
+- Services and pricing
+- Availability and scheduling
+- Experience and qualifications
+- Service areas
+- Guarantees or warranties
+
+Return as a JSON array with this format:
+[
+  {
+    "question": "The question?",
+    "answer": "A helpful, informative answer (2-3 sentences)"
+  }
+]
+
+Return ONLY the JSON array, no other text.`
+
+  const result = await callClaude([{ role: 'user', content: prompt }], 1000)
+
+  try {
+    const jsonMatch = result.match(/\[[\s\S]*\]/)
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0])
+    }
+  } catch (e) {
+    console.error('Failed to parse FAQs:', e)
   }
 
   return []

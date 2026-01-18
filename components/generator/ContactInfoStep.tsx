@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Mail, Phone, MapPin, Globe, Facebook, Instagram, Linkedin } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, MapPin, Globe, Facebook, Instagram, Linkedin, Video, Youtube } from 'lucide-react'
 import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
 import { BusinessInfo } from '@/lib/types'
 import { isValidEmail, isValidPhone, isValidUrl } from '@/lib/utils'
@@ -28,6 +28,8 @@ export function ContactInfoStep({ businessInfo, onSubmit, onBack }: ContactInfoS
   const [instagramUrl, setInstagramUrl] = useState(businessInfo.instagramUrl || '')
   const [linkedinUrl, setLinkedinUrl] = useState(businessInfo.linkedinUrl || '')
   const [yelpUrl, setYelpUrl] = useState(businessInfo.yelpUrl || '')
+  const [tiktokUrl, setTiktokUrl] = useState(businessInfo.tiktokUrl || '')
+  const [youtubeUrl, setYoutubeUrl] = useState(businessInfo.youtubeUrl || '')
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -49,6 +51,8 @@ export function ContactInfoStep({ businessInfo, onSubmit, onBack }: ContactInfoS
     if (facebookUrl && !isValidUrl(facebookUrl)) newErrors.facebookUrl = 'Invalid URL'
     if (instagramUrl && !isValidUrl(instagramUrl)) newErrors.instagramUrl = 'Invalid URL'
     if (linkedinUrl && !isValidUrl(linkedinUrl)) newErrors.linkedinUrl = 'Invalid URL'
+    if (tiktokUrl && !isValidUrl(tiktokUrl)) newErrors.tiktokUrl = 'Invalid URL'
+    if (youtubeUrl && !isValidUrl(youtubeUrl)) newErrors.youtubeUrl = 'Invalid URL'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -69,6 +73,8 @@ export function ContactInfoStep({ businessInfo, onSubmit, onBack }: ContactInfoS
         instagramUrl,
         linkedinUrl,
         yelpUrl,
+        tiktokUrl,
+        youtubeUrl,
       })
     }
   }
@@ -229,6 +235,24 @@ export function ContactInfoStep({ businessInfo, onSubmit, onBack }: ContactInfoS
                 placeholder="https://yelp.com/biz/yourbusiness"
                 value={yelpUrl}
                 onChange={(e) => setYelpUrl(e.target.value)}
+              />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Input
+                label="TikTok"
+                placeholder="https://tiktok.com/@yourbusiness"
+                value={tiktokUrl}
+                onChange={(e) => setTiktokUrl(e.target.value)}
+                error={errors.tiktokUrl}
+                icon={<Video className="w-5 h-5" />}
+              />
+              <Input
+                label="YouTube"
+                placeholder="https://youtube.com/@yourbusiness"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                error={errors.youtubeUrl}
+                icon={<Youtube className="w-5 h-5" />}
               />
             </div>
           </CardContent>
