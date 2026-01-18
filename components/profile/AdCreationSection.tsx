@@ -152,6 +152,46 @@ export function AdCreationSection({
   const [showVoiceover, setShowVoiceover] = useState(false)
   const [selectedVoiceStyle, setSelectedVoiceStyle] = useState<keyof typeof VOICEOVER_STYLES>('conversational')
 
+  // Dynamic video script state
+  const [dynamicVideoScript, setDynamicVideoScript] = useState<{
+    hook: string
+    hookType: string
+    scenes: Array<{
+      time: string
+      action: string
+      visual: string
+      textOverlay: string
+      broll: string[]
+      patternInterrupt?: string
+    }>
+    voiceover: string
+    cta: string
+    hooks: Record<string, string[]>
+    voiceoverGuidance: {
+      tone: string
+      pacing: string
+      emphasis: string[]
+      energy: string
+    }
+    musicSuggestion: string
+    thumbnailConcept: string
+  } | null>(null)
+  const [isLoadingVideoScript, setIsLoadingVideoScript] = useState(false)
+  const [videoScriptError, setVideoScriptError] = useState<string | null>(null)
+
+  // AI Video generation state
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false)
+  const [generatedVideos, setGeneratedVideos] = useState<Array<{
+    id?: string
+    video: string
+    prompt: string
+    platform: string
+    duration: string
+    storagePath?: string
+    mode: string
+  }>>([])
+  const [selectedSceneForVideo, setSelectedSceneForVideo] = useState<number | null>(null)
+
   // Industry profile
   const [industryProfile, setIndustryProfile] = useState<IndustryProfile | null>(null)
 
@@ -277,6 +317,126 @@ export function AdCreationSection({
       setPromptError('Failed to generate AI prompt')
     } finally {
       setIsLoadingPrompt(false)
+    }
+  }
+
+  // Fetch dynamic video script when video tab settings change
+  useEffect(() => {
+    if (activeTab !== 'video' || !isExpanded) return
+    if (selectedPlatform === 'google') return // No video for Google
+
+    // Debounce the API call
+    const timeoutId = setTimeout(() => {
+      fetchDynamicVideoScript()
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [
+    activeTab,
+    isExpanded,
+    selectedPlatform,
+    videoDuration,
+    selectedVideoFormat,
+    businessInfo.services,
+    businessInfo.tagline,
+  ])
+
+  const fetchDynamicVideoScript = async () => {
+    setIsLoadingVideoScript(true)
+    setVideoScriptError(null)
+
+    try {
+      const response = await fetch('/api/generate-video-script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: businessInfo.name,
+          businessType: businessInfo.businessType,
+          services: businessInfo.services,
+          city: businessInfo.city,
+          state: businessInfo.state,
+          tagline: businessInfo.tagline,
+          platform: selectedPlatform === 'google' ? 'youtube' : selectedPlatform,
+          duration: videoDuration,
+          videoFormat: selectedVideoFormat,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate video script')
+      }
+
+      const data = await response.json()
+      setDynamicVideoScript({
+        hook: data.hook,
+        hookType: data.hookType,
+        scenes: data.scenes,
+        voiceover: data.voiceover,
+        cta: data.cta,
+        hooks: data.hooks,
+        voiceoverGuidance: data.voiceoverGuidance,
+        musicSuggestion: data.musicSuggestion,
+        thumbnailConcept: data.thumbnailConcept,
+      })
+    } catch (error) {
+      console.error('Failed to fetch dynamic video script:', error)
+      setVideoScriptError('Failed to generate video script')
+    } finally {
+      setIsLoadingVideoScript(false)
+    }
+  }
+
+  // Generate AI video from scene
+  const handleGenerateVideo = async (sceneIndex?: number) => {
+    setIsGeneratingVideo(true)
+    setSelectedSceneForVideo(sceneIndex ?? null)
+
+    try {
+      // Build prompt from scene or full script
+      let videoPrompt = ''
+      if (sceneIndex !== undefined && dynamicVideoScript) {
+        const scene = dynamicVideoScript.scenes[sceneIndex]
+        videoPrompt = `${scene.visual}. ${scene.action}. Text overlay: "${scene.textOverlay}"`
+      } else if (dynamicVideoScript) {
+        videoPrompt = `${dynamicVideoScript.hook}. ${dynamicVideoScript.scenes[0]?.visual || ''}. ${dynamicVideoScript.voiceover.substring(0, 200)}`
+      }
+
+      // Map duration for Kling (only supports 5 or 10 seconds)
+      const klingDuration = videoDuration === '15s' ? '10' : '5'
+
+      const response = await fetch('/api/generate-ad-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: videoPrompt,
+          profileId,
+          platform: selectedPlatform,
+          duration: klingDuration,
+          aspectRatio: '9:16', // Vertical for social
+          generateAudio: true,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setGeneratedVideos(prev => [{
+          video: data.video,
+          prompt: videoPrompt,
+          platform: selectedPlatform,
+          duration: klingDuration,
+          storagePath: data.storagePath,
+          mode: data.mode,
+        }, ...prev])
+      } else {
+        alert(data.error || 'Failed to generate video')
+      }
+    } catch (error) {
+      console.error('Generate video error:', error)
+      alert('Failed to generate video')
+    } finally {
+      setIsGeneratingVideo(false)
+      setSelectedSceneForVideo(null)
     }
   }
 
@@ -1305,17 +1465,44 @@ export function AdCreationSection({
                 </p>
               </div>
 
-              {/* Video Script */}
-              {videoScript && (
+              {/* Loading State for Dynamic Video Script */}
+              {isLoadingVideoScript && (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-8 flex flex-col items-center justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-purple-600 mb-3" />
+                  <p className="text-purple-700 font-medium">Generating AI video script...</p>
+                  <p className="text-sm text-purple-500">Tailored to your services</p>
+                </div>
+              )}
+
+              {/* Video Script Error */}
+              {videoScriptError && !isLoadingVideoScript && (
+                <div className="bg-red-50 rounded-lg p-4 text-red-700">
+                  <p>{videoScriptError}</p>
+                  <button
+                    onClick={fetchDynamicVideoScript}
+                    className="mt-2 text-sm underline hover:no-underline"
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+
+              {/* Video Script - Uses dynamic when available, falls back to static */}
+              {!isLoadingVideoScript && (dynamicVideoScript || videoScript) && (
                 <div className="space-y-4">
                   <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-purple-900">
-                        {PLATFORM_SPECS[selectedPlatform === 'google' ? 'youtube' : selectedPlatform].name} Video Script ({videoDuration})
-                      </h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-purple-900">
+                          {PLATFORM_SPECS[selectedPlatform === 'google' ? 'youtube' : selectedPlatform].name} Video Script ({videoDuration})
+                        </h4>
+                        {dynamicVideoScript && (
+                          <span className="text-xs bg-purple-200 text-purple-700 px-2 py-0.5 rounded-full">AI Generated</span>
+                        )}
+                      </div>
                       <button
                         onClick={() => handleCopyToClipboard(
-                          `HOOK: ${videoScript.hook}\n\nSCENES:\n${videoScript.scenes.map((s, i) => `${i + 1}. [${s.time}] ${s.action}\n   Visual: ${s.visual}\n   Text: ${s.textOverlay}`).join('\n\n')}\n\nVOICEOVER:\n${videoScript.voiceover}\n\nCTA: ${videoScript.cta}`,
+                          `HOOK: ${(dynamicVideoScript || videoScript)?.hook}\n\nSCENES:\n${(dynamicVideoScript || videoScript)?.scenes.map((s, i) => `${i + 1}. [${s.time}] ${s.action}\n   Visual: ${s.visual}\n   Text: ${s.textOverlay}`).join('\n\n')}\n\nVOICEOVER:\n${(dynamicVideoScript || videoScript)?.voiceover}\n\nCTA: ${(dynamicVideoScript || videoScript)?.cta}`,
                           -1
                         )}
                         className="flex items-center gap-1 px-3 py-1 bg-white border rounded-md text-sm hover:bg-gray-50"
@@ -1328,19 +1515,52 @@ export function AdCreationSection({
                     <div className="space-y-4">
                       {/* Hook */}
                       <div>
-                        <label className="text-xs font-medium text-purple-600 uppercase">Opening Hook ({videoScript.hookType})</label>
-                        <p className="text-purple-900 font-medium text-lg">{videoScript.hook}</p>
+                        <label className="text-xs font-medium text-purple-600 uppercase">Opening Hook ({(dynamicVideoScript || videoScript)?.hookType})</label>
+                        <p className="text-purple-900 font-medium text-lg">{(dynamicVideoScript || videoScript)?.hook}</p>
                       </div>
 
-                      {/* Scene Breakdown - Enhanced */}
+                      {/* Scene Breakdown - Enhanced with AI Video Generation */}
                       <div>
-                        <label className="text-xs font-medium text-purple-600 uppercase">Scene Breakdown</label>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-xs font-medium text-purple-600 uppercase">Scene Breakdown</label>
+                          <button
+                            onClick={() => handleGenerateVideo()}
+                            disabled={isGeneratingVideo}
+                            className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium rounded-md hover:shadow-md transition-all disabled:opacity-50"
+                          >
+                            {isGeneratingVideo && selectedSceneForVideo === null ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Film className="w-3 h-3" />
+                                Generate AI Video (~$0.70)
+                              </>
+                            )}
+                          </button>
+                        </div>
                         <div className="space-y-3 mt-2">
-                          {videoScript.scenes.map((scene, i) => (
+                          {(dynamicVideoScript || videoScript)?.scenes.map((scene, i) => (
                             <div key={i} className="bg-white rounded-lg p-3 border border-purple-100">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-purple-500 font-mono text-sm font-bold">{scene.time}</span>
-                                <span className="font-medium text-gray-900">{scene.action}</span>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-purple-500 font-mono text-sm font-bold">{scene.time}</span>
+                                  <span className="font-medium text-gray-900">{scene.action}</span>
+                                </div>
+                                <button
+                                  onClick={() => handleGenerateVideo(i)}
+                                  disabled={isGeneratingVideo}
+                                  className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1 disabled:opacity-50"
+                                >
+                                  {isGeneratingVideo && selectedSceneForVideo === i ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Film className="w-3 h-3" />
+                                  )}
+                                  {isGeneratingVideo && selectedSceneForVideo === i ? 'Generating...' : 'Generate Scene'}
+                                </button>
                               </div>
                               <div className="grid grid-cols-2 gap-2 text-sm">
                                 <div>
@@ -1363,18 +1583,71 @@ export function AdCreationSection({
                         </div>
                       </div>
 
+                      {/* Generated Videos Gallery */}
+                      {generatedVideos.length > 0 && (
+                        <div className="border-t border-purple-200 pt-4">
+                          <label className="text-xs font-medium text-purple-600 uppercase mb-2 block">Generated AI Videos</label>
+                          <div className="grid grid-cols-2 gap-3">
+                            {generatedVideos.map((vid, i) => (
+                              <div key={i} className="bg-white rounded-lg border overflow-hidden">
+                                <video
+                                  src={vid.video}
+                                  controls
+                                  className="w-full aspect-[9/16] object-cover bg-black"
+                                />
+                                <div className="p-2 text-xs text-gray-500">
+                                  {vid.duration}s • {vid.mode}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Voiceover */}
                       <div>
                         <label className="text-xs font-medium text-purple-600 uppercase">Voiceover Script</label>
                         <p className="text-gray-800 bg-white p-3 rounded-lg mt-1 italic">
-                          &ldquo;{videoScript.voiceover}&rdquo;
+                          &ldquo;{(dynamicVideoScript || videoScript)?.voiceover}&rdquo;
                         </p>
                       </div>
+
+                      {/* Dynamic Voiceover Guidance (only with dynamic script) */}
+                      {dynamicVideoScript?.voiceoverGuidance && (
+                        <div className="bg-green-50 rounded-lg p-3">
+                          <label className="text-xs font-medium text-green-600 uppercase mb-2 block">AI Voiceover Guidance</label>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div><span className="text-gray-500">Tone:</span> <span className="text-gray-700">{dynamicVideoScript.voiceoverGuidance.tone}</span></div>
+                            <div><span className="text-gray-500">Energy:</span> <span className="text-gray-700">{dynamicVideoScript.voiceoverGuidance.energy}</span></div>
+                            <div className="col-span-2"><span className="text-gray-500">Pacing:</span> <span className="text-gray-700">{dynamicVideoScript.voiceoverGuidance.pacing}</span></div>
+                            {dynamicVideoScript.voiceoverGuidance.emphasis.length > 0 && (
+                              <div className="col-span-2">
+                                <span className="text-gray-500">Emphasize:</span>
+                                <span className="text-gray-700 ml-1">{dynamicVideoScript.voiceoverGuidance.emphasis.join(', ')}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Music & Thumbnail Suggestions (only with dynamic script) */}
+                      {dynamicVideoScript && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-indigo-50 rounded-lg p-3">
+                            <label className="text-xs font-medium text-indigo-600 uppercase">Music Suggestion</label>
+                            <p className="text-sm text-indigo-800 mt-1">{dynamicVideoScript.musicSuggestion}</p>
+                          </div>
+                          <div className="bg-orange-50 rounded-lg p-3">
+                            <label className="text-xs font-medium text-orange-600 uppercase">Thumbnail Concept</label>
+                            <p className="text-sm text-orange-800 mt-1">{dynamicVideoScript.thumbnailConcept}</p>
+                          </div>
+                        </div>
+                      )}
 
                       {/* CTA */}
                       <div>
                         <label className="text-xs font-medium text-purple-600 uppercase">Call to Action</label>
-                        <p className="text-orange-600 font-semibold">{videoScript.cta}</p>
+                        <p className="text-orange-600 font-semibold">{(dynamicVideoScript || videoScript)?.cta}</p>
                       </div>
                     </div>
                   </div>
@@ -1387,14 +1660,14 @@ export function AdCreationSection({
                     >
                       <span className="font-medium text-gray-700 flex items-center gap-2">
                         <Sparkles className="w-4 h-4" />
-                        All Generated Hooks ({Object.keys(videoScript.hooks).length} types)
+                        All Generated Hooks ({Object.keys((dynamicVideoScript || videoScript)?.hooks || {}).length} types)
                       </span>
                       {showAllHooks ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </button>
 
                     {showAllHooks && (
                       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {Object.entries(videoScript.hooks).map(([type, hooks]) => (
+                        {Object.entries((dynamicVideoScript || videoScript)?.hooks || {}).map(([type, hooks]) => (
                           <div key={type} className="bg-white rounded-lg p-3">
                             <span className="text-xs font-medium text-purple-600 uppercase">{type}</span>
                             <div className="space-y-1 mt-1">
@@ -1403,7 +1676,7 @@ export function AdCreationSection({
                                   <span className="text-purple-400">•</span>
                                   {hook}
                                   <button
-                                    onClick={() => handleCopyToClipboard(hook, i * 100 + Object.keys(videoScript.hooks).indexOf(type))}
+                                    onClick={() => handleCopyToClipboard(hook, i * 100 + Object.keys((dynamicVideoScript || videoScript)?.hooks || {}).indexOf(type))}
                                     className="text-gray-400 hover:text-gray-600"
                                   >
                                     <Copy className="w-3 h-3" />
@@ -1432,7 +1705,7 @@ export function AdCreationSection({
 
                     {showBroll && (
                       <div className="mt-4 space-y-3">
-                        {videoScript.scenes.map((scene, i) => (
+                        {(dynamicVideoScript || videoScript)?.scenes.map((scene, i) => (
                           scene.broll && scene.broll.length > 0 && (
                             <div key={i} className="bg-white rounded-lg p-3">
                               <span className="text-xs font-medium text-gray-500">{scene.time}</span>
@@ -1525,30 +1798,32 @@ export function AdCreationSection({
                     )}
                   </div>
 
-                  {/* Pacing & Caption Strategy */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        Pacing Rules
-                      </h4>
-                      <div className="space-y-2 text-sm text-blue-700">
-                        <p><strong>Hook Window:</strong> {videoScript.pacing.hookWindow}</p>
-                        <p><strong>Cut Frequency:</strong> {videoScript.pacing.cutFrequency}</p>
-                        <p><strong>Text On Screen:</strong> {videoScript.pacing.textOnScreen}</p>
+                  {/* Pacing & Caption Strategy - only from static videoScript */}
+                  {videoScript && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-blue-50 rounded-lg p-4">
+                        <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Pacing Rules
+                        </h4>
+                        <div className="space-y-2 text-sm text-blue-700">
+                          <p><strong>Hook Window:</strong> {videoScript.pacing.hookWindow}</p>
+                          <p><strong>Cut Frequency:</strong> {videoScript.pacing.cutFrequency}</p>
+                          <p><strong>Text On Screen:</strong> {videoScript.pacing.textOnScreen}</p>
+                        </div>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-4">
+                        <h4 className="font-medium text-green-900 mb-2 flex items-center gap-2">
+                          <Palette className="w-4 h-4" />
+                          Caption Strategy
+                        </h4>
+                        <div className="space-y-2 text-sm text-green-700">
+                          <p><strong>Position:</strong> {videoScript.captionStrategy.position}</p>
+                          <p><strong>Style:</strong> {videoScript.captionStrategy.style}</p>
+                        </div>
                       </div>
                     </div>
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <h4 className="font-medium text-green-900 mb-2 flex items-center gap-2">
-                        <Palette className="w-4 h-4" />
-                        Caption Strategy
-                      </h4>
-                      <div className="space-y-2 text-sm text-green-700">
-                        <p><strong>Position:</strong> {videoScript.captionStrategy.position}</p>
-                        <p><strong>Style:</strong> {videoScript.captionStrategy.style}</p>
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Video Best Practices */}
                   <div className="bg-gray-50 rounded-lg p-4">
