@@ -39,8 +39,6 @@ import {
 } from 'lucide-react'
 import {
   findIndustryProfile,
-  generateImagePrompt,
-  generateImagePromptWithStyle,
   generateVideoScript,
   generateVoiceoverScript,
   PLATFORM_SPECS,
@@ -160,6 +158,16 @@ export function AdCreationSection({
   // Seasonal content
   const [seasonalContent, setSeasonalContent] = useState<ReturnType<typeof getSeasonalContent> | null>(null)
 
+  // Dynamic AI prompt state
+  const [dynamicPrompt, setDynamicPrompt] = useState<{
+    prompt: string
+    visualConcept: string
+    whyItWorks: string
+    scrollStopElement: string
+  } | null>(null)
+  const [isLoadingPrompt, setIsLoadingPrompt] = useState(false)
+  const [promptError, setPromptError] = useState<string | null>(null)
+
   // Bulk generation state
   const [bulkScope, setBulkScope] = useState<'minimal' | 'standard' | 'comprehensive'>('standard')
   const [showBulkPanel, setShowBulkPanel] = useState(false)
@@ -208,6 +216,70 @@ export function AdCreationSection({
     }
   }, [selectedPlatform])
 
+  // Fetch dynamic prompt when image tab settings change
+  useEffect(() => {
+    if (activeTab !== 'image' || !isExpanded) return
+
+    // Debounce the API call
+    const timeoutId = setTimeout(() => {
+      fetchDynamicPrompt()
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [
+    activeTab,
+    isExpanded,
+    selectedPlatform,
+    imagePromptType,
+    selectedUgcStyle,
+    selectedScrollStop,
+    selectedImageFormat,
+    businessInfo.services,
+    businessInfo.tagline,
+  ])
+
+  const fetchDynamicPrompt = async () => {
+    setIsLoadingPrompt(true)
+    setPromptError(null)
+
+    try {
+      const response = await fetch('/api/generate-visual-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: businessInfo.name,
+          businessType: businessInfo.businessType,
+          services: businessInfo.services,
+          city: businessInfo.city,
+          state: businessInfo.state,
+          tagline: businessInfo.tagline,
+          platform: selectedPlatform,
+          promptType: imagePromptType,
+          ugcStyle: selectedUgcStyle,
+          scrollStopTechnique: selectedScrollStop,
+          imageFormat: selectedImageFormat,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate prompt')
+      }
+
+      const data = await response.json()
+      setDynamicPrompt({
+        prompt: data.prompt,
+        visualConcept: data.visualConcept,
+        whyItWorks: data.whyItWorks,
+        scrollStopElement: data.scrollStopElement,
+      })
+    } catch (error) {
+      console.error('Failed to fetch dynamic prompt:', error)
+      setPromptError('Failed to generate AI prompt')
+    } finally {
+      setIsLoadingPrompt(false)
+    }
+  }
+
   // Helper: Get UGC style ranking for current platform
   const getUGCRanking = (style: UGCStyleKey): 'recommended' | 'acceptable' | 'avoid' | null => {
     const rankings = PLATFORM_UGC_RANKINGS[selectedPlatform]
@@ -251,36 +323,44 @@ export function AdCreationSection({
   }
 
   const handleGenerateImage = async () => {
-    if (!industryProfile) return
-
     setIsGeneratingImage(true)
     try {
-      // Use enhanced prompt with UGC and scroll-stop if selected
-      // NOW PASSES SERVICES AND TAGLINE for business-specific imagery
-      const promptData = selectedUgcStyle || selectedScrollStop
-        ? generateImagePromptWithStyle(
-            industryProfile,
-            businessInfo.name,
-            selectedPlatform,
-            imagePromptType,
-            selectedUgcStyle || undefined,
-            selectedScrollStop || undefined,
-            true,                     // autoOptimize
-            businessInfo.services,    // NEW: Pass actual services
-            businessInfo.tagline      // NEW: Pass tagline
-          )
-        : {
-            prompt: generateImagePrompt(
-              industryProfile,
-              businessInfo.name,
-              selectedPlatform,
-              imagePromptType,
-              businessInfo.services,  // NEW: Pass actual services
-              businessInfo.tagline    // NEW: Pass tagline
-            ),
-            format: IMAGE_FORMAT_PRESETS[selectedPlatform].formats[0],
-            autoSelected: { ugcStyle: null, scrollStopTechnique: null, reasoning: 'Manual mode' },
-          }
+      // Use dynamic AI-generated prompt if available, otherwise fetch it
+      let promptToUse = dynamicPrompt?.prompt
+
+      if (!promptToUse) {
+        // Fetch prompt on-demand if not already loaded
+        const response = await fetch('/api/generate-visual-prompt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessName: businessInfo.name,
+            businessType: businessInfo.businessType,
+            services: businessInfo.services,
+            city: businessInfo.city,
+            state: businessInfo.state,
+            tagline: businessInfo.tagline,
+            platform: selectedPlatform,
+            promptType: imagePromptType,
+            ugcStyle: selectedUgcStyle,
+            scrollStopTechnique: selectedScrollStop,
+            imageFormat: selectedImageFormat,
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to generate prompt')
+        }
+
+        const data = await response.json()
+        promptToUse = data.prompt
+        setDynamicPrompt({
+          prompt: data.prompt,
+          visualConcept: data.visualConcept,
+          whyItWorks: data.whyItWorks,
+          scrollStopElement: data.scrollStopElement,
+        })
+      }
 
       // Determine size based on selected format or platform default
       let size: '1024x1024' | '1792x1024' | '1024x1792' = '1024x1024'
@@ -302,7 +382,7 @@ export function AdCreationSection({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: promptData.prompt,
+          prompt: promptToUse,
           profileId,
           platform: selectedPlatform,
           size,
@@ -316,7 +396,7 @@ export function AdCreationSection({
       if (data.success) {
         setGeneratedImages(prev => [{
           image: data.image,
-          prompt: promptData.prompt,
+          prompt: promptToUse,
           revisedPrompt: data.revisedPrompt,
           platform: selectedPlatform,
           storagePath: data.storagePath,
@@ -1012,28 +1092,57 @@ export function AdCreationSection({
                 </div>
               </div>
 
-              {/* Prompt Preview */}
-              {industryProfile && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <label className="text-xs font-medium text-gray-500 uppercase mb-2 block">AI Prompt Preview (Service-Specific)</label>
-                  <p className="text-sm text-gray-600 whitespace-pre-wrap line-clamp-6">
-                    {selectedUgcStyle || selectedScrollStop
-                      ? generateImagePromptWithStyle(
-                          industryProfile,
-                          businessInfo.name,
-                          selectedPlatform,
-                          imagePromptType,
-                          selectedUgcStyle || undefined,
-                          selectedScrollStop || undefined,
-                          true,
-                          businessInfo.services,
-                          businessInfo.tagline
-                        ).prompt.substring(0, 500) + '...'
-                      : generateImagePrompt(industryProfile, businessInfo.name, selectedPlatform, imagePromptType, businessInfo.services, businessInfo.tagline).substring(0, 500) + '...'
-                    }
-                  </p>
+              {/* Dynamic AI Prompt Preview */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-gray-500 uppercase">AI-Generated Prompt</label>
+                  {isLoadingPrompt && (
+                    <div className="flex items-center gap-2 text-xs text-orange-600">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Generating...
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {promptError && (
+                  <p className="text-sm text-red-500">{promptError}</p>
+                )}
+
+                {dynamicPrompt && !isLoadingPrompt && (
+                  <>
+                    {/* Visual Concept Summary */}
+                    <div className="bg-white rounded p-2 border-l-4 border-orange-400">
+                      <p className="text-xs font-medium text-gray-700">{dynamicPrompt.visualConcept}</p>
+                    </div>
+
+                    {/* Why It Works */}
+                    <div className="flex items-start gap-2">
+                      <Zap className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-gray-600">{dynamicPrompt.whyItWorks}</p>
+                    </div>
+
+                    {/* Scroll Stop Element */}
+                    <div className="flex items-start gap-2">
+                      <Eye className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-gray-600"><span className="font-medium">Scroll-stopper:</span> {dynamicPrompt.scrollStopElement}</p>
+                    </div>
+
+                    {/* Full Prompt (collapsed) */}
+                    <details className="group">
+                      <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                        View full DALL-E prompt
+                      </summary>
+                      <p className="text-xs text-gray-600 whitespace-pre-wrap mt-2 p-2 bg-white rounded border max-h-40 overflow-y-auto">
+                        {dynamicPrompt.prompt}
+                      </p>
+                    </details>
+                  </>
+                )}
+
+                {!dynamicPrompt && !isLoadingPrompt && !promptError && (
+                  <p className="text-sm text-gray-400 italic">Select options above to generate AI prompt...</p>
+                )}
+              </div>
 
               {/* Generate Button */}
               <button
