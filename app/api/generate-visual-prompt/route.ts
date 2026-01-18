@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { PLATFORM_SPECS, UGC_STYLES, SCROLL_STOP_TECHNIQUES, IMAGE_FORMAT_PRESETS } from '@/lib/marketing-library'
+import { UGC_STYLES, SCROLL_STOP_TECHNIQUES, IMAGE_FORMAT_PRESETS } from '@/lib/marketing-library'
 
 interface GenerateVisualPromptRequest {
   businessName: string
@@ -44,8 +44,7 @@ export async function POST(request: NextRequest) {
 
     const anthropic = new Anthropic({ apiKey: anthropicKey })
 
-    // Get platform specs
-    const platformSpec = PLATFORM_SPECS[platform]
+    // Get format preset for the platform
     const formatPreset = IMAGE_FORMAT_PRESETS[platform]
 
     // Get UGC style details if selected
@@ -108,7 +107,6 @@ ${tagline ? `Brand Tagline: ${tagline}` : ''}
 ====================================
 PLATFORM: ${platform.toUpperCase()}
 ====================================
-Audience: ${platformSpec.audience}
 Best performing content: Native, authentic visuals that match how real users post
 ${selectedFormat ? `Image Format: ${selectedFormat.name} (${selectedFormat.ratio})` : ''}
 
