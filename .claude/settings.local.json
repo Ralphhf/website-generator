@@ -32,7 +32,21 @@
       "Bash(grep:*)",
       "Bash(git diff:*)",
       "Bash(git fetch:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(xargs:*)",
+      "Bash(timeout 60 tail:*)",
+      "Bash(npx next lint:*)",
+      "Bash(digital temperature display showing 120°F, Rinnai unit visible...\"\n\nAdditional improvements:\n- generateImagePrompt now accepts services[] and tagline parameters\n- generateImagePromptWithStyle passes services to base prompt\n- generateHooksForIndustry creates service-specific hooks with pain points\n- generateVideoScript uses service-specific B-roll suggestions\n- UI passes businessInfo.services and businessInfo.tagline to all prompts\n- Tagline integrated into MOOD section of prompts\n\nThis is what separates a $500/mo tool from a $15,000/mo agency.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(timeout 15 npx next build:*)",
+      "Bash(npx next build)",
+      "WebSearch",
+      "WebFetch(domain:zapier.com)",
+      "WebFetch(domain:pxz.ai)",
+      "WebFetch(domain:ideogram.ai)",
+      "WebFetch(domain:docs.ideogram.ai)",
+      "WebFetch(domain:fal.ai)",
+      "WebFetch(domain:elevenlabs.io)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

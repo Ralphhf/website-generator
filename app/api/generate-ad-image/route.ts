@@ -90,17 +90,7 @@ export async function POST(request: NextRequest) {
     // Upload to Supabase Storage
     const supabase = getSupabase()
 
-    // Check if bucket exists, create if not
-    const { data: buckets } = await supabase.storage.listBuckets()
-    const bucketExists = buckets?.some(b => b.name === 'ad-images')
-
-    if (!bucketExists) {
-      await supabase.storage.createBucket('ad-images', {
-        public: true,
-        fileSizeLimit: 10485760, // 10MB
-      })
-    }
-
+    // Upload directly - bucket should already exist (create 'ad-images' bucket manually in Supabase)
     const { error: uploadError } = await supabase.storage
       .from('ad-images')
       .upload(fileName, imageBuffer, {

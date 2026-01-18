@@ -95,40 +95,7 @@ export async function POST(request: NextRequest) {
     // Upload to Supabase Storage
     const supabase = getSupabase()
 
-    // Check if bucket exists, create if not
-    let bucketReady = false
-    try {
-      const { data: buckets } = await supabase.storage.listBuckets()
-      bucketReady = buckets?.some(b => b.name === 'ad-videos') || false
-
-      if (!bucketReady) {
-        const { error: createError } = await supabase.storage.createBucket('ad-videos', {
-          public: true,
-          fileSizeLimit: 104857600, // 100MB for videos
-        })
-        if (!createError) {
-          bucketReady = true
-        } else {
-          console.error('Failed to create bucket:', createError)
-        }
-      }
-    } catch (bucketError) {
-      console.error('Bucket check/create error:', bucketError)
-    }
-
-    // If bucket isn't ready, return the fal.ai URL directly
-    if (!bucketReady) {
-      return NextResponse.json({
-        success: true,
-        video: videoUrl,
-        stored: false,
-        warning: 'Video generated but storage bucket not available. Create "ad-videos" bucket in Supabase.',
-        duration,
-        model: isImageToVideo ? 'kling-v2.6-pro' : 'kling-v2.5-turbo-pro',
-        mode: isImageToVideo ? 'image-to-video' : 'text-to-video',
-      })
-    }
-
+    // Upload directly - bucket should already exist (create 'ad-videos' bucket manually in Supabase)
     const { error: uploadError } = await supabase.storage
       .from('ad-videos')
       .upload(fileName, videoBuffer, {

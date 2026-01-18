@@ -126,40 +126,7 @@ export async function POST(request: NextRequest) {
     // Upload to Supabase Storage
     const supabase = getSupabase()
 
-    // Check if bucket exists, create if not
-    let bucketReady = false
-    try {
-      const { data: buckets } = await supabase.storage.listBuckets()
-      bucketReady = buckets?.some(b => b.name === 'ad-voiceovers') || false
-
-      if (!bucketReady) {
-        const { error: createError } = await supabase.storage.createBucket('ad-voiceovers', {
-          public: true,
-          fileSizeLimit: 10485760, // 10MB for audio
-        })
-        if (!createError) {
-          bucketReady = true
-        } else {
-          console.error('Failed to create voiceover bucket:', createError)
-        }
-      }
-    } catch (bucketError) {
-      console.error('Bucket check/create error:', bucketError)
-    }
-
-    // If bucket isn't ready, return audio as base64
-    if (!bucketReady) {
-      const base64Audio = audioBuffer.toString('base64')
-      return NextResponse.json({
-        success: true,
-        audio: `data:audio/mpeg;base64,${base64Audio}`,
-        stored: false,
-        warning: 'Audio generated but storage bucket not available. Create "ad-voiceovers" bucket in Supabase.',
-        voiceUsed: voice.name,
-        characterCount: text.length,
-      })
-    }
-
+    // Upload directly - bucket should already exist (create 'ad-voiceovers' bucket manually in Supabase)
     const { error: uploadError } = await supabase.storage
       .from('ad-voiceovers')
       .upload(fileName, audioBuffer, {
