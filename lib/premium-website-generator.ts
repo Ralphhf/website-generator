@@ -435,6 +435,8 @@ html {
 }
 
 function generateNavbar(businessInfo: BusinessInfo): string {
+  const ctaText = getCTAText(businessInfo.primaryCTA)
+
   return `'use client'
 
 import { useState, useEffect } from 'react'
@@ -504,7 +506,7 @@ export function Navbar() {
               <span className="font-medium">${formatPhoneNumber(businessInfo.phone)}</span>
             </a>` : ''}
             <Button asChild>
-              <Link href="/contact">Get a Quote</Link>
+              <Link href="/contact">${ctaText.primary}</Link>
             </Button>
           </div>
 
@@ -544,7 +546,7 @@ export function Navbar() {
                 </Link>
               ))}
               <Button asChild className="w-full mt-4">
-                <Link href="/contact">Get a Quote</Link>
+                <Link href="/contact">${ctaText.primary}</Link>
               </Button>
             </div>
           </motion.div>
@@ -723,6 +725,8 @@ export { Button }`
 }
 
 function generateHeroComponent(businessInfo: BusinessInfo): string {
+  const ctaText = getCTAText(businessInfo.primaryCTA)
+
   return `'use client'
 
 import { motion } from 'framer-motion'
@@ -821,12 +825,12 @@ export function Hero({
           >
             <Button size="lg" asChild>
               <Link href="/contact">
-                Get Free Quote
+                ${ctaText.primary}
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link href="/services">View Services</Link>
+              <Link href="/services">${ctaText.secondary}</Link>
             </Button>
           </motion.div>
 
@@ -1046,6 +1050,8 @@ export function Testimonials() {
 }
 
 function generateCTAComponent(businessInfo: BusinessInfo): string {
+  const ctaText = getCTAText(businessInfo.primaryCTA)
+
   return `'use client'
 
 import { motion } from 'framer-motion'
@@ -1078,7 +1084,7 @@ export function CTA() {
             <div className="flex flex-wrap justify-center gap-4">
               <Button size="lg" className="bg-white text-primary-700 hover:bg-gray-100" asChild>
                 <Link href="/contact">
-                  Get Free Quote
+                  ${ctaText.primary}
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
