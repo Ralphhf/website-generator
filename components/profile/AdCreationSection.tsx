@@ -534,7 +534,16 @@ export function AdCreationSection({
       const response = await fetch(`/api/generate-ad-image?profileId=${profileId}`)
       if (response.ok) {
         const data = await response.json()
-        setGeneratedImages(data.images || [])
+        // Map database fields to UI expected fields
+        const images = (data.images || []).map((img: { id: string; image_url: string; prompt: string; revised_prompt?: string; platform: string; storage_path: string }) => ({
+          id: img.id,
+          image: img.image_url,
+          prompt: img.prompt,
+          revisedPrompt: img.revised_prompt,
+          platform: img.platform,
+          storagePath: img.storage_path,
+        }))
+        setGeneratedImages(images)
       }
     } catch (error) {
       console.error('Failed to load images:', error)
