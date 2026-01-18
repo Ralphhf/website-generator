@@ -120,17 +120,17 @@ ${ugcDetails ? `
 UGC STYLE: ${ugcDetails.name}
 ====================================
 Description: ${ugcDetails.description}
-Visual characteristics: ${ugcDetails.visualCues.join(', ')}
-Camera: ${ugcDetails.camera}
+Camera: ${ugcDetails.cameraInstructions}
 Lighting: ${ugcDetails.lighting}
+Composition: ${ugcDetails.composition}
 ` : ''}
 
 ${scrollStopDetails ? `
 ====================================
 SCROLL-STOP TECHNIQUE: ${scrollStopDetails.name}
 ====================================
-Psychology: ${scrollStopDetails.psychology}
-Visual elements: ${scrollStopDetails.visualElements.join(', ')}
+Description: ${scrollStopDetails.description}
+Implementation: ${scrollStopDetails.implementation}
 ` : ''}
 
 ====================================
