@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Building2, FileText, Calendar, Tag, Sparkles, Loader2, MousePointer } from 'lucide-react'
 import { Button, Input, Textarea, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select'
 import { BusinessInfo, PrimaryCTAType } from '@/lib/types'
+import { businessTypeCategories } from '@/lib/google-places'
 
 const CTA_OPTIONS: { value: PrimaryCTAType; label: string; description: string }[] = [
   { value: 'call', label: 'Call Now', description: 'Best for service businesses (plumbers, lawyers, etc.)' },
@@ -23,11 +25,13 @@ interface BasicInfoStepProps {
 
 export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepProps) {
   const [name, setName] = useState(businessInfo.name)
+  const [businessType, setBusinessType] = useState(businessInfo.businessType || '')
   const [tagline, setTagline] = useState(businessInfo.tagline || '')
   const [description, setDescription] = useState(businessInfo.description || '')
   const [yearsInBusiness, setYearsInBusiness] = useState(businessInfo.yearsInBusiness?.toString() || '')
   const [services, setServices] = useState(businessInfo.services?.join(', ') || '')
   const [primaryCTA, setPrimaryCTA] = useState<PrimaryCTAType | ''>(businessInfo.primaryCTA || '')
+  const [calendlyUrl, setCalendlyUrl] = useState(businessInfo.calendlyUrl || '')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // AI generation states
@@ -39,6 +43,7 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
     const newErrors: Record<string, string> = {}
 
     if (!name.trim()) newErrors.name = 'Business name is required'
+    if (!businessType) newErrors.businessType = 'Business type is required'
     if (!description.trim()) newErrors.description = 'Description is required'
     if (description.length < 50) newErrors.description = 'Description should be at least 50 characters for better SEO'
 
@@ -50,11 +55,13 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
     if (validate()) {
       onSubmit({
         name,
+        businessType,
         tagline,
         description,
         yearsInBusiness: parseInt(yearsInBusiness) || 0,
         services: services.split(',').map(s => s.trim()).filter(Boolean),
         primaryCTA: primaryCTA || undefined,
+        calendlyUrl: primaryCTA === 'book' ? calendlyUrl : undefined,
       })
     }
   }
@@ -73,7 +80,7 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
         body: JSON.stringify({
           type: 'tagline',
           businessName: name,
-          businessType: businessInfo.businessType,
+          businessType: businessType,
           services: services.split(',').map(s => s.trim()).filter(Boolean),
         }),
       })
@@ -103,7 +110,7 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
         body: JSON.stringify({
           type: 'description',
           businessName: name,
-          businessType: businessInfo.businessType,
+          businessType: businessType,
           services: services.split(',').map(s => s.trim()).filter(Boolean),
           yearsInBusiness: parseInt(yearsInBusiness) || 0,
           city: businessInfo.city,
@@ -140,7 +147,7 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
         body: JSON.stringify({
           type: 'services',
           businessName: name,
-          businessType: businessInfo.businessType || '',
+          businessType: businessType || '',
           existingServices: services.split(',').map(s => s.trim()).filter(Boolean),
         }),
       })
@@ -195,6 +202,38 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
             error={errors.name}
             icon={<Building2 className="w-5 h-5" />}
           />
+
+          {/* Business Type Select */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Business Type
+            </label>
+            <Select value={businessType} onValueChange={setBusinessType}>
+              <SelectTrigger className={errors.businessType ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Select business type" />
+              </SelectTrigger>
+              <SelectContent>
+                {businessTypeCategories.map((category) => (
+                  <SelectGroup key={category.category}>
+                    <SelectLabel className="text-xs font-bold text-primary-600 uppercase tracking-wider pt-3 pb-1">
+                      {category.category}
+                    </SelectLabel>
+                    {category.options.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-gray-400" />
+                          {option.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.businessType && (
+              <p className="mt-1 text-sm text-red-500">{errors.businessType}</p>
+            )}
+          </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -318,6 +357,32 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
                 </button>
               ))}
             </div>
+
+            {/* Conditional Calendly URL input */}
+            {primaryCTA === 'book' && (
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Calendly URL
+                </label>
+                <Input
+                  placeholder="https://calendly.com/yourbusiness/30min"
+                  value={calendlyUrl}
+                  onChange={(e) => setCalendlyUrl(e.target.value)}
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  Enter your Calendly scheduling link. This will be embedded on your contact page.
+                </p>
+              </div>
+            )}
+
+            {/* Shop Now notice */}
+            {primaryCTA === 'shop' && (
+              <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-100">
+                <p className="text-sm text-purple-700">
+                  You'll be able to add your products in the next steps. A Shop page will be added to your website.
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

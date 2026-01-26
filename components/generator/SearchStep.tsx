@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Search, MapPin, Building2, Loader2 } from 'lucide-react'
 import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select'
 import { BusinessProfile } from '@/lib/types'
-import { businessTypeOptions, radiusOptions } from '@/lib/google-places'
+import { businessTypeCategories, radiusOptions } from '@/lib/google-places'
 
 interface SearchStepProps {
   onSearchResults: (results: BusinessProfile[]) => void
@@ -117,13 +117,20 @@ export function SearchStep({ onSearchResults }: SearchStepProps) {
                 <SelectValue placeholder="Select business type" />
               </SelectTrigger>
               <SelectContent>
-                {businessTypeOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-gray-400" />
-                      {option.label}
-                    </div>
-                  </SelectItem>
+                {businessTypeCategories.map((category) => (
+                  <SelectGroup key={category.category}>
+                    <SelectLabel className="text-xs font-bold text-primary-600 uppercase tracking-wider pt-3 pb-1">
+                      {category.category}
+                    </SelectLabel>
+                    {category.options.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-gray-400" />
+                          {option.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
