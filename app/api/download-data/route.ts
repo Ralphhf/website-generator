@@ -26,7 +26,35 @@ async function downloadImage(url: string, filepath: string): Promise<boolean> {
   }
 }
 
+// Save base64 data URL to file
+function saveBase64Image(dataUrl: string, filepath: string): boolean {
+  try {
+    // Extract base64 data from data URL (format: data:image/jpeg;base64,/9j/4AAQ...)
+    const matches = dataUrl.match(/^data:image\/(\w+);base64,(.+)$/)
+    if (!matches) {
+      console.error('Invalid base64 data URL format')
+      return false
+    }
+    const base64Data = matches[2]
+    const buffer = Buffer.from(base64Data, 'base64')
+    fs.writeFileSync(filepath, buffer)
+    return true
+  } catch (error) {
+    console.error('Failed to save base64 image:', error)
+    return false
+  }
+}
+
 function getImageExtension(url: string): string {
+  // Handle base64 data URLs
+  if (url.startsWith('data:image/')) {
+    const match = url.match(/^data:image\/(\w+);/)
+    if (match) {
+      const format = match[1].toLowerCase()
+      if (format === 'jpeg') return '.jpg'
+      return `.${format}`
+    }
+  }
   if (url.startsWith('blob:')) return '.jpg'
   const urlPath = url.split('?')[0]
   const ext = path.extname(urlPath).toLowerCase()
@@ -166,6 +194,7 @@ export async function POST(request: NextRequest) {
 
         for (const image of section.images || []) {
           if (image.url && image.url.startsWith('http')) {
+            // Handle external URLs (Unsplash, etc.)
             imageCounter++
             const ext = getImageExtension(image.url)
             const filename = `portfolio-${imageCounter}${ext}`
@@ -178,8 +207,22 @@ export async function POST(request: NextRequest) {
               url: downloaded ? `images/${filename}` : image.url,
               originalUrl: image.url
             })
+          } else if (image.url && image.url.startsWith('data:image/')) {
+            // Handle base64 uploaded images
+            imageCounter++
+            const ext = getImageExtension(image.url)
+            const filename = `portfolio-${imageCounter}${ext}`
+            const filepath = path.join(imagesDir, filename)
+
+            const saved = saveBase64Image(image.url, filepath)
+
+            updatedImages.push({
+              ...image,
+              url: saved ? `images/${filename}` : image.url,
+              originalUrl: 'uploaded-image'
+            })
           } else {
-            // Keep non-http URLs as-is
+            // Keep other URLs as-is
             updatedImages.push({
               ...image,
               originalUrl: image.url

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Plus, Trash2, Image as ImageIcon, Upload, X, FolderOpen, Sparkles, Loader2, Search, Check } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Image as ImageIcon, Upload, X, FolderOpen, Sparkles, Loader2, Search, Check, RefreshCw, ChevronRight } from 'lucide-react'
 import { Button, Input, Textarea, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
 import { PortfolioSection, PortfolioImage } from '@/lib/types'
 import { generateId, getBusinessTypeName } from '@/lib/utils'
@@ -49,6 +49,8 @@ export function PortfolioStep({ portfolioSections: initialSections, businessType
   const [loadingPhotos, setLoadingPhotos] = useState(false)
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [lastSearchQuery, setLastSearchQuery] = useState('')
 
   const suggestions = sectionSuggestions[businessType] || sectionSuggestions.default
 
@@ -75,21 +77,37 @@ export function PortfolioStep({ portfolioSections: initialSections, businessType
     ))
   }
 
-  const handleImageUpload = (sectionId: string, files: FileList | null) => {
+  const handleImageUpload = async (sectionId: string, files: FileList | null) => {
     if (!files) return
 
-    const newImages: PortfolioImage[] = Array.from(files).map(file => ({
-      id: generateId(),
-      url: URL.createObjectURL(file),
-      alt: file.name.replace(/\.[^/.]+$/, ''),
-      caption: '',
-    }))
+    // Convert files to base64 data URLs so they persist and can be saved
+    const newImages: PortfolioImage[] = await Promise.all(
+      Array.from(files).map(async (file) => {
+        const base64 = await fileToBase64(file)
+        return {
+          id: generateId(),
+          url: base64,
+          alt: file.name.replace(/\.[^/.]+$/, ''),
+          caption: '',
+        }
+      })
+    )
 
     setSections(sections.map(s =>
       s.id === sectionId
         ? { ...s, images: [...s.images, ...newImages] }
         : s
     ))
+  }
+
+  // Helper function to convert File to base64 data URL
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = (error) => reject(error)
+    })
   }
 
   const removeImage = (sectionId: string, imageId: string) => {
@@ -109,7 +127,7 @@ export function PortfolioStep({ portfolioSections: initialSections, businessType
     await fetchUnsplashPhotos(sectionTitle)
   }
 
-  const fetchUnsplashPhotos = async (query: string) => {
+  const fetchUnsplashPhotos = async (query: string, page: number = 1) => {
     setLoadingPhotos(true)
     try {
       const searchTerm = query || businessType.replace(/_/g, ' ')
@@ -118,6 +136,7 @@ export function PortfolioStep({ portfolioSections: initialSections, businessType
         businessType,
         sectionTitle: searchTerm,
         perPage: '12',
+        page: page.toString(),
       })
 
       const response = await fetch(`/api/unsplash?${params}`)
@@ -125,12 +144,24 @@ export function PortfolioStep({ portfolioSections: initialSections, businessType
 
       if (data.success && data.photos) {
         setUnsplashPhotos(data.photos)
+        setLastSearchQuery(searchTerm)
+        setCurrentPage(page)
       }
     } catch (error) {
       console.error('Failed to fetch Unsplash photos:', error)
     } finally {
       setLoadingPhotos(false)
     }
+  }
+
+  const loadMorePhotos = () => {
+    fetchUnsplashPhotos(lastSearchQuery, currentPage + 1)
+  }
+
+  const refreshPhotos = () => {
+    // Get a random page between 1-10 to show different results
+    const randomPage = Math.floor(Math.random() * 10) + 1
+    fetchUnsplashPhotos(lastSearchQuery, randomPage)
   }
 
   const togglePhotoSelection = (photoId: string) => {
@@ -484,6 +515,35 @@ export function PortfolioStep({ portfolioSections: initialSections, businessType
                   </div>
                 )}
               </div>
+
+              {/* Pagination Controls */}
+              {unsplashPhotos.length > 0 && (
+                <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={refreshPhotos}
+                    disabled={loadingPhotos}
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${loadingPhotos ? 'animate-spin' : ''}`} />
+                    Shuffle Results
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadMorePhotos}
+                    disabled={loadingPhotos}
+                    className="flex items-center gap-2"
+                  >
+                    Next 12
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                  <span className="text-xs text-gray-400">
+                    Page {currentPage}
+                  </span>
+                </div>
+              )}
 
               {/* Modal Footer */}
               <div className="p-4 border-t border-gray-200 flex items-center justify-between">
