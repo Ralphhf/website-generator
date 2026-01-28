@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Building2, FileText, Calendar, Tag, Sparkles, Loader2, MousePointer } from 'lucide-react'
+import { ArrowLeft, Building2, FileText, Calendar, Tag, Sparkles, Loader2, MousePointer, MapPin, Link2, CheckCircle } from 'lucide-react'
 import { Button, Input, Textarea, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select'
 import { BusinessInfo, PrimaryCTAType } from '@/lib/types'
@@ -34,6 +34,13 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
   const [calendlyUrl, setCalendlyUrl] = useState(businessInfo.calendlyUrl || '')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  // Google Maps URL fetch states
+  const [googleMapsUrl, setGoogleMapsUrl] = useState('')
+  const [googlePhotos, setGooglePhotos] = useState<string[]>(businessInfo.googlePhotos || [])
+  const [fetchingBusiness, setFetchingBusiness] = useState(false)
+  const [fetchSuccess, setFetchSuccess] = useState(false)
+  const [fetchError, setFetchError] = useState('')
+
   // AI generation states
   const [generatingTagline, setGeneratingTagline] = useState(false)
   const [generatingDescription, setGeneratingDescription] = useState(false)
@@ -62,7 +69,49 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
         services: services.split(',').map(s => s.trim()).filter(Boolean),
         primaryCTA: primaryCTA || undefined,
         calendlyUrl: primaryCTA === 'book' ? calendlyUrl : undefined,
+        googlePhotos: googlePhotos.length > 0 ? googlePhotos : undefined,
       })
+    }
+  }
+
+  // Fetch business data from Google Maps URL
+  const fetchFromGoogle = async () => {
+    if (!googleMapsUrl.trim()) {
+      setFetchError('Please paste a Google Maps URL')
+      return
+    }
+
+    setFetchingBusiness(true)
+    setFetchError('')
+    setFetchSuccess(false)
+
+    try {
+      const response = await fetch('/api/fetch-google-business', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: googleMapsUrl }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.business) {
+        const biz = data.business
+        // Pre-fill form fields
+        if (biz.name) setName(biz.name)
+        if (biz.businessType) setBusinessType(biz.businessType)
+        if (biz.photos && biz.photos.length > 0) {
+          setGooglePhotos(biz.photos)
+        }
+        setFetchSuccess(true)
+        setFetchError('')
+      } else {
+        setFetchError(data.error || 'Failed to fetch business data')
+      }
+    } catch (error) {
+      console.error('Failed to fetch from Google:', error)
+      setFetchError('Failed to fetch business data. Please check the URL.')
+    } finally {
+      setFetchingBusiness(false)
     }
   }
 
@@ -182,6 +231,59 @@ export function BasicInfoStep({ businessInfo, onSubmit, onBack }: BasicInfoStepP
           Tell us about the business to create compelling website content
         </p>
       </motion.div>
+
+      {/* Google Maps URL Fetch Section */}
+      <Card variant="outlined" className="mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <MapPin className="w-5 h-5 text-blue-500" />
+            Import from Google Maps
+          </CardTitle>
+          <CardDescription>
+            Paste a Google Maps URL to automatically fetch business info and photos
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Input
+                placeholder="Paste Google Maps URL here..."
+                value={googleMapsUrl}
+                onChange={(e) => {
+                  setGoogleMapsUrl(e.target.value)
+                  setFetchError('')
+                  setFetchSuccess(false)
+                }}
+                icon={<Link2 className="w-5 h-5" />}
+              />
+            </div>
+            <Button
+              onClick={fetchFromGoogle}
+              disabled={fetchingBusiness || !googleMapsUrl.trim()}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {fetchingBusiness ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                'Fetch'
+              )}
+            </Button>
+          </div>
+
+          {fetchError && (
+            <p className="mt-2 text-sm text-red-500">{fetchError}</p>
+          )}
+
+          {fetchSuccess && (
+            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
+              <CheckCircle className="w-5 h-5" />
+              <span className="text-sm">
+                Fetched <strong>{name}</strong> with {googlePhotos.length} photos!
+              </span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card variant="gradient">
         <CardHeader>

@@ -92,6 +92,9 @@ export interface BusinessInfo {
   menu?: MenuConfig; // For restaurants
   booking?: BookingConfig; // For service businesses
   medical?: MedicalConfig; // For healthcare
+
+  // Google Business Photos (fetched from URL in Quick Entry)
+  googlePhotos?: string[];
 }
 
 // Product Types (for Shop Now CTA)

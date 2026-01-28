@@ -524,7 +524,7 @@ function GeneratorContent() {
                 businessDescription={businessInfo.description}
                 businessServices={businessInfo.services}
                 portfolioImages={businessInfo.portfolioSections.flatMap(s => s.images)}
-                googlePhotos={selectedBusiness?.photos || []}
+                googlePhotos={selectedBusiness?.photos || businessInfo.googlePhotos || []}
                 onSubmit={handleHeroImageSubmit}
                 onBack={handleBack}
               />
@@ -553,7 +553,7 @@ function GeneratorContent() {
               <PortfolioStep
                 portfolioSections={businessInfo.portfolioSections}
                 businessType={businessInfo.businessType}
-                googlePhotos={selectedBusiness?.photos || []}
+                googlePhotos={selectedBusiness?.photos || businessInfo.googlePhotos || []}
                 onSubmit={handlePortfolioSubmit}
                 onBack={handleBack}
               />
