@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
           types: details.types || [],
           rating: details.rating,
           reviewCount: details.user_ratings_total,
-          photos: details.photos?.slice(0, 5).map(
+          photos: details.photos?.map(
             (p: { photo_reference: string }) =>
               `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${p.photo_reference}&key=${GOOGLE_MAPS_API_KEY}`
           ),
