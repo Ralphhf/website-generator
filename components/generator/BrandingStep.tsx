@@ -16,20 +16,109 @@ import {
 
 interface BrandingStepProps {
   branding?: BrandingConfig
+  businessType?: string
   onSubmit: (branding: BrandingConfig) => void
   onBack: () => void
 }
+
+// Default branding recommendations based on business type
+const BUSINESS_TYPE_DEFAULTS: Record<string, { colorScheme: ColorScheme; fontStyle: FontStyle; brandTone: BrandTone }> = {
+  // Food & Beverage
+  restaurant: { colorScheme: 'red', fontStyle: 'elegant', brandTone: 'friendly' },
+  cafe: { colorScheme: 'orange', fontStyle: 'modern', brandTone: 'friendly' },
+  bakery: { colorScheme: 'orange', fontStyle: 'elegant', brandTone: 'friendly' },
+  bar: { colorScheme: 'slate', fontStyle: 'bold', brandTone: 'friendly' },
+
+  // Beauty & Personal Care
+  beauty_salon: { colorScheme: 'purple', fontStyle: 'elegant', brandTone: 'luxury' },
+  hair_salon: { colorScheme: 'purple', fontStyle: 'modern', brandTone: 'friendly' },
+  barber_shop: { colorScheme: 'slate', fontStyle: 'bold', brandTone: 'professional' },
+  spa: { colorScheme: 'teal', fontStyle: 'elegant', brandTone: 'luxury' },
+  nail_salon: { colorScheme: 'purple', fontStyle: 'elegant', brandTone: 'friendly' },
+
+  // Healthcare
+  dentist: { colorScheme: 'blue', fontStyle: 'modern', brandTone: 'professional' },
+  doctor: { colorScheme: 'blue', fontStyle: 'modern', brandTone: 'professional' },
+  chiropractor: { colorScheme: 'green', fontStyle: 'modern', brandTone: 'professional' },
+  physiotherapist: { colorScheme: 'teal', fontStyle: 'modern', brandTone: 'professional' },
+  veterinary_care: { colorScheme: 'green', fontStyle: 'modern', brandTone: 'friendly' },
+  psychologist: { colorScheme: 'teal', fontStyle: 'classic', brandTone: 'professional' },
+
+  // Home Services
+  plumber: { colorScheme: 'blue', fontStyle: 'bold', brandTone: 'professional' },
+  electrician: { colorScheme: 'orange', fontStyle: 'bold', brandTone: 'professional' },
+  hvac_contractor: { colorScheme: 'blue', fontStyle: 'bold', brandTone: 'professional' },
+  roofing_contractor: { colorScheme: 'slate', fontStyle: 'bold', brandTone: 'professional' },
+  general_contractor: { colorScheme: 'orange', fontStyle: 'bold', brandTone: 'professional' },
+  landscaping: { colorScheme: 'green', fontStyle: 'modern', brandTone: 'friendly' },
+  house_cleaning: { colorScheme: 'teal', fontStyle: 'modern', brandTone: 'friendly' },
+  painter: { colorScheme: 'orange', fontStyle: 'modern', brandTone: 'professional' },
+
+  // Professional Services
+  lawyer: { colorScheme: 'slate', fontStyle: 'classic', brandTone: 'professional' },
+  accountant: { colorScheme: 'blue', fontStyle: 'classic', brandTone: 'professional' },
+  real_estate_agency: { colorScheme: 'blue', fontStyle: 'elegant', brandTone: 'professional' },
+  insurance_agency: { colorScheme: 'blue', fontStyle: 'classic', brandTone: 'professional' },
+  financial_planner: { colorScheme: 'green', fontStyle: 'classic', brandTone: 'professional' },
+  marketing_agency: { colorScheme: 'purple', fontStyle: 'modern', brandTone: 'playful' },
+
+  // Fitness & Sports
+  gym: { colorScheme: 'red', fontStyle: 'bold', brandTone: 'friendly' },
+  yoga_studio: { colorScheme: 'teal', fontStyle: 'elegant', brandTone: 'friendly' },
+  martial_arts_school: { colorScheme: 'red', fontStyle: 'bold', brandTone: 'professional' },
+  personal_trainer: { colorScheme: 'orange', fontStyle: 'bold', brandTone: 'friendly' },
+
+  // Retail
+  jewelry_store: { colorScheme: 'slate', fontStyle: 'elegant', brandTone: 'luxury' },
+  florist: { colorScheme: 'green', fontStyle: 'elegant', brandTone: 'friendly' },
+  clothing_store: { colorScheme: 'slate', fontStyle: 'modern', brandTone: 'friendly' },
+  furniture_store: { colorScheme: 'orange', fontStyle: 'modern', brandTone: 'professional' },
+
+  // Automotive
+  car_repair: { colorScheme: 'red', fontStyle: 'bold', brandTone: 'professional' },
+  car_dealer: { colorScheme: 'blue', fontStyle: 'bold', brandTone: 'professional' },
+  car_wash: { colorScheme: 'blue', fontStyle: 'modern', brandTone: 'friendly' },
+
+  // Events
+  photographer: { colorScheme: 'slate', fontStyle: 'elegant', brandTone: 'professional' },
+  event_planner: { colorScheme: 'purple', fontStyle: 'elegant', brandTone: 'friendly' },
+  wedding_venue: { colorScheme: 'purple', fontStyle: 'elegant', brandTone: 'luxury' },
+
+  // Education
+  tutoring: { colorScheme: 'blue', fontStyle: 'modern', brandTone: 'friendly' },
+  preschool: { colorScheme: 'orange', fontStyle: 'modern', brandTone: 'playful' },
+  music_school: { colorScheme: 'purple', fontStyle: 'modern', brandTone: 'friendly' },
+
+  // Other
+  tattoo_parlor: { colorScheme: 'slate', fontStyle: 'bold', brandTone: 'playful' },
+  pet_store: { colorScheme: 'green', fontStyle: 'modern', brandTone: 'playful' },
+  dog_groomer: { colorScheme: 'teal', fontStyle: 'modern', brandTone: 'friendly' },
+}
+
+// Fallback defaults
+const DEFAULT_BRANDING = { colorScheme: 'blue' as ColorScheme, fontStyle: 'modern' as FontStyle, brandTone: 'professional' as BrandTone }
 
 const colorSchemeKeys = Object.keys(COLOR_SCHEMES) as Exclude<ColorScheme, 'custom'>[]
 const fontStyleKeys = Object.keys(FONT_STYLES) as FontStyle[]
 const brandToneKeys = Object.keys(BRAND_TONES) as BrandTone[]
 
-export function BrandingStep({ branding, onSubmit, onBack }: BrandingStepProps) {
-  const [colorScheme, setColorScheme] = useState<ColorScheme>(branding?.colorScheme || 'blue')
+export function BrandingStep({ branding, businessType, onSubmit, onBack }: BrandingStepProps) {
+  // Get recommended defaults based on business type
+  const getDefaults = () => {
+    if (branding) return branding // Use existing branding if provided
+    if (businessType && BUSINESS_TYPE_DEFAULTS[businessType]) {
+      return BUSINESS_TYPE_DEFAULTS[businessType]
+    }
+    return DEFAULT_BRANDING
+  }
+
+  const defaults = getDefaults()
+
+  const [colorScheme, setColorScheme] = useState<ColorScheme>(defaults.colorScheme)
   const [customPrimaryColor, setCustomPrimaryColor] = useState(branding?.customPrimaryColor || '#3b82f6')
   const [customSecondaryColor, setCustomSecondaryColor] = useState(branding?.customSecondaryColor || '#1e40af')
-  const [fontStyle, setFontStyle] = useState<FontStyle>(branding?.fontStyle || 'modern')
-  const [brandTone, setBrandTone] = useState<BrandTone>(branding?.brandTone || 'professional')
+  const [fontStyle, setFontStyle] = useState<FontStyle>(defaults.fontStyle)
+  const [brandTone, setBrandTone] = useState<BrandTone>(defaults.brandTone)
 
   const handleSubmit = () => {
     onSubmit({

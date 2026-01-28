@@ -510,6 +510,7 @@ function GeneratorContent() {
             {currentStep === 'branding' && (
               <BrandingStep
                 branding={businessInfo.branding}
+                businessType={businessInfo.businessType}
                 onSubmit={handleBrandingSubmit}
                 onBack={handleBack}
               />
