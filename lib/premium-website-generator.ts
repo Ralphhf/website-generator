@@ -1,6 +1,82 @@
-import { BusinessInfo } from './types'
+import { BusinessInfo, COLOR_SCHEMES, FONT_STYLES, ColorScheme } from './types'
 import { slugify, formatPhoneNumber } from './utils'
 import { WEBSITE_DESIGN_PROMPT } from './website-design-prompt'
+
+// Get colors from branding config
+function getBrandColors(businessInfo: BusinessInfo): { primary: string; secondary: string } {
+  const branding = businessInfo.branding
+  if (!branding) {
+    return { primary: '#3b82f6', secondary: '#1e40af' } // Default blue
+  }
+
+  if (branding.colorScheme === 'custom') {
+    return {
+      primary: branding.customPrimaryColor || '#3b82f6',
+      secondary: branding.customSecondaryColor || '#1e40af',
+    }
+  }
+
+  return COLOR_SCHEMES[branding.colorScheme] || { primary: '#3b82f6', secondary: '#1e40af' }
+}
+
+// Get fonts from branding config
+function getBrandFonts(businessInfo: BusinessInfo): { heading: string; body: string } {
+  const branding = businessInfo.branding
+  if (!branding) {
+    return { heading: 'Inter', body: 'Inter' } // Default modern
+  }
+
+  return FONT_STYLES[branding.fontStyle] || { heading: 'Inter', body: 'Inter' }
+}
+
+// Convert hex to RGB values for Tailwind
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : { r: 59, g: 130, b: 246 } // Default blue
+}
+
+// Generate color shades from a base color
+function generateColorShades(hex: string): Record<number, string> {
+  const { r, g, b } = hexToRgb(hex)
+
+  // Generate shades by adjusting lightness
+  return {
+    50: adjustColor(r, g, b, 0.95),
+    100: adjustColor(r, g, b, 0.9),
+    200: adjustColor(r, g, b, 0.75),
+    300: adjustColor(r, g, b, 0.6),
+    400: adjustColor(r, g, b, 0.4),
+    500: `#${hex.replace('#', '')}`,
+    600: adjustColor(r, g, b, -0.1),
+    700: adjustColor(r, g, b, -0.25),
+    800: adjustColor(r, g, b, -0.4),
+    900: adjustColor(r, g, b, -0.55),
+    950: adjustColor(r, g, b, -0.7),
+  }
+}
+
+// Adjust color brightness
+function adjustColor(r: number, g: number, b: number, factor: number): string {
+  if (factor > 0) {
+    // Lighten
+    r = Math.round(r + (255 - r) * factor)
+    g = Math.round(g + (255 - g) * factor)
+    b = Math.round(b + (255 - b) * factor)
+  } else {
+    // Darken
+    r = Math.round(r * (1 + factor))
+    g = Math.round(g * (1 + factor))
+    b = Math.round(b * (1 + factor))
+  }
+
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+}
 
 // Escape strings for safe use in JavaScript single-quoted strings
 function escapeJs(str: string): string {
@@ -39,6 +115,14 @@ function sanitizeBusinessInfo(info: BusinessInfo): BusinessInfo {
       question: escapeJs(f.question),
       answer: escapeJs(f.answer),
     })),
+    products: info.products?.map(p => ({
+      ...p,
+      name: escapeJs(p.name),
+      price: escapeJs(p.price),
+      description: p.description ? escapeJs(p.description) : undefined,
+      image: p.image || undefined,
+    })),
+    calendlyUrl: info.calendlyUrl ? escapeJs(info.calendlyUrl) : undefined,
   }
 }
 
@@ -73,7 +157,7 @@ export function generatePremiumWebsite(businessInfo: BusinessInfo): Record<strin
 
   // Config files
   files['next.config.js'] = generateNextConfig()
-  files['tailwind.config.ts'] = generateTailwindConfig()
+  files['tailwind.config.ts'] = generateTailwindConfig(safeInfo)
   files['tsconfig.json'] = generateTsConfig()
   files['postcss.config.js'] = `module.exports = { plugins: { tailwindcss: {}, autoprefixer: {} } }`
 
@@ -84,6 +168,26 @@ export function generatePremiumWebsite(businessInfo: BusinessInfo): Record<strin
   files['app/about/page.tsx'] = generateAboutPage(safeInfo)
   files['app/services/page.tsx'] = generateServicesPage(safeInfo)
   files['app/contact/page.tsx'] = generateContactPage(safeInfo)
+
+  // Generate Shop page if products exist
+  if (safeInfo.products && safeInfo.products.length > 0) {
+    files['app/shop/page.tsx'] = generateShopPage(safeInfo)
+  }
+
+  // Generate Menu page for restaurants
+  if (safeInfo.menu && (safeInfo.menu.categories.length > 0 || safeInfo.menu.menuPdfUrl)) {
+    files['app/menu/page.tsx'] = generateMenuPage(safeInfo)
+  }
+
+  // Generate booking section component if booking is configured
+  if (safeInfo.booking && safeInfo.booking.enabled) {
+    files['components/sections/booking.tsx'] = generateBookingComponent(safeInfo)
+  }
+
+  // Generate medical info component for healthcare
+  if (safeInfo.medical) {
+    files['components/sections/medical-info.tsx'] = generateMedicalComponent(safeInfo)
+  }
 
   // Components - use safeInfo with escaped strings
   files['components/ui/navbar.tsx'] = generateNavbar(safeInfo)
@@ -159,7 +263,10 @@ const nextConfig = {
 module.exports = nextConfig`
 }
 
-function generateTailwindConfig(): string {
+function generateTailwindConfig(businessInfo: BusinessInfo): string {
+  const colors = getBrandColors(businessInfo)
+  const primaryShades = generateColorShades(colors.primary)
+
   return `import type { Config } from 'tailwindcss'
 
 const config: Config = {
@@ -172,21 +279,22 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554',
+          50: '${primaryShades[50]}',
+          100: '${primaryShades[100]}',
+          200: '${primaryShades[200]}',
+          300: '${primaryShades[300]}',
+          400: '${primaryShades[400]}',
+          500: '${primaryShades[500]}',
+          600: '${primaryShades[600]}',
+          700: '${primaryShades[700]}',
+          800: '${primaryShades[800]}',
+          900: '${primaryShades[900]}',
+          950: '${primaryShades[950]}',
         },
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-heading)', 'system-ui', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out',
@@ -262,6 +370,7 @@ function generateTsConfig(): string {
 }
 
 function generateRootLayout(businessInfo: BusinessInfo): string {
+  const fonts = getBrandFonts(businessInfo)
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
@@ -278,13 +387,50 @@ function generateRootLayout(businessInfo: BusinessInfo): string {
     },
   }
 
+  // Map font names to their Google Fonts import names
+  const fontImportMap: Record<string, string> = {
+    'Inter': 'Inter',
+    'Merriweather': 'Merriweather',
+    'Source Sans 3': 'Source_Sans_3',
+    'Playfair Display': 'Playfair_Display',
+    'Lato': 'Lato',
+    'Montserrat': 'Montserrat',
+    'Open Sans': 'Open_Sans',
+  }
+
+  const headingFontImport = fontImportMap[fonts.heading] || 'Inter'
+  const bodyFontImport = fontImportMap[fonts.body] || 'Inter'
+  const isSameFont = fonts.heading === fonts.body
+
+  // Always generate both font variables for consistency
+  // When same font, both variables use the same font
+  const fontImports = isSameFont
+    ? `import { ${headingFontImport} } from 'next/font/google'
+
+const headingFont = ${headingFontImport}({
+  subsets: ['latin'],
+  variable: '--font-heading',
+})
+const bodyFont = ${headingFontImport}({
+  subsets: ['latin'],
+  variable: '--font-body',
+})`
+    : `import { ${headingFontImport}, ${bodyFontImport} } from 'next/font/google'
+
+const headingFont = ${headingFontImport}({
+  subsets: ['latin'],
+  variable: '--font-heading',
+})
+const bodyFont = ${bodyFontImport}({
+  subsets: ['latin'],
+  variable: '--font-body',
+})`
+
   return `import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+${fontImports}
 import './globals.css'
 import { Navbar } from '@/components/ui/navbar'
 import { Footer } from '@/components/ui/footer'
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
   title: {
@@ -317,14 +463,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={\`\${headingFont.variable} \${bodyFont.variable}\`}>
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(${JSON.stringify(jsonLd)}) }}
         />
       </head>
-      <body className="min-h-screen bg-white text-gray-900 antialiased">
+      <body className="min-h-screen bg-white text-gray-900 antialiased font-sans">
         <Navbar />
         <main>{children}</main>
         <Footer />
@@ -353,6 +499,10 @@ function generateGlobalStyles(): string {
     @apply bg-white text-gray-900;
   }
 
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+
   ::selection {
     @apply bg-primary-500/20 text-primary-900;
   }
@@ -360,7 +510,7 @@ function generateGlobalStyles(): string {
 
 @layer components {
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 via-primary-500 to-blue-500;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400;
   }
 
   .glass {
@@ -436,6 +586,8 @@ html {
 
 function generateNavbar(businessInfo: BusinessInfo): string {
   const ctaText = getCTAText(businessInfo.primaryCTA)
+  const hasShop = businessInfo.products && businessInfo.products.length > 0
+  const hasMenu = businessInfo.menu && (businessInfo.menu.categories.length > 0 || businessInfo.menu.menuPdfUrl)
 
   return `'use client'
 
@@ -449,6 +601,8 @@ const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
   { href: '/services', label: 'Services' },
+  ${hasMenu ? `{ href: '/menu', label: 'Menu' },` : ''}
+  ${hasShop ? `{ href: '/shop', label: 'Shop' },` : ''}
   { href: '/contact', label: 'Contact' },
 ]
 
@@ -1521,20 +1675,46 @@ export default function ServicesPage() {
 }
 
 function generateContactPage(businessInfo: BusinessInfo): string {
+  const primaryCTA = businessInfo.primaryCTA || 'contact'
+  const services = businessInfo.services || []
+  const hasCalendly = primaryCTA === 'book' && businessInfo.calendlyUrl
+  const isCallCTA = primaryCTA === 'call'
+  const isVisitCTA = primaryCTA === 'visit'
+  const isQuoteCTA = primaryCTA === 'quote'
+
+  // Generate Google Maps embed URL if address exists
+  const mapQuery = encodeURIComponent(
+    `${businessInfo.address || ''}, ${businessInfo.city || ''}, ${businessInfo.state || ''} ${businessInfo.zipCode || ''}`
+  )
+
+  // Hero title and description based on CTA type
+  const heroContent = {
+    call: { title: 'Call Us Today', desc: "Speak directly with our team. We're here to help with all your needs." },
+    book: { title: 'Book Your Appointment', desc: 'Schedule a convenient time that works for you.' },
+    quote: { title: 'Get a Free Quote', desc: "Tell us about your project and we'll provide a detailed estimate." },
+    visit: { title: 'Visit Our Location', desc: "Come see us in person. We'd love to meet you!" },
+    shop: { title: 'Get In Touch', desc: "Have questions about our products? We're here to help." },
+    contact: { title: 'Get In Touch', desc: 'Ready to start your project? Contact us today for a free consultation.' },
+  }
+
+  const hero = heroContent[primaryCTA as keyof typeof heroContent] || heroContent.contact
+
   return `'use client'
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Phone, Mail, MapPin, Clock, Send } from 'lucide-react'
+import { Phone, Mail, MapPin, Clock, Send, PhoneCall } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollReveal } from '@/components/animations/scroll-reveal'
 
 const contactInfo = [
   ${businessInfo.phone ? `{ icon: Phone, label: 'Phone', value: '${formatPhoneNumber(businessInfo.phone)}', href: 'tel:${businessInfo.phone}' },` : ''}
   ${businessInfo.email ? `{ icon: Mail, label: 'Email', value: '${businessInfo.email}', href: 'mailto:${businessInfo.email}' },` : ''}
-  ${businessInfo.address ? `{ icon: MapPin, label: 'Address', value: '${businessInfo.address}, ${businessInfo.city || ''} ${businessInfo.state || ''}', href: '#' },` : ''}
+  ${businessInfo.address ? `{ icon: MapPin, label: 'Address', value: '${businessInfo.address}, ${businessInfo.city || ''} ${businessInfo.state || ''}', href: 'https://maps.google.com/?q=${mapQuery}' },` : ''}
   { icon: Clock, label: 'Hours', value: 'Mon-Fri: 8am - 6pm', href: '#' },
 ]
+
+${isQuoteCTA ? `const services = [${services.map(s => `'${s}'`).join(', ')}]` : ''}
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -1542,6 +1722,8 @@ export default function ContactPage() {
     email: '',
     phone: '',
     message: '',
+    ${isQuoteCTA ? `service: '',
+    projectDetails: '',` : ''}
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -1555,7 +1737,7 @@ export default function ContactPage() {
 
     setIsSubmitting(false)
     setIsSubmitted(true)
-    setFormData({ name: '', email: '', phone: '', message: '' })
+    setFormData({ name: '', email: '', phone: '', message: ''${isQuoteCTA ? `, service: '', projectDetails: ''` : ''} })
   }
 
   return (
@@ -1570,7 +1752,7 @@ export default function ContactPage() {
               animate={{ opacity: 1, y: 0 }}
               className="heading-1 text-gray-900 mb-6"
             >
-              Get In <span className="gradient-text">Touch</span>
+              ${hero.title.split(' ').map((word, i) => i === 0 ? `<span className="gradient-text">${word}</span>` : ` ${word}`).join('')}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -1578,14 +1760,92 @@ export default function ContactPage() {
               transition={{ delay: 0.1 }}
               className="text-xl text-gray-600"
             >
-              Ready to start your project? Contact us today for a free consultation and quote.
+              ${hero.desc}
             </motion.p>
           </div>
         </div>
       </section>
 
-      {/* Contact Section */}
+${isCallCTA && businessInfo.phone ? `
+      {/* Call Now Hero Section */}
+      <section className="py-16 bg-gradient-to-r from-primary-600 to-primary-700">
+        <div className="container-custom">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="text-center md:text-left">
+              <h2 className="text-3xl font-bold text-white mb-2">Ready to Talk?</h2>
+              <p className="text-primary-100">Our team is standing by to help you.</p>
+            </div>
+            <a
+              href="tel:${businessInfo.phone}"
+              className="inline-flex items-center gap-3 bg-white text-primary-700 px-8 py-4 rounded-full font-bold text-xl hover:bg-primary-50 transition-colors shadow-lg"
+            >
+              <PhoneCall className="w-6 h-6" />
+              ${formatPhoneNumber(businessInfo.phone)}
+            </a>
+          </div>
+        </div>
+      </section>
+` : ''}
+
+${hasCalendly ? `
+      {/* Calendly Embed Section */}
       <section className="section-padding bg-white">
+        <div className="container-custom">
+          <ScrollReveal>
+            <div className="max-w-4xl mx-auto">
+              <h2 className="heading-3 text-gray-900 mb-8 text-center">Schedule Your Appointment</h2>
+              <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-100">
+                <iframe
+                  src="${businessInfo.calendlyUrl}"
+                  width="100%"
+                  height="700"
+                  frameBorder="0"
+                  title="Schedule Appointment"
+                ></iframe>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+` : ''}
+
+${isVisitCTA && businessInfo.address ? `
+      {/* Map Section - Prominent for Visit CTA */}
+      <section className="section-padding bg-white">
+        <div className="container-custom">
+          <ScrollReveal>
+            <div className="text-center mb-12">
+              <h2 className="heading-2 text-gray-900 mb-4">Find Us</h2>
+              <p className="text-xl text-gray-600">${businessInfo.address}, ${businessInfo.city || ''} ${businessInfo.state || ''}</p>
+              <a
+                href="https://maps.google.com/?q=${mapQuery}"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-primary-600 font-semibold mt-4 hover:text-primary-700"
+              >
+                <MapPin className="w-5 h-5" />
+                Get Directions
+              </a>
+            </div>
+            <div className="aspect-[16/9] rounded-2xl overflow-hidden shadow-xl">
+              <iframe
+                src="https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Location Map"
+              ></iframe>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+` : ''}
+
+      {/* Contact Section */}
+      <section className="section-padding bg-${isVisitCTA ? 'gray-50' : 'white'}">
         <div className="container-custom">
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Contact Info */}
@@ -1599,6 +1859,8 @@ export default function ContactPage() {
                       key={item.label}
                       href={item.href}
                       className="flex items-start gap-4 group"
+                      ${businessInfo.address ? `target={item.label === 'Address' ? '_blank' : undefined}
+                      rel={item.label === 'Address' ? 'noopener noreferrer' : undefined}` : ''}
                     >
                       <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center group-hover:bg-primary-200 transition-colors">
                         <item.icon className="w-5 h-5 text-primary-600" />
@@ -1613,17 +1875,28 @@ export default function ContactPage() {
                   ))}
                 </div>
 
-                {/* Map placeholder */}
-                <div className="aspect-video rounded-2xl bg-gray-100 flex items-center justify-center">
-                  <MapPin className="w-8 h-8 text-gray-400" />
-                </div>
+                ${!isVisitCTA ? `{/* Map */}
+                <div className="aspect-video rounded-2xl overflow-hidden shadow-lg">
+                  ${businessInfo.address ? `<iframe
+                    src="https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Location Map"
+                  ></iframe>` : `<div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                    <MapPin className="w-8 h-8 text-gray-400" />
+                  </div>`}
+                </div>` : ''}
               </div>
             </ScrollReveal>
 
             {/* Contact Form */}
             <ScrollReveal delay={0.2}>
               <div className="bg-gray-50 rounded-2xl p-8">
-                <h2 className="heading-3 text-gray-900 mb-6">Send Us a Message</h2>
+                <h2 className="heading-3 text-gray-900 mb-6">${isQuoteCTA ? 'Request a Free Quote' : 'Send Us a Message'}</h2>
 
                 {isSubmitted ? (
                   <motion.div
@@ -1634,7 +1907,7 @@ export default function ContactPage() {
                     <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
                       <Send className="w-8 h-8 text-green-600" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Message Sent!</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">${isQuoteCTA ? 'Quote Request Sent!' : 'Message Sent!'}</h3>
                     <p className="text-gray-600">We'll get back to you as soon as possible.</p>
                   </motion.div>
                 ) : (
@@ -1669,10 +1942,11 @@ export default function ContactPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Phone (Optional)
+                        Phone${isQuoteCTA ? '' : ' (Optional)'}
                       </label>
                       <input
                         type="tel"
+                        ${isQuoteCTA ? 'required' : ''}
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
@@ -1680,6 +1954,39 @@ export default function ContactPage() {
                       />
                     </div>
 
+${isQuoteCTA && services.length > 0 ? `
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Service Needed
+                      </label>
+                      <select
+                        required
+                        value={formData.service}
+                        onChange={(e) => setFormData({ ...formData, service: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all bg-white"
+                      >
+                        <option value="">Select a service</option>
+                        {services.map((service) => (
+                          <option key={service} value={service}>{service}</option>
+                        ))}
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Project Details
+                      </label>
+                      <textarea
+                        required
+                        rows={5}
+                        value={formData.projectDetails}
+                        onChange={(e) => setFormData({ ...formData, projectDetails: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all resize-none"
+                        placeholder="Please describe your project, including timeline, budget range, and any specific requirements..."
+                      />
+                    </div>
+` : `
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Message
@@ -1693,6 +2000,7 @@ export default function ContactPage() {
                         placeholder="Tell us about your project..."
                       />
                     </div>
+`}
 
                     <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? (
@@ -1706,7 +2014,7 @@ export default function ContactPage() {
                         </span>
                       ) : (
                         <span className="flex items-center gap-2">
-                          Send Message
+                          ${isQuoteCTA ? 'Request Quote' : 'Send Message'}
                           <Send className="w-5 h-5" />
                         </span>
                       )}
@@ -1822,6 +2130,85 @@ export function Pricing() {
 }`
 }
 
+function generateShopPage(businessInfo: BusinessInfo): string {
+  const products = businessInfo.products || []
+
+  return `import type { Metadata } from 'next'
+import { Hero } from '@/components/sections/hero'
+import { ScrollReveal } from '@/components/animations/scroll-reveal'
+import { ShoppingBag } from 'lucide-react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+
+export const metadata: Metadata = {
+  title: 'Shop',
+  description: 'Browse our products and shop online at ${businessInfo.name}.',
+}
+
+const products = [
+  ${products.map(p => `{
+    name: '${p.name}',
+    price: '${p.price}',
+    description: '${p.description || ''}',
+    image: '${p.image || ''}',
+  }`).join(',\n  ')}
+]
+
+export default function ShopPage() {
+  return (
+    <>
+      <Hero
+        title="Shop Our Products"
+        subtitle="Quality Products for You"
+        description="Browse our selection of products and find exactly what you need."
+        showRating={false}
+      />
+
+      <section className="section-padding bg-white">
+        <div className="container-custom">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {products.map((product, index) => (
+              <ScrollReveal key={product.name} delay={index * 0.1}>
+                <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+                  {/* Product Image */}
+                  <div className="aspect-square bg-gray-100 relative overflow-hidden">
+                    {product.image ? (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ShoppingBag className="w-12 h-12 text-gray-300" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Product Info */}
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">{product.name}</h3>
+                    {product.description && (
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xl font-bold text-primary-600">{product.price}</span>
+                      <Button size="sm" asChild>
+                        <Link href="/contact">Buy Now</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  )
+}`
+}
+
 function generateFAQComponent(businessInfo: BusinessInfo): string {
   const faqs = businessInfo.faqs || []
 
@@ -1895,6 +2282,347 @@ export function FAQ() {
             </ScrollReveal>
           ))}
         </div>
+      </div>
+    </section>
+  )
+}`
+}
+
+// ============================================
+// INDUSTRY-SPECIFIC COMPONENTS
+// ============================================
+
+function generateMenuPage(businessInfo: BusinessInfo): string {
+  const menu = businessInfo.menu
+  if (!menu) return ''
+
+  // If PDF menu only
+  if (menu.menuPdfUrl && menu.categories.length === 0) {
+    return `import { Navbar } from '@/components/ui/navbar'
+import { Footer } from '@/components/ui/footer'
+import { FileText, ExternalLink } from 'lucide-react'
+
+export const metadata = {
+  title: 'Menu | ${businessInfo.name}',
+  description: 'View our menu.',
+}
+
+export default function MenuPage() {
+  return (
+    <>
+      <Navbar />
+      <main className="pt-20">
+        <section className="section-padding bg-gray-50">
+          <div className="container-custom text-center">
+            <h1 className="heading-1 text-gray-900 mb-6">Our Menu</h1>
+            <a href="${menu.menuPdfUrl}" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 px-8 py-4 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors text-lg font-semibold">
+              <FileText className="w-6 h-6" /> View PDF Menu <ExternalLink className="w-5 h-5" />
+            </a>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </>
+  )
+}`
+  }
+
+  const categoriesCode = menu.categories.map(cat => {
+    const itemsCode = cat.items.map(item => {
+      const dietaryArr = (item.dietary || []).map(d => `'${d}'`).join(', ')
+      return `{ id: '${item.id}', name: '${escapeJs(item.name)}', description: '${escapeJs(item.description || '')}', price: '${escapeJs(item.price)}', dietary: [${dietaryArr}], isPopular: ${item.isPopular || false} }`
+    }).join(',\n        ')
+    return `{ id: '${cat.id}', name: '${escapeJs(cat.name)}', description: '${escapeJs(cat.description || '')}', items: [\n        ${itemsCode}\n      ] }`
+  }).join(',\n    ')
+
+  const priceDisplay = menu.showPrices ? '<span className="text-primary-600 font-bold text-lg">{item.price}</span>' : ''
+  const noteSection = menu.note ? `<section className="pb-16"><div className="container-custom"><p className="text-center text-gray-500 text-sm">${escapeJs(menu.note)}</p></div></section>` : ''
+
+  return `'use client'
+
+import { useState } from 'react'
+import { Navbar } from '@/components/ui/navbar'
+import { Footer } from '@/components/ui/footer'
+import { motion } from 'framer-motion'
+import { Star } from 'lucide-react'
+import { ScrollReveal } from '@/components/animations/scroll-reveal'
+
+const menuCategories = [
+    ${categoriesCode}
+  ]
+
+const dietaryIcons: Record<string, { icon: string; label: string }> = {
+  'vegetarian': { icon: '🥬', label: 'Vegetarian' },
+  'vegan': { icon: '🌱', label: 'Vegan' },
+  'gluten-free': { icon: '🌾', label: 'Gluten-Free' },
+  'dairy-free': { icon: '🥛', label: 'Dairy-Free' },
+  'nut-free': { icon: '🥜', label: 'Nut-Free' },
+  'spicy': { icon: '🌶️', label: 'Spicy' },
+}
+
+export default function MenuPage() {
+  const [activeCategory, setActiveCategory] = useState(menuCategories[0]?.id || '')
+
+  return (
+    <>
+      <Navbar />
+      <main className="pt-20">
+        <section className="section-padding bg-gray-50">
+          <div className="container-custom text-center">
+            <ScrollReveal>
+              <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">Our Menu</span>
+              <h1 className="heading-1 text-gray-900 mt-4 mb-6">Delicious Offerings</h1>
+            </ScrollReveal>
+          </div>
+        </section>
+
+        <section className="sticky top-20 z-40 bg-white border-b border-gray-200 shadow-sm">
+          <div className="container-custom">
+            <div className="flex gap-2 overflow-x-auto py-4">
+              {menuCategories.map((category) => (
+                <button key={category.id} onClick={() => setActiveCategory(category.id)}
+                  className={\`px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all \${activeCategory === category.id ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}\`}>
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section-padding">
+          <div className="container-custom">
+            {menuCategories.map((category) => (
+              <motion.div key={category.id} initial={{ opacity: 0 }}
+                animate={{ opacity: activeCategory === category.id ? 1 : 0, display: activeCategory === category.id ? 'block' : 'none' }}>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {category.items.map((item, index) => (
+                    <ScrollReveal key={item.id} delay={index * 0.05}>
+                      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-lg text-gray-900">{item.name}</h3>
+                              {item.isPopular && <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full"><Star className="w-3 h-3" /> Popular</span>}
+                            </div>
+                            {item.description && <p className="text-gray-600 text-sm mb-3">{item.description}</p>}
+                            {item.dietary?.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {item.dietary.map((d) => (<span key={d} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">{dietaryIcons[d]?.icon} {dietaryIcons[d]?.label}</span>))}
+                              </div>
+                            )}
+                          </div>
+                          ${priceDisplay}
+                        </div>
+                      </div>
+                    </ScrollReveal>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+        ${noteSection}
+      </main>
+      <Footer />
+    </>
+  )
+}`
+}
+
+function generateBookingComponent(businessInfo: BusinessInfo): string {
+  const booking = businessInfo.booking
+  if (!booking || !booking.enabled) return ''
+
+  const servicesCode = (booking.services || []).map(s =>
+    `{ id: '${s.id}', name: '${escapeJs(s.name)}', duration: '${escapeJs(s.duration)}', price: '${escapeJs(s.price)}', description: '${escapeJs(s.description || '')}' }`
+  ).join(',\n    ')
+
+  const walkinsText = booking.acceptWalkins ? ' Walk-ins welcome!' : ''
+  const servicesSection = (booking.services || []).length > 0 ? `<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {services.map((service, index) => (
+            <ScrollReveal key={service.id} delay={index * 0.1}>
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">{service.name}</h3>
+                {service.description && <p className="text-gray-600 text-sm mb-4">{service.description}</p>}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-1 text-gray-500"><Clock className="w-4 h-4" /> {service.duration}</span>
+                  <span className="text-primary-600 font-semibold">{service.price}</span>
+                </div>
+              </div>
+            </ScrollReveal>
+          ))}
+        </div>` : ''
+
+  const bookButton = booking.bookingUrl ? `<div className="text-center">
+          <a href="${booking.bookingUrl}" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-4 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors text-lg font-semibold">
+            <Calendar className="w-5 h-5" /> Book Appointment <ExternalLink className="w-4 h-4" />
+          </a>
+        </div>` : ''
+
+  const depositText = booking.requireDeposit && booking.depositAmount ? `<p>Deposit of ${escapeJs(booking.depositAmount)} required.</p>` : ''
+  const policyText = booking.cancellationPolicy ? `<p>${escapeJs(booking.cancellationPolicy)}</p>` : ''
+
+  return `'use client'
+
+import { Calendar, Clock, ExternalLink } from 'lucide-react'
+import { ScrollReveal } from '@/components/animations/scroll-reveal'
+
+const services = [
+    ${servicesCode}
+  ]
+
+export function BookingSection() {
+  return (
+    <section className="section-padding bg-primary-50">
+      <div className="container-custom">
+        <ScrollReveal>
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">Book Now</span>
+            <h2 className="heading-2 text-gray-900 mt-4 mb-6">Schedule Your Appointment</h2>
+            <p className="text-lg text-gray-600">Choose from our services.${walkinsText}</p>
+          </div>
+        </ScrollReveal>
+        ${servicesSection}
+        ${bookButton}
+        <div className="mt-12 text-center text-sm text-gray-500 space-y-2">
+          ${depositText}
+          ${policyText}
+        </div>
+      </div>
+    </section>
+  )
+}`
+}
+
+function generateMedicalComponent(businessInfo: BusinessInfo): string {
+  const medical = businessInfo.medical
+  if (!medical) return ''
+
+  const insuranceArr = medical.insuranceAccepted.map(i => `'${escapeJs(i)}'`).join(', ')
+  const credentialsArr = (medical.credentials || []).map(c => `'${escapeJs(c)}'`).join(', ')
+  const hospitalsArr = (medical.hospitalAffiliations || []).map(h => `'${escapeJs(h)}'`).join(', ')
+  const languagesArr = (medical.languages || []).map(l => `'${escapeJs(l)}'`).join(', ')
+
+  const newPatientsCard = medical.acceptingNewPatients ? `<ScrollReveal delay={0.1}>
+            <div className="bg-green-50 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-green-100 rounded-lg"><CheckCircle className="w-6 h-6 text-green-600" /></div>
+                <h3 className="font-semibold text-lg text-gray-900">Accepting New Patients</h3>
+              </div>
+              <p className="text-gray-600">We welcome new patients.</p>
+            </div>
+          </ScrollReveal>` : ''
+
+  const telehealthCard = medical.telehealth ? `<ScrollReveal delay={0.2}>
+            <div className="bg-blue-50 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-blue-100 rounded-lg"><Video className="w-6 h-6 text-blue-600" /></div>
+                <h3 className="font-semibold text-lg text-gray-900">Telehealth Available</h3>
+              </div>
+              <p className="text-gray-600">Virtual appointments available.</p>
+            </div>
+          </ScrollReveal>` : ''
+
+  const languagesCard = (medical.languages || []).length > 0 ? `<ScrollReveal delay={0.3}>
+            <div className="bg-purple-50 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-purple-100 rounded-lg"><Globe className="w-6 h-6 text-purple-600" /></div>
+                <h3 className="font-semibold text-lg text-gray-900">Languages</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {medicalInfo.languages.map((l) => (<span key={l} className="px-3 py-1 bg-white rounded-full text-sm">{l}</span>))}
+              </div>
+            </div>
+          </ScrollReveal>` : ''
+
+  const credentialsCard = (medical.credentials || []).length > 0 ? `<ScrollReveal delay={0.4}>
+            <div className="bg-gray-50 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-gray-200 rounded-lg"><Stethoscope className="w-6 h-6 text-gray-600" /></div>
+                <h3 className="font-semibold text-lg text-gray-900">Credentials</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {medicalInfo.credentials.map((c) => (<span key={c} className="px-3 py-1 bg-white rounded-full text-sm border">{c}</span>))}
+              </div>
+            </div>
+          </ScrollReveal>` : ''
+
+  const hospitalsCard = (medical.hospitalAffiliations || []).length > 0 ? `<ScrollReveal delay={0.5}>
+            <div className="bg-gray-50 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-gray-200 rounded-lg"><Building2 className="w-6 h-6 text-gray-600" /></div>
+                <h3 className="font-semibold text-lg text-gray-900">Hospital Affiliations</h3>
+              </div>
+              <ul className="space-y-2">
+                {medicalInfo.hospitalAffiliations.map((h) => (<li key={h} className="flex items-center gap-2 text-gray-600"><CheckCircle className="w-4 h-4 text-primary-500" />{h}</li>))}
+              </ul>
+            </div>
+          </ScrollReveal>` : ''
+
+  const insuranceSection = medical.insuranceAccepted.length > 0 ? `<ScrollReveal delay={0.6}>
+          <div className="mt-12 bg-gray-50 rounded-xl p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <Shield className="w-6 h-6 text-primary-600" />
+              <h3 className="font-semibold text-xl text-gray-900">Insurance Accepted</h3>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {medicalInfo.insuranceAccepted.map((ins) => (<span key={ins} className="px-4 py-2 bg-white rounded-lg text-gray-700 border">{ins}</span>))}
+            </div>
+          </div>
+        </ScrollReveal>` : ''
+
+  const portalSection = medical.patientPortalUrl ? `<div className="mt-8 text-center">
+          <a href="${medical.patientPortalUrl}" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700">
+            Patient Portal <ExternalLink className="w-4 h-4" />
+          </a>
+        </div>` : ''
+
+  const emergencySection = medical.emergencyNotice ? `<div className="mt-12 bg-amber-50 border border-amber-200 rounded-xl p-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+            <div>
+              <h4 className="font-semibold text-amber-800 mb-1">Important</h4>
+              <p className="text-amber-700">${escapeJs(medical.emergencyNotice)}</p>
+            </div>
+          </div>
+        </div>` : ''
+
+  return `'use client'
+
+import { CheckCircle, Shield, Globe, Video, Building2, AlertTriangle, Stethoscope, ExternalLink } from 'lucide-react'
+import { ScrollReveal } from '@/components/animations/scroll-reveal'
+
+const medicalInfo = {
+  acceptingNewPatients: ${medical.acceptingNewPatients},
+  insuranceAccepted: [${insuranceArr}],
+  credentials: [${credentialsArr}],
+  hospitalAffiliations: [${hospitalsArr}],
+  languages: [${languagesArr}],
+  telehealth: ${medical.telehealth},
+}
+
+export function MedicalInfo() {
+  return (
+    <section className="section-padding bg-white">
+      <div className="container-custom">
+        <ScrollReveal>
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider">Practice Information</span>
+            <h2 className="heading-2 text-gray-900 mt-4 mb-6">About Our Practice</h2>
+          </div>
+        </ScrollReveal>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          ${newPatientsCard}
+          ${telehealthCard}
+          ${languagesCard}
+          ${credentialsCard}
+          ${hospitalsCard}
+        </div>
+
+        ${insuranceSection}
+        ${portalSection}
+        ${emergencySection}
       </div>
     </section>
   )

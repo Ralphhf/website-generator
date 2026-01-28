@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Plus, Trash2, Image as ImageIcon, Upload, X, FolderOpen, Sparkles, Loader2, Search, Check, RefreshCw, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Image as ImageIcon, Upload, X, FolderOpen, Sparkles, Loader2, Search, Check, RefreshCw, ChevronRight, MapPin } from 'lucide-react'
 import { Button, Input, Textarea, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
 import { PortfolioSection, PortfolioImage } from '@/lib/types'
 import { generateId, getBusinessTypeName } from '@/lib/utils'
@@ -19,6 +19,7 @@ interface UnsplashPhoto {
 interface PortfolioStepProps {
   portfolioSections: PortfolioSection[]
   businessType: string
+  googlePhotos?: string[]
   onSubmit: (sections: PortfolioSection[]) => void
   onBack: () => void
 }
@@ -36,7 +37,7 @@ const sectionSuggestions: Record<string, string[]> = {
   default: ['Our Work', 'Projects', 'Gallery', 'Showcase'],
 }
 
-export function PortfolioStep({ portfolioSections: initialSections, businessType, onSubmit, onBack }: PortfolioStepProps) {
+export function PortfolioStep({ portfolioSections: initialSections, businessType, googlePhotos = [], onSubmit, onBack }: PortfolioStepProps) {
   const [sections, setSections] = useState<PortfolioSection[]>(
     initialSections.length > 0 ? initialSections : []
   )
@@ -51,6 +52,10 @@ export function PortfolioStep({ portfolioSections: initialSections, businessType
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [lastSearchQuery, setLastSearchQuery] = useState('')
+
+  // Google Photos state
+  const [showGoogleModal, setShowGoogleModal] = useState(false)
+  const [selectedGooglePhotos, setSelectedGooglePhotos] = useState<Set<number>>(new Set())
 
   const suggestions = sectionSuggestions[businessType] || sectionSuggestions.default
 
@@ -195,6 +200,43 @@ export function PortfolioStep({ portfolioSections: initialSections, businessType
     setSelectedPhotos(new Set())
   }
 
+  // Google Photos functions
+  const openGoogleModal = (sectionId: string) => {
+    setCurrentSectionId(sectionId)
+    setShowGoogleModal(true)
+    setSelectedGooglePhotos(new Set())
+  }
+
+  const toggleGooglePhotoSelection = (index: number) => {
+    const newSelection = new Set(selectedGooglePhotos)
+    if (newSelection.has(index)) {
+      newSelection.delete(index)
+    } else {
+      newSelection.add(index)
+    }
+    setSelectedGooglePhotos(newSelection)
+  }
+
+  const addSelectedGooglePhotos = () => {
+    if (!currentSectionId) return
+
+    const newImages: PortfolioImage[] = Array.from(selectedGooglePhotos).map(index => ({
+      id: generateId(),
+      url: googlePhotos[index],
+      alt: 'Business photo from Google',
+      caption: 'From Google Business Profile',
+    }))
+
+    setSections(sections.map(s =>
+      s.id === currentSectionId
+        ? { ...s, images: [...s.images, ...newImages] }
+        : s
+    ))
+
+    setShowGoogleModal(false)
+    setSelectedGooglePhotos(new Set())
+  }
+
   const handleSubmit = () => {
     // Filter out sections with no title or no images
     const validSections = sections.filter(s => s.title.trim() && s.images.length > 0)
@@ -303,16 +345,30 @@ export function PortfolioStep({ portfolioSections: initialSections, businessType
                       <label className="text-sm font-medium text-gray-700">
                         Images
                       </label>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openUnsplashModal(section.id, section.title)}
-                        className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                      >
-                        <Sparkles className="mr-1 w-4 h-4" />
-                        Find AI Images
-                      </Button>
+                      <div className="flex gap-2">
+                        {googlePhotos.length > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openGoogleModal(section.id)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <MapPin className="mr-1 w-4 h-4" />
+                            Google Photos ({googlePhotos.length})
+                          </Button>
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openUnsplashModal(section.id, section.title)}
+                          className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                        >
+                          <Sparkles className="mr-1 w-4 h-4" />
+                          Find AI Images
+                        </Button>
+                      </div>
                     </div>
 
                     <input
@@ -561,6 +617,97 @@ export function PortfolioStep({ portfolioSections: initialSections, businessType
                   >
                     <Plus className="mr-1 w-4 h-4" />
                     Add {selectedPhotos.size} Photo{selectedPhotos.size !== 1 ? 's' : ''}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Google Photos Modal */}
+      <AnimatePresence>
+        {showGoogleModal && googlePhotos.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={() => setShowGoogleModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-blue-500" />
+                    Google Business Photos
+                  </h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowGoogleModal(false)}
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  Select photos from the business's Google profile
+                </p>
+              </div>
+
+              {/* Photo Grid */}
+              <div className="p-4 overflow-y-auto max-h-[50vh]">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {googlePhotos.map((photo, index) => (
+                    <button
+                      key={index}
+                      onClick={() => toggleGooglePhotoSelection(index)}
+                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedGooglePhotos.has(index)
+                          ? 'border-blue-500 ring-2 ring-blue-500/50'
+                          : 'border-transparent hover:border-gray-300'
+                      }`}
+                    >
+                      <img
+                        src={photo}
+                        alt={`Business photo ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {selectedGooglePhotos.has(index) && (
+                        <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                            <Check className="w-5 h-5 text-white" />
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 border-t border-gray-200 flex items-center justify-between">
+                <p className="text-sm text-gray-500">
+                  {selectedGooglePhotos.size} photo{selectedGooglePhotos.size !== 1 ? 's' : ''} selected
+                </p>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setShowGoogleModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={addSelectedGooglePhotos}
+                    disabled={selectedGooglePhotos.size === 0}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Plus className="mr-1 w-4 h-4" />
+                    Add {selectedGooglePhotos.size} Photo{selectedGooglePhotos.size !== 1 ? 's' : ''}
                   </Button>
                 </div>
               </div>

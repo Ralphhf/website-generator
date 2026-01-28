@@ -22,7 +22,9 @@ export async function POST(request: NextRequest) {
         result = await generateTagline(
           params.businessName,
           params.businessType,
-          params.services || []
+          params.services || [],
+          params.brandTone,
+          params.primaryCTA
         )
         break
 
@@ -33,7 +35,9 @@ export async function POST(request: NextRequest) {
           params.services || [],
           params.yearsInBusiness || 0,
           params.city || '',
-          params.state || ''
+          params.state || '',
+          params.brandTone,
+          params.primaryCTA
         )
         break
 
@@ -60,7 +64,9 @@ export async function POST(request: NextRequest) {
           params.businessName,
           params.businessType,
           params.services || [],
-          params.count || 3
+          params.count || 3,
+          params.brandTone,
+          params.primaryCTA
         )
         break
 
@@ -72,7 +78,9 @@ export async function POST(request: NextRequest) {
         result = await generatePricing(
           params.businessName,
           params.businessType,
-          params.services || []
+          params.services || [],
+          params.brandTone,
+          params.primaryCTA
         )
         break
 
@@ -80,7 +88,9 @@ export async function POST(request: NextRequest) {
         result = await generateFAQs(
           params.businessName,
           params.businessType,
-          params.services || []
+          params.services || [],
+          params.brandTone,
+          params.primaryCTA
         )
         break
 

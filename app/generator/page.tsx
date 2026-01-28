@@ -5,16 +5,21 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Sparkles } from 'lucide-react'
 import Link from 'next/link'
-import { BusinessProfile, BusinessInfo, FormStep, Testimonial, PortfolioSection, PricingPackage, FAQ } from '@/lib/types'
+import { BusinessProfile, BusinessInfo, FormStep, Testimonial, PortfolioSection, PricingPackage, FAQ, Product, BrandingConfig, MenuConfig, BookingConfig, MedicalConfig, detectIndustryModules, IndustryModule } from '@/lib/types'
 import { SearchStep } from '@/components/generator/SearchStep'
 import { SelectBusinessStep } from '@/components/generator/SelectBusinessStep'
 import { BasicInfoStep } from '@/components/generator/BasicInfoStep'
+import { BrandingStep } from '@/components/generator/BrandingStep'
 import { HeroImageStep } from '@/components/generator/HeroImageStep'
 import { ContactInfoStep } from '@/components/generator/ContactInfoStep'
 import { TestimonialsStep } from '@/components/generator/TestimonialsStep'
 import { PortfolioStep } from '@/components/generator/PortfolioStep'
 import { PricingStep } from '@/components/generator/PricingStep'
 import { FAQsStep } from '@/components/generator/FAQsStep'
+import { ProductsStep } from '@/components/generator/ProductsStep'
+import { MenuStep } from '@/components/generator/MenuStep'
+import { BookingStep } from '@/components/generator/BookingStep'
+import { MedicalInfoStep } from '@/components/generator/MedicalInfoStep'
 import { PreviewStep, WebsiteStyle } from '@/components/generator/PreviewStep'
 import { GeneratingStep } from '@/components/generator/GeneratingStep'
 import { CompleteStep } from '@/components/generator/CompleteStep'
@@ -77,18 +82,26 @@ const initialBusinessInfo: BusinessInfo = {
   primaryCTA: undefined,
 }
 
-const steps: { key: FormStep; label: string }[] = [
+const baseSteps: { key: FormStep; label: string }[] = [
   { key: 'search', label: 'Search' },
   { key: 'select-business', label: 'Select' },
   { key: 'basic-info', label: 'Basic Info' },
+  { key: 'branding', label: 'Branding' },
   { key: 'hero-image', label: 'Hero Image' },
   { key: 'contact-info', label: 'Contact' },
   { key: 'testimonials', label: 'Testimonials' },
   { key: 'portfolio', label: 'Portfolio' },
   { key: 'pricing', label: 'Pricing' },
   { key: 'faqs', label: 'FAQs' },
-  { key: 'preview', label: 'Preview' },
 ]
+
+// Industry-specific step definitions
+const industrySteps: Record<IndustryModule, { key: FormStep; label: string }> = {
+  restaurant: { key: 'menu', label: 'Menu' },
+  booking: { key: 'booking', label: 'Booking' },
+  medical: { key: 'medical-info', label: 'Medical' },
+  ecommerce: { key: 'products', label: 'Products' },
+}
 
 function GeneratorContent() {
   const searchParams = useSearchParams()
@@ -99,6 +112,7 @@ function GeneratorContent() {
   const [businessInfo, setBusinessInfo] = useState<BusinessInfo>(initialBusinessInfo)
   const [downloadSuccess, setDownloadSuccess] = useState<boolean>(false)
   const [isQuickMode, setIsQuickMode] = useState<boolean>(false)
+  const [industryModules, setIndustryModules] = useState<IndustryModule[]>([])
 
   // Handle quick mode - start directly at basic-info step
   useEffect(() => {
@@ -132,6 +146,14 @@ function GeneratorContent() {
 
   const handleBasicInfoSubmit = (data: Partial<BusinessInfo>) => {
     setBusinessInfo(prev => ({ ...prev, ...data }))
+    // Detect industry modules based on business type
+    const modules = detectIndustryModules(data.businessType || '')
+    setIndustryModules(modules)
+    setCurrentStep('branding')
+  }
+
+  const handleBrandingSubmit = (branding: BrandingConfig) => {
+    setBusinessInfo(prev => ({ ...prev, branding }))
     setCurrentStep('hero-image')
   }
 
@@ -162,6 +184,58 @@ function GeneratorContent() {
 
   const handleFAQsSubmit = (faqs: FAQ[]) => {
     setBusinessInfo(prev => ({ ...prev, faqs }))
+    // Navigate through industry-specific steps
+    if (industryModules.includes('restaurant')) {
+      setCurrentStep('menu')
+    } else if (industryModules.includes('booking')) {
+      setCurrentStep('booking')
+    } else if (industryModules.includes('medical')) {
+      setCurrentStep('medical-info')
+    } else if (businessInfo.primaryCTA === 'shop') {
+      setCurrentStep('products')
+    } else {
+      setCurrentStep('preview')
+    }
+  }
+
+  const handleMenuSubmit = (menu: MenuConfig) => {
+    setBusinessInfo(prev => ({ ...prev, menu }))
+    // Go to next applicable industry step
+    if (industryModules.includes('booking')) {
+      setCurrentStep('booking')
+    } else if (industryModules.includes('medical')) {
+      setCurrentStep('medical-info')
+    } else if (businessInfo.primaryCTA === 'shop') {
+      setCurrentStep('products')
+    } else {
+      setCurrentStep('preview')
+    }
+  }
+
+  const handleBookingSubmit = (booking: BookingConfig) => {
+    setBusinessInfo(prev => ({ ...prev, booking }))
+    // Go to next applicable industry step
+    if (industryModules.includes('medical')) {
+      setCurrentStep('medical-info')
+    } else if (businessInfo.primaryCTA === 'shop') {
+      setCurrentStep('products')
+    } else {
+      setCurrentStep('preview')
+    }
+  }
+
+  const handleMedicalSubmit = (medical: MedicalConfig) => {
+    setBusinessInfo(prev => ({ ...prev, medical }))
+    // Go to products if shop CTA, otherwise preview
+    if (businessInfo.primaryCTA === 'shop') {
+      setCurrentStep('products')
+    } else {
+      setCurrentStep('preview')
+    }
+  }
+
+  const handleProductsSubmit = (products: Product[]) => {
+    setBusinessInfo(prev => ({ ...prev, products }))
     setCurrentStep('preview')
   }
 
@@ -247,43 +321,69 @@ function GeneratorContent() {
   }
 
   const handleBack = () => {
-    const stepOrder: FormStep[] = [
-      'search',
-      'select-business',
-      'basic-info',
-      'hero-image',
-      'contact-info',
-      'testimonials',
-      'portfolio',
-      'pricing',
-      'faqs',
-      'preview',
-    ]
-    const postWebsiteSteps: FormStep[] = [
-      'complete',
-      'logo-generator',
-      'google-business',
-      'social-media',
-      'update-profiles',
-    ]
-
     // In quick mode, going back from basic-info returns to home
     if (isQuickMode && currentStep === 'basic-info') {
       router.push('/')
       return
     }
 
-    // Handle back for main flow
-    const mainIndex = stepOrder.indexOf(currentStep)
-    if (mainIndex > 0) {
-      setCurrentStep(stepOrder[mainIndex - 1])
-      return
+    // Handle back navigation with industry-specific steps
+    const getBackStep = (): FormStep | null => {
+      switch (currentStep) {
+        case 'select-business':
+          return 'search'
+        case 'basic-info':
+          return isQuickMode ? null : 'select-business'
+        case 'branding':
+          return 'basic-info'
+        case 'hero-image':
+          return 'branding'
+        case 'contact-info':
+          return 'hero-image'
+        case 'testimonials':
+          return 'contact-info'
+        case 'portfolio':
+          return 'testimonials'
+        case 'pricing':
+          return 'portfolio'
+        case 'faqs':
+          return 'pricing'
+        case 'menu':
+          return 'faqs'
+        case 'booking':
+          return industryModules.includes('restaurant') ? 'menu' : 'faqs'
+        case 'medical-info':
+          if (industryModules.includes('booking')) return 'booking'
+          if (industryModules.includes('restaurant')) return 'menu'
+          return 'faqs'
+        case 'products':
+          if (industryModules.includes('medical')) return 'medical-info'
+          if (industryModules.includes('booking')) return 'booking'
+          if (industryModules.includes('restaurant')) return 'menu'
+          return 'faqs'
+        case 'preview':
+          if (businessInfo.primaryCTA === 'shop') return 'products'
+          if (industryModules.includes('medical')) return 'medical-info'
+          if (industryModules.includes('booking')) return 'booking'
+          if (industryModules.includes('restaurant')) return 'menu'
+          return 'faqs'
+        // Post-website steps
+        case 'logo-generator':
+          return 'complete'
+        case 'google-business':
+          return 'logo-generator'
+        case 'social-media':
+          return 'google-business'
+        case 'update-profiles':
+          return 'social-media'
+        default:
+          return null
+      }
     }
 
-    // Handle back for post-website flow
-    const postIndex = postWebsiteSteps.indexOf(currentStep)
-    if (postIndex > 0) {
-      setCurrentStep(postWebsiteSteps[postIndex - 1])
+    const backStep = getBackStep()
+    if (backStep) {
+      setCurrentStep(backStep)
     }
   }
 
@@ -313,9 +413,34 @@ function GeneratorContent() {
   const postWebsiteSteps: FormStep[] = ['complete', 'logo-generator', 'google-business', 'social-media', 'update-profiles', 'all-done']
   const showStepIndicator = !['generating', ...postWebsiteSteps].includes(currentStep)
 
-  // Steps to display in the indicator - quick mode skips search and select steps
-  const quickModeSteps = steps.filter(s => s.key !== 'search' && s.key !== 'select-business')
-  const displaySteps = isQuickMode ? quickModeSteps : steps
+  // Build dynamic steps based on industry modules and CTA type
+  const buildDisplaySteps = () => {
+    const steps = [...baseSteps]
+
+    // Add industry-specific steps after FAQs
+    if (industryModules.includes('restaurant')) {
+      steps.push(industrySteps.restaurant)
+    }
+    if (industryModules.includes('booking')) {
+      steps.push(industrySteps.booking)
+    }
+    if (industryModules.includes('medical')) {
+      steps.push(industrySteps.medical)
+    }
+    // Add products step if shop CTA (ecommerce module is handled by CTA)
+    if (businessInfo.primaryCTA === 'shop') {
+      steps.push(industrySteps.ecommerce)
+    }
+
+    // Add preview at the end
+    steps.push({ key: 'preview', label: 'Preview' })
+
+    return steps
+  }
+
+  const allSteps = buildDisplaySteps()
+  const quickModeSteps = allSteps.filter(s => s.key !== 'search' && s.key !== 'select-business')
+  const displaySteps = isQuickMode ? quickModeSteps : allSteps
 
   return (
     <div className="min-h-screen mesh-bg">
@@ -382,6 +507,14 @@ function GeneratorContent() {
               />
             )}
 
+            {currentStep === 'branding' && (
+              <BrandingStep
+                branding={businessInfo.branding}
+                onSubmit={handleBrandingSubmit}
+                onBack={handleBack}
+              />
+            )}
+
             {currentStep === 'hero-image' && (
               <HeroImageStep
                 heroImage={businessInfo.heroImage}
@@ -391,6 +524,7 @@ function GeneratorContent() {
                 businessDescription={businessInfo.description}
                 businessServices={businessInfo.services}
                 portfolioImages={businessInfo.portfolioSections.flatMap(s => s.images)}
+                googlePhotos={selectedBusiness?.photos || []}
                 onSubmit={handleHeroImageSubmit}
                 onBack={handleBack}
               />
@@ -419,6 +553,7 @@ function GeneratorContent() {
               <PortfolioStep
                 portfolioSections={businessInfo.portfolioSections}
                 businessType={businessInfo.businessType}
+                googlePhotos={selectedBusiness?.photos || []}
                 onSubmit={handlePortfolioSubmit}
                 onBack={handleBack}
               />
@@ -442,6 +577,40 @@ function GeneratorContent() {
                 businessType={businessInfo.businessType}
                 services={businessInfo.services}
                 onSubmit={handleFAQsSubmit}
+                onBack={handleBack}
+              />
+            )}
+
+            {currentStep === 'menu' && (
+              <MenuStep
+                menu={businessInfo.menu}
+                onSubmit={handleMenuSubmit}
+                onBack={handleBack}
+              />
+            )}
+
+            {currentStep === 'booking' && (
+              <BookingStep
+                booking={businessInfo.booking}
+                businessName={businessInfo.name}
+                onSubmit={handleBookingSubmit}
+                onBack={handleBack}
+              />
+            )}
+
+            {currentStep === 'medical-info' && (
+              <MedicalInfoStep
+                medical={businessInfo.medical}
+                businessName={businessInfo.name}
+                onSubmit={handleMedicalSubmit}
+                onBack={handleBack}
+              />
+            )}
+
+            {currentStep === 'products' && (
+              <ProductsStep
+                products={businessInfo.products || []}
+                onSubmit={handleProductsSubmit}
                 onBack={handleBack}
               />
             )}

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Upload, Image as ImageIcon, Sparkles, Loader2, Search, Check, X, FolderOpen, RefreshCw, ChevronRight, Video, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Upload, Image as ImageIcon, Sparkles, Loader2, Search, Check, X, FolderOpen, RefreshCw, ChevronRight, Video, ExternalLink, MapPin } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
 import { PortfolioImage } from '@/lib/types'
 
@@ -23,8 +23,98 @@ interface HeroImageStepProps {
   businessDescription?: string
   businessServices?: string[]
   portfolioImages: PortfolioImage[]
+  googlePhotos?: string[]
   onSubmit: (heroImage: string) => void
   onBack: () => void
+}
+
+// Business-type specific hero image keyword suggestions
+const HERO_IMAGE_KEYWORDS: Record<string, string[]> = {
+  // Home Services
+  plumber: ['plumber fixing pipes', 'modern bathroom', 'plumbing repair', 'water heater installation'],
+  electrician: ['electrician at work', 'electrical panel', 'modern lighting', 'home wiring'],
+  hvac: ['air conditioning unit', 'hvac technician', 'modern thermostat', 'heating system'],
+  contractor: ['home renovation', 'construction worker', 'modern house exterior', 'remodeling project'],
+  landscaping: ['beautiful garden', 'landscaping work', 'green lawn', 'outdoor living space'],
+  cleaning: ['clean modern home', 'cleaning service', 'spotless kitchen', 'organized space'],
+  roofing: ['roof installation', 'new roof shingles', 'roofing contractor', 'house exterior'],
+  handyman: ['home repair', 'handyman tools', 'home improvement', 'fixing furniture'],
+  painting: ['house painting', 'interior paint', 'paint brushes', 'colorful wall'],
+  flooring: ['hardwood floor', 'flooring installation', 'modern tile', 'beautiful floors'],
+
+  // Professional Services
+  lawyer: ['law office', 'legal consultation', 'modern law firm', 'professional attorney'],
+  accountant: ['accounting office', 'financial planning', 'modern office desk', 'business meeting'],
+  consultant: ['business consulting', 'professional meeting', 'strategy session', 'modern conference room'],
+  real_estate: ['beautiful home', 'real estate agent', 'house for sale', 'modern property'],
+  insurance: ['insurance consultation', 'family protection', 'professional office', 'peace of mind'],
+  financial: ['financial advisor', 'investment planning', 'wealth management', 'business growth'],
+
+  // Health & Wellness
+  dentist: ['modern dental office', 'bright smile', 'dental care', 'dentist with patient'],
+  doctor: ['medical office', 'doctor consultation', 'healthcare professional', 'modern clinic'],
+  chiropractor: ['chiropractic care', 'spine health', 'wellness center', 'back adjustment'],
+  salon: ['hair salon interior', 'hairstylist at work', 'beauty salon', 'hair styling'],
+  spa: ['spa relaxation', 'massage therapy', 'wellness retreat', 'zen atmosphere'],
+  gym: ['modern gym', 'fitness training', 'workout equipment', 'personal training'],
+  yoga: ['yoga studio', 'meditation space', 'yoga practice', 'peaceful wellness'],
+  therapy: ['therapy session', 'counseling office', 'mental wellness', 'supportive environment'],
+
+  // Food & Hospitality
+  restaurant: ['restaurant interior', 'delicious food plating', 'fine dining', 'chef cooking'],
+  cafe: ['cozy cafe', 'coffee shop interior', 'latte art', 'cafe atmosphere'],
+  bakery: ['fresh baked bread', 'bakery display', 'pastries', 'artisan baking'],
+  catering: ['catering event', 'food presentation', 'buffet setup', 'elegant dining'],
+  bar: ['cocktail bar', 'bar interior', 'craft cocktails', 'nightlife ambiance'],
+  pizza: ['pizza making', 'wood fired oven', 'italian restaurant', 'fresh pizza'],
+
+  // Retail
+  retail: ['retail store', 'shopping experience', 'product display', 'modern storefront'],
+  boutique: ['boutique interior', 'fashion display', 'clothing store', 'curated collection'],
+  jewelry: ['jewelry display', 'elegant jewelry', 'luxury accessories', 'jewelry store'],
+  florist: ['flower shop', 'beautiful bouquet', 'floral arrangement', 'colorful flowers'],
+
+  // Automotive
+  auto_repair: ['auto mechanic', 'car repair shop', 'automotive service', 'mechanic at work'],
+  car_dealer: ['car dealership', 'new cars', 'car showroom', 'automotive sales'],
+  auto_detail: ['car detailing', 'shiny car', 'auto cleaning', 'car wash'],
+
+  // Education
+  school: ['classroom', 'students learning', 'education', 'school building'],
+  daycare: ['happy children', 'daycare center', 'child care', 'playful kids'],
+  tutoring: ['tutoring session', 'student studying', 'learning', 'education support'],
+  music: ['music lesson', 'musical instruments', 'music studio', 'playing piano'],
+  dance: ['dance studio', 'ballet dancer', 'dance class', 'movement'],
+
+  // Technology
+  it_services: ['tech support', 'computer repair', 'it professional', 'server room'],
+  web_design: ['web design', 'creative workspace', 'digital agency', 'design studio'],
+  photography: ['photography studio', 'camera equipment', 'photo shoot', 'creative photography'],
+
+  // Pet Services
+  veterinary: ['veterinary clinic', 'vet with pet', 'animal care', 'happy pets'],
+  pet_grooming: ['dog grooming', 'pet spa', 'cute groomed dog', 'pet care'],
+  dog_training: ['dog training', 'obedient dog', 'pet training session', 'dog and trainer'],
+}
+
+// Get suggested keywords based on business type
+function getHeroKeywords(businessType: string): string[] {
+  const normalizedType = businessType.toLowerCase().replace(/[^a-z]/g, '_').replace(/_+/g, '_')
+
+  // Try exact match first
+  if (HERO_IMAGE_KEYWORDS[normalizedType]) {
+    return HERO_IMAGE_KEYWORDS[normalizedType]
+  }
+
+  // Try partial match
+  for (const [key, keywords] of Object.entries(HERO_IMAGE_KEYWORDS)) {
+    if (normalizedType.includes(key) || key.includes(normalizedType)) {
+      return keywords
+    }
+  }
+
+  // Default generic keywords
+  return ['professional business', 'modern office', 'team at work', 'business storefront']
 }
 
 export function HeroImageStep({
@@ -35,14 +125,56 @@ export function HeroImageStep({
   businessDescription,
   businessServices,
   portfolioImages,
+  googlePhotos = [],
   onSubmit,
   onBack
 }: HeroImageStepProps) {
   const [selectedImage, setSelectedImage] = useState<string>(initialHeroImage || '')
   const [isVideo, setIsVideo] = useState<boolean>(false)
-  const [activeTab, setActiveTab] = useState<'upload' | 'portfolio' | 'ai'>('ai')
+  const [activeTab, setActiveTab] = useState<'upload' | 'portfolio' | 'ai' | 'google'>(googlePhotos.length > 0 ? 'google' : 'ai')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const videoInputRef = useRef<HTMLInputElement | null>(null)
+
+  // AI-generated keyword suggestions
+  const [aiKeywords, setAiKeywords] = useState<string[]>([])
+  const [keywordsLoading, setKeywordsLoading] = useState(true)
+
+  // Fetch AI-generated keywords on mount
+  useEffect(() => {
+    const fetchAiKeywords = async () => {
+      setKeywordsLoading(true)
+      try {
+        const response = await fetch('/api/generate-hero-keywords', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessName,
+            businessType,
+            services: businessServices,
+          }),
+        })
+
+        const data = await response.json()
+        if (data.success && data.keywords) {
+          setAiKeywords(data.keywords)
+        } else {
+          // Fall back to static keywords
+          setAiKeywords(getHeroKeywords(businessType))
+        }
+      } catch (error) {
+        console.error('Failed to fetch AI keywords:', error)
+        // Fall back to static keywords
+        setAiKeywords(getHeroKeywords(businessType))
+      } finally {
+        setKeywordsLoading(false)
+      }
+    }
+
+    fetchAiKeywords()
+  }, [businessName, businessType, businessServices])
+
+  // Use AI keywords if available, otherwise fall back to static
+  const suggestedKeywords = aiKeywords.length > 0 ? aiKeywords : getHeroKeywords(businessType)
 
   // AI Video Generator links
   const videoGenerators = [
@@ -206,7 +338,17 @@ Make the prompt specific to this business type and ready to paste into an AI vid
       )}
 
       {/* Tab Selection */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {googlePhotos.length > 0 && (
+          <Button
+            variant={activeTab === 'google' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('google')}
+            className="flex-1"
+          >
+            <MapPin className="mr-2 w-4 h-4" />
+            Google Photos ({googlePhotos.length})
+          </Button>
+        )}
         <Button
           variant={activeTab === 'ai' ? 'default' : 'outline'}
           onClick={() => setActiveTab('ai')}
@@ -280,21 +422,27 @@ Make the prompt specific to this business type and ready to paste into an AI vid
                   </Button>
                 </div>
 
-                {/* Quick search suggestions */}
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-sm text-gray-500">Quick search:</span>
-                  {[businessType.replace(/_/g, ' '), 'office interior', 'storefront', 'professional team', 'workspace'].map((term) => (
-                    <button
-                      key={term}
-                      onClick={() => {
-                        setSearchQuery(term)
-                        fetchUnsplashPhotos(term)
-                      }}
-                      className="text-sm px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
-                    >
-                      {term}
-                    </button>
-                  ))}
+                {/* Quick search suggestions - AI-generated based on business info */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="text-sm text-gray-500">
+                    {keywordsLoading ? 'Generating suggestions...' : 'Suggested:'}
+                  </span>
+                  {keywordsLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+                  ) : (
+                    suggestedKeywords.map((term) => (
+                      <button
+                        key={term}
+                        onClick={() => {
+                          setSearchQuery(term)
+                          fetchUnsplashPhotos(term)
+                        }}
+                        className="text-sm px-3 py-1 rounded-full bg-purple-100 hover:bg-purple-200 text-purple-700 transition-colors"
+                      >
+                        {term}
+                      </button>
+                    ))
+                  )}
                 </div>
 
                 {/* Photo Grid */}
@@ -534,6 +682,56 @@ Make the prompt specific to this business type and ready to paste into an AI vid
                       {selectedImage === image.url && (
                         <div className="absolute inset-0 bg-primary-500/20 flex items-center justify-center">
                           <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center">
+                            <Check className="w-5 h-5 text-white" />
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Google Photos Tab */}
+        {activeTab === 'google' && googlePhotos.length > 0 && (
+          <motion.div
+            key="google"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            <Card variant="outlined">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-blue-500" />
+                  Google Business Photos
+                </CardTitle>
+                <CardDescription>
+                  Select a photo from the business's Google profile - great for authenticity!
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {googlePhotos.map((photo, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(photo)}
+                      className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedImage === photo
+                          ? 'border-blue-500 ring-2 ring-blue-500/50'
+                          : 'border-transparent hover:border-gray-300'
+                      }`}
+                    >
+                      <img
+                        src={photo}
+                        alt={`Business photo ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {selectedImage === photo && (
+                        <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
                             <Check className="w-5 h-5 text-white" />
                           </div>
                         </div>

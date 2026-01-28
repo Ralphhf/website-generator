@@ -146,13 +146,14 @@ export async function getBusinessPhotos(
 export async function getPortfolioSectionPhotos(
   businessType: string,
   sectionTitle: string,
-  perPage: number = 6
+  perPage: number = 6,
+  page: number = 1
 ): Promise<UnsplashPhoto[]> {
   // Create a search query combining section title with business context
   const businessContext = businessType.replace(/_/g, ' ')
   const query = `${sectionTitle} ${businessContext}`
 
-  return searchPhotos(query, perPage)
+  return searchPhotos(query, perPage, page)
 }
 
 // Track download for Unsplash attribution requirements

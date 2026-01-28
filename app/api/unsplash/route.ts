@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
         const businessType = searchParams.get('businessType') || ''
         const sectionTitle = searchParams.get('sectionTitle') || ''
         const perPage = parseInt(searchParams.get('perPage') || '12')
+        const page = parseInt(searchParams.get('page') || '1')
 
         if (!sectionTitle.trim()) {
           return NextResponse.json(
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
           )
         }
 
-        const photos = await getPortfolioSectionPhotos(businessType, sectionTitle, perPage)
+        const photos = await getPortfolioSectionPhotos(businessType, sectionTitle, perPage, page)
         return NextResponse.json({ success: true, photos })
       }
 
